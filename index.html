@@ -1058,7 +1058,13 @@ function addExerciseToForm(existing) {
       <input type="text" class="input" placeholder="ex: Rosca Direta" value="${existing?.conjugado||''}" data-field="conjugado">
       ${existing?.method==='Tri-Set'?`<input type="text" class="input" style="margin-top:6px" placeholder="ex: Rosca Martelo" value="${existing?.conjugado2||''}" data-field="conjugado2">`:''}
     </div>
-    <div class="input-group" style="margin-top:10px;margin-bottom:0">
+    <div style="margin-top:12px;margin-bottom:10px;display:flex;align-items:center;gap:10px;background:var(--surface3);border:1px solid var(--border);border-radius:8px;padding:10px 14px">
+      <input type="checkbox" id="bw-check-${id}" data-field="bodyweight" ${existing?.bodyweight?'checked':''} style="width:18px;height:18px;accent-color:var(--accent);cursor:pointer;flex-shrink:0">
+      <label for="bw-check-${id}" style="font-size:13px;font-weight:600;color:var(--text2);cursor:pointer;user-select:none">
+        Exercício sem peso <span style="font-size:11px;color:var(--text3)">(ex: abdominais, flexão)</span>
+      </label>
+    </div>
+    <div class="input-group" style="margin-top:0;margin-bottom:0">
       <label class="input-label">Observações</label>
       <input type="text" class="input" placeholder="ex: Pegada fechada, 2s na descida" value="${existing?.obs||''}" data-field="obs">
     </div>
@@ -1111,8 +1117,7 @@ function getExercisesFromForm() {
     reps: parseInt(item.querySelector('[data-field="repsMax"]').value) || 12, // backward compat
     dropSets: parseInt(item.querySelector('[data-field="dropSets"]')?.value) || 2,
     conjugado: item.querySelector('[data-field="conjugado"]')?.value.trim() || '',
-    conjugado2: item.querySelector('[data-field="conjugado2"]')?.value.trim() || '',
-    obs: item.querySelector('[data-field="obs"]').value.trim(),
+    bodyweight: item.querySelector('[data-field="bodyweight"]')?.checked || false,
   })).filter(e => e.name);
 }
 
@@ -1192,6 +1197,10 @@ function startSession(fichaIdx) {
     date: new Date().toISOString(),
     exercises: ficha.exercises.map(ex => {
       const last = getLastSessionForExercise(ex.id);
+      const isDropSet = ex.method === 'Drop Set';
+      const dropCount = ex.dropSets || 1;
+      // Normal sets + drop series at the end
+      const totalSets = isDropSet ? ex.sets + dropCount : ex.sets;
       return {
         id: ex.id,
         name: ex.name,
@@ -1201,14 +1210,17 @@ function startSession(fichaIdx) {
         targetReps: ex.reps,
         targetRepsMin: ex.repsMin || ex.reps,
         targetRepsMax: ex.repsMax || ex.reps,
-        dropSets: ex.dropSets || 2,
+        dropSets: dropCount,
         conjugado: ex.conjugado || '',
         conjugado2: ex.conjugado2 || '',
-        lastSets: last ? last.sets : null, // previous session data for reference
-        sets: Array.from({length: ex.method === 'Drop Set' ? ex.sets * (ex.dropSets||2) : ex.sets}, (_, si) => ({
+        bodyweight: ex.bodyweight || false,
+        skipped: false,
+        lastSets: last ? last.sets : null,
+        sets: Array.from({length: totalSets}, (_, si) => ({
           reps: '',
           weight: last && last.sets[si] && last.sets[si].done ? last.sets[si].weight : '',
-          done: false
+          done: false,
+          isDrop: isDropSet && si >= ex.sets // mark drop series
         }))
       };
     })
@@ -1219,6 +1231,11 @@ function startSession(fichaIdx) {
 
   renderSessionExercises();
   openModal('modal-session');
+}
+
+function skipExercise(ei) {
+  currentSession.exercises[ei].skipped = !currentSession.exercises[ei].skipped;
+  renderSessionExercises();
 }
 
 function renderSessionExercises() {
@@ -1234,30 +1251,55 @@ function renderSessionExercises() {
         lastSummary = '<div style="font-size:11px;color:var(--text3);margin-top:4px">Último: <span style="color:var(--accent2);font-family:JetBrains Mono,monospace;font-weight:700">' + maxR + ' reps × ' + maxW + 'kg</span></div>';
       }
     }
+
     let setsHtml = '';
-    ex.sets.forEach(function(s, si) {
-      const lastSet = ex.lastSets && ex.lastSets[si] && ex.lastSets[si].done ? ex.lastSets[si] : null;
-      const lastReps = lastSet ? lastSet.reps : '';
-      const lastWeight = lastSet ? lastSet.weight : '';
-      const repsHint = lastReps ? lastReps : ex.targetRepsMin;
-      const weightHint = lastWeight ? lastWeight : '0';
-      const doneClass = s.done ? 'done' : '';
-      const checkInner = s.done ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" style="width:16px;height:16px"><path d="M20 6L9 17l-5-5"/></svg>' : '';
-      const antReps = lastReps ? '<div style="font-size:9px;color:var(--accent2);text-align:center;margin-bottom:3px;letter-spacing:0.3px">ant: ' + lastReps + '</div>' : '';
-      const antWeight = lastWeight ? '<div style="font-size:9px;color:var(--accent2);text-align:center;margin-bottom:3px;letter-spacing:0.3px">ant: ' + lastWeight + '</div>' : '';
-      // Drop set label
-      const isDropSet = ex.method === 'Drop Set';
-      const setLabel = isDropSet
-        ? '<div style="font-family:Bebas Neue,sans-serif;font-size:14px;color:var(--accent3);line-height:1;padding-bottom:2px">' + (si+1) + '<span style="font-size:9px;color:var(--accent3);margin-left:2px">DROP</span></div>'
-        : '<div style="font-family:Bebas Neue,sans-serif;font-size:20px;color:var(--text3);line-height:1;padding-bottom:2px">' + (si+1) + '</div>';
-      setsHtml += '<div style="display:grid;grid-template-columns:36px 1fr 1fr 36px;gap:8px;align-items:end;padding:10px 0;border-bottom:1px solid var(--border)">'
-        + setLabel
-        + '<div>' + antReps + '<input type="number" class="series-input ' + doneClass + '" placeholder="' + repsHint + '" value="' + s.reps + '" oninput="updateSet(' + ei + ',' + si + ',\'reps\',this.value)" min="0" style="width:100%"></div>'
-        + '<div>' + antWeight + '<input type="number" class="series-input ' + doneClass + '" placeholder="' + weightHint + '" value="' + s.weight + '" oninput="updateSet(' + ei + ',' + si + ',\'weight\',this.value)" step="0.5" min="0" style="width:100%"></div>'
-        + '<button class="series-check ' + doneClass + '" onclick="toggleSetDone(' + ei + ',' + si + ')" style="width:36px;height:36px;align-self:end;margin-bottom:0">' + checkInner + '</button>'
-        + '</div>';
-    });
-    html += '<div class="session-exercise">'
+    if(!ex.skipped) {
+      ex.sets.forEach(function(s, si) {
+        const lastSet = ex.lastSets && ex.lastSets[si] && ex.lastSets[si].done ? ex.lastSets[si] : null;
+        const lastReps = lastSet ? lastSet.reps : '';
+        const lastWeight = lastSet ? lastSet.weight : '';
+        const repsHint = lastReps ? lastReps : ex.targetRepsMin;
+        const weightHint = lastWeight ? lastWeight : '0';
+        const doneClass = s.done ? 'done' : '';
+        const checkInner = s.done ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" style="width:16px;height:16px"><path d="M20 6L9 17l-5-5"/></svg>' : '';
+        const antReps = lastReps ? '<div style="font-size:9px;color:var(--accent2);text-align:center;margin-bottom:3px;letter-spacing:0.3px">ant: ' + lastReps + '</div>' : '';
+        const antWeight = lastWeight ? '<div style="font-size:9px;color:var(--accent2);text-align:center;margin-bottom:3px;letter-spacing:0.3px">ant: ' + lastWeight + '</div>' : '';
+
+        // Drop separator line before first drop set
+        let dropSeparator = '';
+        if(s.isDrop && (si === 0 || !ex.sets[si-1].isDrop)) {
+          dropSeparator = '<div style="display:flex;align-items:center;gap:8px;padding:8px 0 4px">'
+            + '<div style="flex:1;height:1px;background:var(--accent3);opacity:0.4"></div>'
+            + '<span style="font-size:10px;font-weight:700;color:var(--accent3);letter-spacing:1px">↓ DROP</span>'
+            + '<div style="flex:1;height:1px;background:var(--accent3);opacity:0.4"></div>'
+            + '</div>';
+        }
+
+        const setLabel = s.isDrop
+          ? '<div style="font-family:Bebas Neue,sans-serif;font-size:16px;color:var(--accent3);line-height:1;padding-bottom:2px">D' + (si - ex.targetSets + 1) + '</div>'
+          : '<div style="font-family:Bebas Neue,sans-serif;font-size:20px;color:var(--text3);line-height:1;padding-bottom:2px">' + (si+1) + '</div>';
+
+        const isBodyweight = ex.bodyweight;
+        const gridCols = isBodyweight ? '36px 1fr 36px' : '36px 1fr 1fr 36px';
+
+        setsHtml += dropSeparator
+          + '<div style="display:grid;grid-template-columns:' + gridCols + ';gap:8px;align-items:end;padding:10px 0;border-bottom:1px solid var(--border)">'
+          + setLabel
+          + '<div>' + antReps + '<input type="number" class="series-input ' + doneClass + (s.isDrop?' drop-input':'') + '" placeholder="' + repsHint + '" value="' + s.reps + '" oninput="updateSet(' + ei + ',' + si + ',\'reps\',this.value)" min="0" style="width:100%' + (s.isDrop?';border-color:rgba(255,107,71,0.4)':'') + '"></div>'
+          + (!isBodyweight ? '<div>' + antWeight + '<input type="number" class="series-input ' + doneClass + '" placeholder="' + weightHint + '" value="' + s.weight + '" oninput="updateSet(' + ei + ',' + si + ',\'weight\',this.value)" step="0.5" min="0" style="width:100%' + (s.isDrop?';border-color:rgba(255,107,71,0.4)':'') + '"></div>' : '')
+          + '<button class="series-check ' + doneClass + '" onclick="toggleSetDone(' + ei + ',' + si + ')" style="width:36px;height:36px;align-self:end;margin-bottom:0">' + checkInner + '</button>'
+          + '</div>';
+      });
+    } else {
+      setsHtml = '<div style="text-align:center;padding:16px;color:var(--text3);font-size:13px">Exercício pulado</div>';
+    }
+
+    const skipLabel = ex.skipped ? '↩ Retomar' : '⏭ Pular';
+    const skipStyle = ex.skipped
+      ? 'color:var(--accent2);border-color:var(--accent2)'
+      : 'color:var(--text3);border-color:var(--border)';
+
+    html += '<div class="session-exercise" style="' + (ex.skipped ? 'opacity:0.5' : '') + '">'
       + '<div class="session-exercise-header">'
       + '<div style="flex:1"><div style="font-weight:700;font-size:15px">' + ex.name + '</div>'
       + (ex.conjugado ? '<div style="font-size:11px;color:var(--accent4);margin-top:2px">⟳ ' + ex.conjugado + (ex.conjugado2 ? ' + ' + ex.conjugado2 : '') + '</div>' : '')
@@ -1265,15 +1307,18 @@ function renderSessionExercises() {
       + (ex.method === 'Drop Set' ? '<span style="font-size:10px;background:rgba(255,107,71,0.15);color:var(--accent3);padding:2px 6px;border-radius:4px;font-weight:700">↓ DROP</span>' : '')
       + '</div>'
       + lastSummary + '</div>'
-      + '<div style="text-align:right;flex-shrink:0;margin-left:10px"><div style="font-family:JetBrains Mono,monospace;font-size:14px;color:var(--accent)">' + ex.targetSets + '×' + ex.targetRepsMin + (ex.targetRepsMin !== ex.targetRepsMax ? '–' + ex.targetRepsMax : '') + '</div><div style="font-size:10px;color:var(--text3)">alvo</div></div>'
+      + '<div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;margin-left:10px">'
+      + '<div style="text-align:right"><div style="font-family:JetBrains Mono,monospace;font-size:14px;color:var(--accent)">' + ex.targetSets + '×' + ex.targetRepsMin + (ex.targetRepsMin !== ex.targetRepsMax ? '–' + ex.targetRepsMax : '') + '</div><div style="font-size:10px;color:var(--text3)">alvo</div></div>'
+      + '<button onclick="skipExercise(' + ei + ')" style="font-size:10px;font-weight:700;background:none;border:1px solid;border-radius:6px;padding:3px 8px;cursor:pointer;' + skipStyle + '">' + skipLabel + '</button>'
+      + '</div>'
       + '</div>'
       + '<div class="session-exercise-body">'
-      + '<div style="display:grid;grid-template-columns:24px 1fr 1fr 36px;gap:8px;padding-bottom:8px;border-bottom:1px solid var(--border);margin-bottom:2px">'
+      + (!ex.skipped ? '<div style="display:grid;grid-template-columns:' + (ex.bodyweight ? '36px 1fr 36px' : '36px 1fr 1fr 36px') + ';gap:8px;padding-bottom:8px;border-bottom:1px solid var(--border);margin-bottom:2px">'
       + '<span style="font-size:9px;font-weight:700;text-transform:uppercase;color:var(--text3)">#</span>'
       + '<span style="font-size:9px;font-weight:700;text-transform:uppercase;color:var(--text3);text-align:center">REPS</span>'
-      + '<span style="font-size:9px;font-weight:700;text-transform:uppercase;color:var(--text3);text-align:center">PESO kg</span>'
+      + (!ex.bodyweight ? '<span style="font-size:9px;font-weight:700;text-transform:uppercase;color:var(--text3);text-align:center">PESO kg</span>' : '')
       + '<span style="font-size:9px;font-weight:700;text-transform:uppercase;color:var(--text3);text-align:center">✓</span>'
-      + '</div>'
+      + '</div>' : '')
       + setsHtml
       + '</div></div>';
   });
