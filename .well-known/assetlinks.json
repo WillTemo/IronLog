@@ -1,8 +1,0 @@
-[{
-      "relation": ["delegate_permission/common.handle_all_urls"],
-      "target": {
-        "namespace": "android_app",
-        "package_name": "io.github.willtemo.twa",
-        "sha256_cert_fingerprints": ["D0:8F:D7:02:00:1F:C1:7C:20:D0:59:78:86:7F:4E:38:32:FB:D4:30:4C:9E:9A:AE:19:D4:69:33:16:81:D9:F3"]
-      }
-    }]
