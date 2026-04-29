@@ -748,6 +748,43 @@ canvas { max-width: 100%; }
 <!-- TOAST -->
 <div class="toast" id="toast"></div>
 
+<!-- PAGE: BACKUP -->
+<div class="page" id="page-backup">
+  <div style="height:16px"></div>
+  <div class="section-title">Backup & Dados</div>
+
+  <!-- EXPORT -->
+  <div class="card card-accent" style="margin-bottom:16px">
+    <div style="font-weight:700;font-size:15px;margin-bottom:6px">📤 Exportar Dados</div>
+    <div style="font-size:13px;color:var(--text2);margin-bottom:14px;line-height:1.5">
+      Salva todas as suas fichas, treinos, pesos e bioimpedância em um arquivo <strong style="color:var(--accent)">JSON</strong>. Guarde esse arquivo em um local seguro (Google Drive, WhatsApp para você mesmo, etc).
+    </div>
+    <button class="btn btn-primary" onclick="exportData()" style="width:100%;justify-content:center">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" style="width:18px;height:18px"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      Exportar Backup
+    </button>
+  </div>
+
+  <!-- IMPORT -->
+  <div class="card" style="margin-bottom:16px;border-color:var(--accent3)">
+    <div style="font-weight:700;font-size:15px;margin-bottom:6px">📥 Importar Dados</div>
+    <div style="font-size:13px;color:var(--text2);margin-bottom:14px;line-height:1.5">
+      Restaura um backup exportado anteriormente. <span style="color:var(--red);font-weight:600">Atenção: isso substituirá todos os dados atuais.</span>
+    </div>
+    <label style="display:block;background:var(--surface2);border:2px dashed var(--border);border-radius:8px;padding:20px;text-align:center;cursor:pointer;transition:border-color 0.2s" id="import-drop-area">
+      <input type="file" accept=".json" id="import-file-input" style="display:none" onchange="importData(this)">
+      <div style="font-size:28px;margin-bottom:8px">📁</div>
+      <div style="font-size:13px;color:var(--text2)">Toque para selecionar o arquivo <strong>.json</strong></div>
+    </label>
+  </div>
+
+  <!-- INFO -->
+  <div class="card" style="border-color:var(--accent2)">
+    <div style="font-weight:700;font-size:14px;margin-bottom:10px;color:var(--accent2)">ℹ️ Sobre seus dados</div>
+    <div id="backup-stats" style="font-size:13px;color:var(--text2);line-height:1.8"></div>
+  </div>
+</div>
+
 <!-- BOTTOM NAV -->
 <nav class="nav">
   <button class="nav-btn active" onclick="goPage('fichas', this)">
@@ -765,6 +802,10 @@ canvas { max-width: 100%; }
   <button class="nav-btn" onclick="goPage('corpo', this)">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="7" r="4"/><path d="M5.5 21c0-4 3-7 6.5-7s6.5 3 6.5 7"/></svg>
     Corpo
+  </button>
+  <button class="nav-btn" onclick="goPage('backup', this)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+    Backup
   </button>
 </nav>
 
@@ -865,6 +906,7 @@ function goPage(page, btn) {
   if(page === 'treinar') renderTreinarPage();
   if(page === 'evolucao') { renderEvoExercises(); renderEvolution(); }
   if(page === 'corpo') { renderPesoCharts(); renderBioCharts(); }
+  if(page === 'backup') renderBackupStats();
 }
 
 // ========================
@@ -1774,8 +1816,101 @@ function renderBioCharts() {
 }
 
 // ========================
-// INIT
+// BACKUP / EXPORT / IMPORT
 // ========================
+function renderBackupStats() {
+  const el = document.getElementById('backup-stats');
+  const totalSessions = sessions.length;
+  const totalExercises = fichas.reduce((a, f) => a + f.exercises.length, 0);
+  const firstSession = sessions.length ? new Date(sessions[0].date).toLocaleDateString('pt-BR') : '—';
+  const lastSession = sessions.length ? new Date(sessions[sessions.length-1].date).toLocaleDateString('pt-BR') : '—';
+  const totalWeights = weights.length;
+  const totalBios = bios.length;
+
+  el.innerHTML =
+    '📋 <strong>' + fichas.length + '</strong> fichas com <strong>' + totalExercises + '</strong> exercícios<br>' +
+    '💪 <strong>' + totalSessions + '</strong> treinos registrados<br>' +
+    '⚖️ <strong>' + totalWeights + '</strong> registros de peso<br>' +
+    '🧬 <strong>' + totalBios + '</strong> registros de bioimpedância<br>' +
+    '📅 Primeiro treino: <strong>' + firstSession + '</strong><br>' +
+    '📅 Último treino: <strong>' + lastSession + '</strong>';
+}
+
+async function exportData() {
+  await loadAllData();
+  const backup = {
+    version: '1.0',
+    exportDate: new Date().toISOString(),
+    appName: 'IronLog',
+    data: { fichas, sessions, weights, bios }
+  };
+  const json = JSON.stringify(backup, null, 2);
+  const blob = new Blob([json], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const date = new Date().toISOString().split('T')[0];
+  a.href = url;
+  a.download = 'IronLog-backup-' + date + '.json';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  toast('✅ Backup exportado com sucesso!');
+}
+
+async function importData(input) {
+  const file = input.files[0];
+  if(!file) return;
+
+  const reader = new FileReader();
+  reader.onload = async function(e) {
+    try {
+      const parsed = JSON.parse(e.target.result);
+
+      // Validate structure
+      if(!parsed.data || !parsed.appName) {
+        toast('❌ Arquivo inválido — não é um backup do IronLog', 'var(--red)');
+        return;
+      }
+
+      const { fichas: f, sessions: s, weights: w, bios: b } = parsed.data;
+
+      if(!confirm(
+        'Importar backup de ' + new Date(parsed.exportDate).toLocaleDateString('pt-BR') + '?\n\n' +
+        '• ' + (f?.length||0) + ' fichas\n' +
+        '• ' + (s?.length||0) + ' treinos\n' +
+        '• ' + (w?.length||0) + ' registros de peso\n\n' +
+        '⚠️ Isso substituirá todos os dados atuais.'
+      )) {
+        input.value = '';
+        return;
+      }
+
+      // Save all data
+      fichas   = f || [];
+      sessions = s || [];
+      weights  = w || [];
+      bios     = b || [];
+
+      await Promise.all([
+        DB.set('fichas', fichas),
+        DB.set('sessions', sessions),
+        DB.set('weights', weights),
+        DB.set('bios', bios)
+      ]);
+
+      renderBackupStats();
+      toast('✅ Backup importado com sucesso! ' + (s?.length||0) + ' treinos restaurados.');
+      input.value = '';
+    } catch(err) {
+      toast('❌ Erro ao ler o arquivo: ' + err.message, 'var(--red)');
+      input.value = '';
+    }
+  };
+  reader.readAsText(file);
+}
+
+
 window.addEventListener('load', async () => {
   // Register service worker for offline/PWA support
   if ('serviceWorker' in navigator) {
