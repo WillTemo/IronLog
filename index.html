@@ -13,6 +13,77 @@
 <meta name="description" content="Diário de treino de força pessoal. Fichas, evolução, peso e bioimpedância.">
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<!-- Firebase SDK -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getFirestore, doc, setDoc, getDoc, enableIndexedDbPersistence } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyC8y571mmpuHbqvM3tIo6K5PXKqC98cz20",
+    authDomain: "ironlog-657e8.firebaseapp.com",
+    projectId: "ironlog-657e8",
+    storageBucket: "ironlog-657e8.firebasestorage.app",
+    messagingSenderId: "1010469887439",
+    appId: "1:1010469887439:web:c9748ee057d2253216c6ba"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+
+  // Enable offline persistence (funciona sem internet)
+  enableIndexedDbPersistence(db).catch(err => {
+    console.warn('[IronLog] Firebase offline persistence não disponível:', err.code);
+  });
+
+  // USER ID fixo para este dispositivo (sem login)
+  const USER_ID = (() => {
+    let uid = localStorage.getItem('ironlog_uid');
+    if (!uid) {
+      uid = 'user_' + Math.random().toString(36).slice(2, 10) + Date.now().toString(36);
+      localStorage.setItem('ironlog_uid', uid);
+    }
+    return uid;
+  })();
+
+  // ========================
+  // CLOUD DB API
+  // ========================
+  window.CloudDB = {
+    _ref: (key) => doc(db, 'users', USER_ID, 'data', key),
+
+    async set(key, value) {
+      try {
+        await setDoc(this._ref(key), { value, updatedAt: Date.now() });
+        console.log('[IronLog] ☁️ Salvo na nuvem:', key);
+        return true;
+      } catch (err) {
+        console.warn('[IronLog] ⚠️ Falha ao salvar na nuvem:', err.message);
+        return false;
+      }
+    },
+
+    async get(key) {
+      try {
+        const snap = await getDoc(this._ref(key));
+        if (snap.exists()) {
+          console.log('[IronLog] ☁️ Carregado da nuvem:', key);
+          return snap.data().value;
+        }
+        return null;
+      } catch (err) {
+        console.warn('[IronLog] ⚠️ Falha ao ler da nuvem:', err.message);
+        return null;
+      }
+    },
+
+    getUserId() { return USER_ID; }
+  };
+
+  console.log('[IronLog] 🔥 Firebase inicializado. User ID:', USER_ID);
+
+  // Dispara evento para o restante do JS saber que o Firebase está pronto
+  window.dispatchEvent(new Event('firebase-ready'));
+</script>
 <style>
 :root {
   --bg: #0a0a0f;
@@ -778,6 +849,23 @@ canvas { max-width: 100%; }
     </label>
   </div>
 
+  <!-- NUVEM -->
+  <div class="card" style="margin-bottom:16px;border-color:#ff6b47">
+    <div style="font-weight:700;font-size:15px;margin-bottom:6px">🔥 Sincronização Firebase</div>
+    <div id="cloud-status" style="font-size:13px;color:var(--text2);margin-bottom:12px;line-height:1.5">
+      Verificando conexão com a nuvem…
+    </div>
+    <div style="display:flex;gap:10px">
+      <button class="btn btn-secondary" onclick="manualCloudUpload()" style="flex:1;justify-content:center">
+        ☁️ Subir para nuvem
+      </button>
+      <button class="btn btn-secondary" onclick="manualCloudDownload()" style="flex:1;justify-content:center">
+        ⬇️ Baixar da nuvem
+      </button>
+    </div>
+    <div style="font-size:11px;color:var(--text3);margin-top:10px;text-align:center" id="cloud-uid-display"></div>
+  </div>
+
   <!-- INFO -->
   <div class="card" style="border-color:var(--accent2)">
     <div style="font-weight:700;font-size:14px;margin-bottom:10px;color:var(--accent2)">ℹ️ Sobre seus dados</div>
@@ -872,11 +960,20 @@ const DB = (() => {
       r.onsuccess = () => res(r.result ?? null);
       r.onerror = () => rej(r.error);
     })),
-    set: (k, v) => tx('readwrite').then(store => new Promise((res, rej) => {
-      const r = store.put(v, 'ironlog_' + k);
-      r.onsuccess = () => res(true);
-      r.onerror = () => rej(r.error);
-    })),
+    set: async (k, v) => {
+      // Salva localmente (IndexedDB)
+      const store = await tx('readwrite');
+      await new Promise((res, rej) => {
+        const r = store.put(v, 'ironlog_' + k);
+        r.onsuccess = () => res(true);
+        r.onerror = () => rej(r.error);
+      });
+      // Sincroniza na nuvem (Firebase) se disponível
+      if (window.CloudDB) {
+        window.CloudDB.set(k, v); // fire-and-forget
+      }
+      return true;
+    },
     delete: (k) => tx('readwrite').then(store => new Promise((res, rej) => {
       const r = store.delete('ironlog_' + k);
       r.onsuccess = () => res(true);
@@ -902,15 +999,72 @@ async function migrateFromLocalStorage() {
   }
 }
 
-// Async data loader
+// Async data loader — lê local primeiro, depois mescla com nuvem
 async function loadAllData() {
   const [f, s, w, b] = await Promise.all([
     DB.get('fichas'), DB.get('sessions'), DB.get('weights'), DB.get('bios')
   ]);
-  fichas = f || [];
+  fichas   = f || [];
   sessions = s || [];
-  weights = w || [];
-  bios = b || [];
+  weights  = w || [];
+  bios     = b || [];
+
+  // Tenta sincronizar com Firebase em background (se disponível)
+  if (window.CloudDB) {
+    syncFromCloud().catch(e => console.warn('[IronLog] Sync da nuvem falhou:', e));
+  }
+}
+
+// Mescla dois arrays: nuvem tem prioridade, deduplicado por id ou date
+function mergeArrays(cloudArr, localArr) {
+  if (!Array.isArray(cloudArr)) return localArr;
+  if (!Array.isArray(localArr)) return cloudArr;
+  const map = new Map();
+  localArr.forEach(item => { if (item && item.id) map.set(item.id, item); });
+  cloudArr.forEach(item => { if (item && item.id) map.set(item.id, item); });
+  const withId = [...map.values()];
+  const dateMap = new Map();
+  localArr.filter(i => !i || !i.id).forEach(i => { if (i && i.date) dateMap.set(i.date, i); });
+  cloudArr.filter(i => !i || !i.id).forEach(i => { if (i && i.date) dateMap.set(i.date, i); });
+  return [...withId, ...dateMap.values()];
+}
+
+// Baixa dados da nuvem e mescla com IndexedDB local
+async function syncFromCloud() {
+  const keys = ['fichas', 'sessions', 'weights', 'bios'];
+  let anySynced = false;
+
+  for (const key of keys) {
+    const cloudVal = await window.CloudDB.get(key);
+    if (!cloudVal) continue;
+
+    const localVal = await DB.get(key);
+    const merged = mergeArrays(cloudVal, localVal || []);
+
+    if (merged.length !== (localVal || []).length) {
+      // Persiste merged localmente sem re-acionar o upload
+      await new Promise((res, rej) => {
+        const req2 = indexedDB.open('ironlog_db', 1);
+        req2.onsuccess = e => {
+          const store = e.target.result.transaction('kv', 'readwrite').objectStore('kv');
+          const r = store.put(merged, 'ironlog_' + key);
+          r.onsuccess = res; r.onerror = () => rej(r.error);
+        };
+        req2.onerror = () => rej(req2.error);
+      });
+      if (key === 'fichas')   fichas   = merged;
+      if (key === 'sessions') sessions = merged;
+      if (key === 'weights')  weights  = merged;
+      if (key === 'bios')     bios     = merged;
+      anySynced = true;
+    }
+  }
+
+  if (anySynced) {
+    renderFichas();
+    if (typeof renderBackupStats === 'function') renderBackupStats();
+    toast('☁️ Dados sincronizados com a nuvem!', 'var(--accent2)');
+  }
 }
 
 const MUSCLES = ['Peito','Costas','Ombro Frontal','Ombro Lateral','Ombro Posterior','Bíceps','Tríceps','Abdômen','Lombar','Quadríceps','Posterior de Coxa','Glúteo','Panturrilha','Trapézio','Antebraço'];
@@ -943,7 +1097,7 @@ function goPage(page, btn) {
   if(page === 'evolucao') { renderEvoExercises(); renderEvolution(); }
   if(page === 'historico') renderHistorico();
   if(page === 'corpo') { renderPesoCharts(); renderBioCharts(); }
-  if(page === 'backup') renderBackupStats();
+  if(page === 'backup') { renderBackupStats(); updateCloudStatus(); }
 }
 
 // ========================
@@ -2240,6 +2394,59 @@ function exportSessionPDF(sessionIdx) {
 }
 
 
+// ========================
+// FIREBASE CLOUD SYNC
+// ========================
+function updateCloudStatus() {
+  const el = document.getElementById('cloud-status');
+  const uidEl = document.getElementById('cloud-uid-display');
+  if (!el) return;
+
+  if (!window.CloudDB) {
+    el.innerHTML = '⏳ Carregando Firebase…';
+    return;
+  }
+
+  const uid = window.CloudDB.getUserId();
+  if (uidEl) uidEl.textContent = 'Device ID: ' + uid;
+
+  if (navigator.onLine) {
+    el.innerHTML = '<span style="color:var(--green)">🟢 Online</span> — seus dados são sincronizados automaticamente a cada salvamento.';
+  } else {
+    el.innerHTML = '<span style="color:var(--accent)">🟡 Offline</span> — dados salvos localmente. Serão sincronizados quando voltar online.';
+  }
+}
+
+async function manualCloudUpload() {
+  if (!window.CloudDB) { toast('⚠️ Firebase ainda não carregou', 'var(--accent)'); return; }
+  toast('☁️ Subindo dados para a nuvem…', 'var(--accent2)');
+  await loadAllData();
+  await Promise.all([
+    window.CloudDB.set('fichas', fichas),
+    window.CloudDB.set('sessions', sessions),
+    window.CloudDB.set('weights', weights),
+    window.CloudDB.set('bios', bios)
+  ]);
+  toast('✅ Dados enviados para a nuvem com sucesso!');
+}
+
+async function manualCloudDownload() {
+  if (!window.CloudDB) { toast('⚠️ Firebase ainda não carregou', 'var(--accent)'); return; }
+  toast('⬇️ Baixando dados da nuvem…', 'var(--accent2)');
+  await syncFromCloud();
+  renderBackupStats();
+  if (!fichas.length && !sessions.length) {
+    toast('ℹ️ Nenhum dado encontrado na nuvem ainda.', 'var(--accent)');
+  }
+}
+
+// Atualiza status quando status de rede mudar
+window.addEventListener('online',  () => updateCloudStatus());
+window.addEventListener('offline', () => updateCloudStatus());
+
+// Atualiza status quando Firebase estiver pronto
+window.addEventListener('firebase-ready', () => updateCloudStatus());
+
 function renderBackupStats() {
   const el = document.getElementById('backup-stats');
   const totalSessions = sessions.length;
@@ -2347,6 +2554,7 @@ window.addEventListener('load', async () => {
 
   renderFichas();
   await checkForDraft();
+  updateCloudStatus();
   const today = new Date().toISOString().split('T')[0];
   document.getElementById('peso-date').value = today;
   const now = new Date();
