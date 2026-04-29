@@ -3,6 +3,6 @@
       "target": {
         "namespace": "android_app",
         "package_name": "io.github.willtemo.twa",
-        "sha256_cert_fingerprints": ["D0:8F:D7:02:00:1F:C1:7C:20:D0:59:78:86:7F:4E:38:32:FB:D4:30:4C:9E:9A:AE:19:D4:69:33:16:81:D9:F3"]
+        "sha256_cert_fingerprints": ["93:AA:5D:55:D9:D2:0D:9E:CD:10:E4:C7:19:EA:E2:CE:46:0B:B7:3D:EA:DA:4E:48:89:79:78:25:B7:42:D6:20"]
       }
     }]
