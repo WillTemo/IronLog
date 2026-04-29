@@ -846,6 +846,11 @@ const DB = (() => {
       r.onsuccess = () => res(true);
       r.onerror = () => rej(r.error);
     })),
+    delete: (k) => tx('readwrite').then(store => new Promise((res, rej) => {
+      const r = store.delete('ironlog_' + k);
+      r.onsuccess = () => res(true);
+      r.onerror = () => rej(r.error);
+    })),
     // Sync fallback for legacy calls (reads cached in-memory state)
     getSync: k => { try { return JSON.parse(localStorage.getItem('ironlog_'+k) || 'null'); } catch(e) { return null; } }
   };
@@ -1369,17 +1374,18 @@ function renderSessionExercises() {
 
 function updateSet(ei, si, field, val) {
   currentSession.exercises[ei].sets[si][field] = val;
+  saveDraft();
 }
 
 function toggleSetDone(ei, si) {
   const s = currentSession.exercises[ei].sets[si];
   s.done = !s.done;
+  saveDraft();
   renderSessionExercises();
 }
 
 function saveSession() {
   const session = { ...currentSession, date: new Date().toISOString() };
-  // Check that at least one set is done
   const anyDone = session.exercises.some(ex => ex.sets.some(s => s.done));
   if(!anyDone) {
     toast('Marque pelo menos uma série como concluída', 'var(--red)');
@@ -1387,9 +1393,70 @@ function saveSession() {
   }
   sessions.push(session);
   DB.set('sessions', sessions);
+  clearDraft();
   closeModal('modal-session');
   currentSession = null;
   toast('Treino salvo! 🔥');
+}
+
+// ========================
+// DRAFT (rascunho automático)
+// ========================
+function saveDraft() {
+  if(!currentSession) return;
+  DB.set('draft_session', currentSession);
+}
+
+async function clearDraft() {
+  try { await DB.delete('draft_session'); } catch(e) {}
+}
+
+async function checkForDraft() {
+  let draft = null;
+  try { draft = await DB.get('draft_session'); } catch(e) {}
+  if(!draft) return;
+
+  const fichaName = draft.fichaName || 'Treino';
+  const doneCount = draft.exercises.reduce((a, ex) => a + ex.sets.filter(s => s.done).length, 0);
+  const startTime = new Date(draft.date).toLocaleTimeString('pt-BR', {hour:'2-digit',minute:'2-digit'});
+
+  const banner = document.createElement('div');
+  banner.id = 'draft-banner';
+  banner.innerHTML =
+    '<div style="position:fixed;top:0;left:0;right:0;z-index:500;background:var(--accent);color:#000;padding:12px 16px;display:flex;align-items:center;justify-content:space-between;gap:10px;box-shadow:0 4px 20px rgba(232,255,71,0.3)">'
+    + '<div><div style="font-weight:700;font-size:13px">⚡ Treino em andamento</div>'
+    + '<div style="font-size:11px;opacity:0.7">' + fichaName + ' · ' + doneCount + ' séries feitas · às ' + startTime + '</div></div>'
+    + '<div style="display:flex;gap:8px;flex-shrink:0">'
+    + '<button onclick="resumeDraft()" style="background:#000;color:var(--accent);border:none;border-radius:6px;padding:6px 12px;font-size:12px;font-weight:700;cursor:pointer">Continuar</button>'
+    + '<button onclick="discardDraft()" style="background:rgba(0,0,0,0.2);color:#000;border:none;border-radius:6px;padding:6px 10px;font-size:12px;font-weight:700;cursor:pointer">✕</button>'
+    + '</div></div>';
+  document.body.appendChild(banner);
+  document.querySelector('.header').style.marginTop = '60px';
+}
+
+async function resumeDraft() {
+  let draft = null;
+  try { draft = await DB.get('draft_session'); } catch(e) {}
+  if(!draft) return;
+  currentSession = draft;
+  document.getElementById('session-ficha-name').textContent = draft.fichaName;
+  document.getElementById('session-date-display').textContent = new Date(draft.date).toLocaleDateString('pt-BR', {weekday:'long',day:'2-digit',month:'long',year:'numeric'});
+  renderSessionExercises();
+  openModal('modal-session');
+  dismissDraftBanner();
+}
+
+async function discardDraft() {
+  await clearDraft();
+  currentSession = null;
+  dismissDraftBanner();
+  toast('Rascunho descartado');
+}
+
+function dismissDraftBanner() {
+  const b = document.getElementById('draft-banner');
+  if(b) b.remove();
+  document.querySelector('.header').style.marginTop = '';
 }
 
 // ========================
@@ -1924,7 +1991,7 @@ window.addEventListener('load', async () => {
   await loadAllData();
 
   renderFichas();
-  // Set default dates
+  await checkForDraft();
   const today = new Date().toISOString().split('T')[0];
   document.getElementById('peso-date').value = today;
   const now = new Date();
