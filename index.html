@@ -16,6 +16,7 @@
 <!-- Firebase SDK -->
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
   import { getFirestore, doc, setDoc, getDoc, enableIndexedDbPersistence } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
   const firebaseConfig = {
@@ -28,60 +29,86 @@
   };
 
   const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
   const db = getFirestore(app);
+  const provider = new GoogleAuthProvider();
 
-  // Enable offline persistence (funciona sem internet)
+  // Enable offline persistence
   enableIndexedDbPersistence(db).catch(err => {
-    console.warn('[IronLog] Firebase offline persistence não disponível:', err.code);
+    console.warn('[IronLog] Firebase offline persistence:', err.code);
   });
-
-  // USER ID fixo para este dispositivo (sem login)
-  const USER_ID = (() => {
-    let uid = localStorage.getItem('ironlog_uid');
-    if (!uid) {
-      uid = 'user_' + Math.random().toString(36).slice(2, 10) + Date.now().toString(36);
-      localStorage.setItem('ironlog_uid', uid);
-    }
-    return uid;
-  })();
 
   // ========================
   // CLOUD DB API
   // ========================
   window.CloudDB = {
-    _ref: (key) => doc(db, 'users', USER_ID, 'data', key),
+    _uid: null,
+    _ref: (key) => doc(db, 'users', window.CloudDB._uid, 'data', key),
 
     async set(key, value) {
+      if(!this._uid) return false;
       try {
         await setDoc(this._ref(key), { value, updatedAt: Date.now() });
-        console.log('[IronLog] ☁️ Salvo na nuvem:', key);
         return true;
-      } catch (err) {
-        console.warn('[IronLog] ⚠️ Falha ao salvar na nuvem:', err.message);
+      } catch(err) {
+        console.warn('[IronLog] Cloud save failed:', err.message);
         return false;
       }
     },
 
     async get(key) {
+      if(!this._uid) return null;
       try {
         const snap = await getDoc(this._ref(key));
-        if (snap.exists()) {
-          console.log('[IronLog] ☁️ Carregado da nuvem:', key);
-          return snap.data().value;
-        }
-        return null;
-      } catch (err) {
-        console.warn('[IronLog] ⚠️ Falha ao ler da nuvem:', err.message);
+        return snap.exists() ? snap.data().value : null;
+      } catch(err) {
+        console.warn('[IronLog] Cloud read failed:', err.message);
         return null;
       }
     },
 
-    getUserId() { return USER_ID; }
+    getUserId() { return this._uid; }
   };
 
-  console.log('[IronLog] 🔥 Firebase inicializado. User ID:', USER_ID);
+  // ========================
+  // AUTH API
+  // ========================
+  window.FirebaseAuth = {
+    async signInWithGoogle() {
+      try {
+        // Try popup first, fallback to redirect on mobile
+        const result = await signInWithPopup(auth, provider);
+        return result.user;
+      } catch(err) {
+        if(err.code === 'auth/popup-blocked' || err.code === 'auth/popup-closed-by-user') {
+          await signInWithRedirect(auth, provider);
+        } else {
+          throw err;
+        }
+      }
+    },
 
-  // Dispara evento para o restante do JS saber que o Firebase está pronto
+    async signOut() {
+      await signOut(auth);
+    },
+
+    onAuthStateChanged(callback) {
+      onAuthStateChanged(auth, callback);
+    }
+  };
+
+  // Handle redirect result (for mobile fallback)
+  getRedirectResult(auth).then(result => {
+    if(result?.user) console.log('[IronLog] Redirect login success:', result.user.displayName);
+  }).catch(err => console.warn('[IronLog] Redirect result:', err));
+
+  // Listen for auth state changes
+  onAuthStateChanged(auth, (user) => {
+    window.CloudDB._uid = user ? user.uid : null;
+    window.dispatchEvent(new CustomEvent('auth-state-changed', { detail: { user } }));
+  });
+
+  console.log('[IronLog] 🔥 Firebase + Auth inicializado');
   window.dispatchEvent(new Event('firebase-ready'));
 </script>
 <style>
@@ -611,6 +638,20 @@ canvas { max-width: 100%; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
 
+/* LOGIN SCREEN */
+#login-screen {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: var(--bg);
+  z-index: 1000;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 32px;
+}
+#btn-google-login:hover { transform: translateY(-1px); box-shadow: 0 4px 20px rgba(0,0,0,0.2); }
+
 /* RESPONSIVE */
 @media (min-width: 600px) {
   .page { max-width: 600px; margin: 0 auto; }
@@ -619,10 +660,60 @@ canvas { max-width: 100%; }
 </head>
 <body>
 
+<!-- LOGIN SCREEN -->
+<div id="login-screen" style="display:none;position:fixed;inset:0;background:var(--bg);z-index:1000;flex-direction:column;align-items:center;justify-content:center;padding:32px">
+  <div style="font-family:'Bebas Neue',sans-serif;font-size:52px;letter-spacing:3px;color:var(--accent);text-shadow:0 0 40px rgba(232,255,71,0.4);margin-bottom:8px">IRON<span style="color:var(--text)">LOG</span></div>
+  <div style="font-size:13px;color:var(--text3);letter-spacing:1px;text-transform:uppercase;margin-bottom:48px">Seu Diário de Força</div>
+
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:28px;width:100%;max-width:340px;text-align:center">
+    <div style="font-size:36px;margin-bottom:12px">💪</div>
+    <div style="font-weight:700;font-size:18px;margin-bottom:8px">Bem-vindo!</div>
+    <div style="font-size:13px;color:var(--text2);line-height:1.6;margin-bottom:24px">
+      Entre com sua conta Google para salvar seus treinos na nuvem e acessar de qualquer dispositivo.
+    </div>
+
+    <button id="btn-google-login" onclick="handleGoogleLogin()" style="width:100%;display:flex;align-items:center;justify-content:center;gap:12px;background:#fff;color:#1a1a2e;border:none;border-radius:10px;padding:14px;font-size:15px;font-weight:700;cursor:pointer;transition:all 0.2s">
+      <svg width="20" height="20" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+      Entrar com Google
+    </button>
+
+    <div style="margin-top:16px;font-size:11px;color:var(--text3)">
+      Seus dados ficam vinculados à sua conta Google e nunca são perdidos.
+    </div>
+  </div>
+
+  <div id="login-error" style="margin-top:16px;font-size:13px;color:var(--red);text-align:center;display:none"></div>
+</div>
+
 <!-- HEADER -->
 <div class="header">
   <div class="logo">Iron<span>Log</span></div>
-  <div style="font-size:11px;color:var(--text3);font-weight:600;letter-spacing:1px;text-transform:uppercase;">Seu Diário de Força</div>
+  <div style="display:flex;align-items:center;gap:10px">
+    <div id="sync-indicator" style="font-size:10px;color:var(--text3);display:none">
+      <span id="sync-dot" style="display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--green);margin-right:4px"></span>
+      <span id="sync-text">Sincronizado</span>
+    </div>
+    <button id="user-avatar-btn" onclick="showUserMenu()" style="display:none;background:none;border:none;cursor:pointer;padding:0">
+      <img id="user-avatar" style="width:32px;height:32px;border-radius:50%;border:2px solid var(--accent)" src="" alt="">
+    </button>
+    <div id="header-subtitle" style="font-size:11px;color:var(--text3);font-weight:600;letter-spacing:1px;text-transform:uppercase;">Seu Diário de Força</div>
+  </div>
+</div>
+
+<!-- USER MENU -->
+<div id="user-menu" style="display:none;position:fixed;top:64px;right:16px;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;z-index:300;min-width:220px;box-shadow:0 8px 32px rgba(0,0,0,0.5)">
+  <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid var(--border)">
+    <img id="user-menu-avatar" style="width:40px;height:40px;border-radius:50%;border:2px solid var(--accent)" src="" alt="">
+    <div>
+      <div id="user-menu-name" style="font-weight:700;font-size:14px"></div>
+      <div id="user-menu-email" style="font-size:11px;color:var(--text3)"></div>
+    </div>
+  </div>
+  <div style="font-size:12px;color:var(--text3);margin-bottom:12px" id="user-menu-sync"></div>
+  <button onclick="handleSignOut()" style="width:100%;background:rgba(255,71,87,0.1);color:var(--red);border:1px solid rgba(255,71,87,0.3);border-radius:8px;padding:10px;font-size:13px;font-weight:700;cursor:pointer">
+    Sair da conta
+  </button>
+  <button onclick="closeUserMenu()" style="width:100%;background:none;color:var(--text3);border:none;padding:8px;font-size:12px;cursor:pointer;margin-top:4px">Fechar</button>
 </div>
 
 <!-- PAGES -->
@@ -984,6 +1075,17 @@ const DB = (() => {
   };
 })();
 
+// Auto-sync to cloud whenever DB.set is called
+const _originalDBSet = DB.set.bind(DB);
+DB.set = async function(k, v) {
+  const result = await _originalDBSet(k, v);
+  // Also save to cloud in background if logged in
+  if(window.CloudDB && window.CloudDB._uid) {
+    window.CloudDB.set(k, v).then(() => showSyncStatus('synced')).catch(() => showSyncStatus('offline'));
+  }
+  return result;
+};
+
 // Migrate from localStorage to IndexedDB on first run
 async function migrateFromLocalStorage() {
   const keys = ['fichas','sessions','weights','bios'];
@@ -1001,6 +1103,38 @@ async function migrateFromLocalStorage() {
 
 // Async data loader — lê local primeiro, depois mescla com nuvem
 async function loadAllData() {
+  // If logged in, try cloud first
+  if(window.CloudDB && window.CloudDB._uid) {
+    try {
+      const [cf, cs, cw, cb] = await Promise.all([
+        window.CloudDB.get('fichas'),
+        window.CloudDB.get('sessions'),
+        window.CloudDB.get('weights'),
+        window.CloudDB.get('bios')
+      ]);
+      // Get local as fallback
+      const [lf, ls, lw, lb] = await Promise.all([
+        DB.get('fichas'), DB.get('sessions'), DB.get('weights'), DB.get('bios')
+      ]);
+      fichas   = mergeArrays(cf, lf) || [];
+      sessions = mergeArrays(cs, ls) || [];
+      weights  = mergeArrays(cw, lw) || [];
+      bios     = mergeArrays(cb, lb) || [];
+      // Save merged back to both
+      await Promise.all([
+        DB.set('fichas', fichas), DB.set('sessions', sessions),
+        DB.set('weights', weights), DB.set('bios', bios)
+      ]);
+      await Promise.all([
+        window.CloudDB.set('fichas', fichas), window.CloudDB.set('sessions', sessions),
+        window.CloudDB.set('weights', weights), window.CloudDB.set('bios', bios)
+      ]);
+      return;
+    } catch(e) {
+      console.warn('[IronLog] Cloud load failed, using local:', e);
+    }
+  }
+  // Fallback to local only
   const [f, s, w, b] = await Promise.all([
     DB.get('fichas'), DB.get('sessions'), DB.get('weights'), DB.get('bios')
   ]);
@@ -1008,11 +1142,6 @@ async function loadAllData() {
   sessions = s || [];
   weights  = w || [];
   bios     = b || [];
-
-  // Tenta sincronizar com Firebase em background (se disponível)
-  if (window.CloudDB) {
-    syncFromCloud().catch(e => console.warn('[IronLog] Sync da nuvem falhou:', e));
-  }
 }
 
 // Mescla dois arrays: nuvem tem prioridade, deduplicado por id ou date
@@ -2540,30 +2669,102 @@ async function importData(input) {
 }
 
 
-window.addEventListener('load', async () => {
-  // Register service worker for offline/PWA support
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js').then(r => {
-      console.log('[IronLog] SW registered:', r.scope);
-    }).catch(e => console.warn('[IronLog] SW error:', e));
+// ========================
+// AUTH & USER SESSION
+// ========================
+let currentUser = null;
+
+window.addEventListener('auth-state-changed', async (e) => {
+  const user = e.detail.user;
+  currentUser = user;
+
+  if(user) {
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('user-avatar-btn').style.display = 'block';
+    document.getElementById('user-avatar').src = user.photoURL || '';
+    document.getElementById('user-menu-avatar').src = user.photoURL || '';
+    document.getElementById('user-menu-name').textContent = user.displayName || 'Usuário';
+    document.getElementById('user-menu-email').textContent = user.email || '';
+    document.getElementById('header-subtitle').style.display = 'none';
+    document.getElementById('sync-indicator').style.display = 'flex';
+    showSyncStatus('syncing');
+    await migrateFromLocalStorage();
+    await loadAllData();
+    renderFichas();
+    await checkForDraft();
+    showSyncStatus('synced');
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('peso-date').value = today;
+    const now = new Date();
+    document.getElementById('bio-date').value = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+  } else {
+    document.getElementById('login-screen').style.display = 'flex';
+    document.getElementById('user-avatar-btn').style.display = 'none';
+    document.getElementById('header-subtitle').style.display = 'block';
+    document.getElementById('sync-indicator').style.display = 'none';
+    fichas = []; sessions = []; weights = []; bios = [];
   }
+});
 
-  // Migrate old localStorage data then load from IndexedDB
-  await migrateFromLocalStorage();
-  await loadAllData();
+function showSyncStatus(state) {
+  const dot = document.getElementById('sync-dot');
+  const text = document.getElementById('sync-text');
+  const ind = document.getElementById('sync-indicator');
+  ind.style.display = 'flex';
+  ind.style.alignItems = 'center';
+  if(state === 'syncing') { dot.style.background = 'var(--accent)'; text.textContent = 'Sincronizando...'; }
+  else if(state === 'synced') {
+    dot.style.background = 'var(--green)'; text.textContent = 'Sincronizado';
+    const el = document.getElementById('user-menu-sync');
+    if(el) el.textContent = '☁️ Último sync: ' + new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+  }
+  else if(state === 'offline') { dot.style.background = 'var(--text3)'; text.textContent = 'Offline'; }
+}
 
-  renderFichas();
-  await checkForDraft();
-  updateCloudStatus();
-  const today = new Date().toISOString().split('T')[0];
-  document.getElementById('peso-date').value = today;
-  const now = new Date();
-  document.getElementById('bio-date').value = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
-  
-  // Show install banner for iOS
+async function handleGoogleLogin() {
+  const btn = document.getElementById('btn-google-login');
+  const errEl = document.getElementById('login-error');
+  btn.textContent = 'Entrando...';
+  btn.disabled = true;
+  errEl.style.display = 'none';
+  try {
+    await window.FirebaseAuth.signInWithGoogle();
+  } catch(err) {
+    btn.innerHTML = 'Entrar com Google';
+    btn.disabled = false;
+    errEl.textContent = 'Erro: ' + (err.message || 'Tente novamente');
+    errEl.style.display = 'block';
+  }
+}
+
+async function handleSignOut() {
+  if(!confirm('Sair da conta? Seus dados estão salvos na nuvem.')) return;
+  closeUserMenu();
+  await window.FirebaseAuth.signOut();
+  toast('Saiu da conta');
+}
+
+function showUserMenu() { document.getElementById('user-menu').style.display = 'block'; }
+function closeUserMenu() { document.getElementById('user-menu').style.display = 'none'; }
+
+document.addEventListener('click', (e) => {
+  const menu = document.getElementById('user-menu');
+  const btn = document.getElementById('user-avatar-btn');
+  if(menu && btn && !menu.contains(e.target) && !btn.contains(e.target)) {
+    menu.style.display = 'none';
+  }
+});
+
+window.addEventListener('load', async () => {
+  if('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('./sw.js').catch(e => console.warn('[IronLog] SW error:', e));
+  }
+  // Show login screen while waiting for auth
+  document.getElementById('login-screen').style.display = 'flex';
+
   const isIos = /iphone|ipad|ipod/.test(navigator.userAgent.toLowerCase());
   const isInStandaloneMode = ('standalone' in window.navigator) && (window.navigator.standalone);
-  if (isIos && !isInStandaloneMode && !localStorage.getItem('pwa_ios_hint_shown')) {
+  if(isIos && !isInStandaloneMode && !localStorage.getItem('pwa_ios_hint_shown')) {
     setTimeout(() => {
       toast('📲 Para instalar: toque em Compartilhar → "Adicionar à tela de início"', 'var(--accent2)');
       localStorage.setItem('pwa_ios_hint_shown','1');
