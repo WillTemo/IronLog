@@ -836,11 +836,12 @@ async function loadAllData() {
   bios = b || [];
 }
 
-const MUSCLES = ['Peito','Costas','Ombro','Bíceps','Tríceps','Abdômen','Quadríceps','Posterior de Coxa','Glúteo','Panturrilha','Trapézio','Antebraço'];
+const MUSCLES = ['Peito','Costas','Ombro Frontal','Ombro Lateral','Ombro Posterior','Bíceps','Tríceps','Abdômen','Lombar','Quadríceps','Posterior de Coxa','Glúteo','Panturrilha','Trapézio','Antebraço'];
 const METHODS = ['Convencional','Drop Set','Bi-Set','Tri-Set','Pirâmide Crescente','Pirâmide Decrescente','Rest-Pause','Super Série','FST-7','HIT','Volume Alemão (GVT)'];
 const MUSCLE_COLORS = {
-  'Peito':'#e8ff47','Costas':'#47c8ff','Ombro':'#ff6b47','Bíceps':'#b847ff',
-  'Tríceps':'#47ffb8','Abdômen':'#ff47a0','Quadríceps':'#ffa847','Posterior de Coxa':'#47a0ff',
+  'Peito':'#e8ff47','Costas':'#47c8ff','Ombro Frontal':'#ff6b47','Ombro Lateral':'#ffaa47','Ombro Posterior':'#ff4790',
+  'Bíceps':'#b847ff','Tríceps':'#47ffb8','Abdômen':'#ff47a0','Lombar':'#c47a3a',
+  'Quadríceps':'#ffa847','Posterior de Coxa':'#47a0ff',
   'Glúteo':'#ff47ff','Panturrilha':'#a0ff47','Trapézio':'#47ffd4','Antebraço':'#ffd447'
 };
 
@@ -1115,7 +1116,7 @@ function getExercisesFromForm() {
   })).filter(e => e.name);
 }
 
-function saveFicha() {
+async function saveFicha() {
   const name = document.getElementById('ficha-name').value.trim();
   const color = document.getElementById('ficha-color').value || '#e8ff47';
   const exercises = getExercisesFromForm();
@@ -1124,18 +1125,18 @@ function saveFicha() {
   if(!exercises.length) { toast('Adicione pelo menos um exercício', 'var(--red)'); return; }
 
   const editingId = document.getElementById('editing-ficha-id').value;
-  const ficha = { id: crypto.randomUUID(), name, color, exercises };
 
   if(editingId !== '') {
-    fichas[parseInt(editingId)] = { ...fichas[parseInt(editingId)], ...ficha };
+    const existingId = fichas[parseInt(editingId)].id;
+    fichas[parseInt(editingId)] = { id: existingId, name, color, exercises };
   } else {
-    fichas.push(ficha);
+    fichas.push({ id: crypto.randomUUID(), name, color, exercises });
   }
 
-  DB.set('fichas', fichas);
+  await DB.set('fichas', fichas);
   closeModal('modal-new-ficha');
-  renderFichas();
   resetFichaForm();
+  renderFichas();
   toast('Ficha salva!');
 }
 
@@ -1328,21 +1329,20 @@ function renderEvolution() {
   const el = document.getElementById('evo-charts');
   if(!exId) { el.innerHTML = ''; return; }
 
-  // Get all sets for this exercise across sessions
+  // Get all sets for this exercise across sessions — only max weight set per session
   const data = [];
   sessions.forEach(sess => {
     sess.exercises.forEach(ex => {
       if(ex.id === exId) {
-        ex.sets.forEach((s, si) => {
-          if(s.done && s.reps) {
-            data.push({
-              date: sess.date,
-              setNum: si+1,
-              reps: parseFloat(s.reps)||0,
-              weight: parseFloat(s.weight)||0,
-              volume: (parseFloat(s.reps)||0)*(parseFloat(s.weight)||0)
-            });
-          }
+        const doneSets = ex.sets.filter(s => s.done && s.weight);
+        if(!doneSets.length) return;
+        // Only keep the set with the highest weight
+        const best = doneSets.reduce((a, b) => (parseFloat(b.weight)||0) > (parseFloat(a.weight)||0) ? b : a);
+        data.push({
+          date: sess.date,
+          reps: parseFloat(best.reps)||0,
+          weight: parseFloat(best.weight)||0,
+          volume: (parseFloat(best.reps)||0)*(parseFloat(best.weight)||0)
         });
       }
     });
