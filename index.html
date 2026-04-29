@@ -2088,9 +2088,16 @@ function openSessionDetail(sessionIdx) {
   });
 
   // Delete button
-  html += `<button onclick="deleteSession(${sessionIdx})" class="btn btn-danger" style="width:100%;justify-content:center;margin-top:8px">
-    🗑 Excluir este treino
-  </button>`;
+  html += `
+    <div style="display:flex;gap:10px;margin-top:8px">
+      <button onclick="exportSessionPDF(${sessionIdx})" class="btn btn-primary" style="flex:1;justify-content:center">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" style="width:16px;height:16px"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
+        Exportar PDF
+      </button>
+      <button onclick="deleteSession(${sessionIdx})" class="btn btn-danger" style="flex:1;justify-content:center">
+        🗑 Excluir
+      </button>
+    </div>`;
 
   document.getElementById('detail-content').innerHTML = html;
   openModal('modal-session-detail');
@@ -2103,6 +2110,133 @@ async function deleteSession(idx) {
   closeModal('modal-session-detail');
   renderHistorico();
   toast('Treino excluído');
+}
+
+function exportSessionPDF(sessionIdx) {
+  const sess = sessions[sessionIdx];
+  if(!sess) return;
+
+  const date = new Date(sess.date);
+  const dateStr = date.toLocaleDateString('pt-BR',{weekday:'long',day:'2-digit',month:'long',year:'numeric'});
+  const timeStr = date.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+  const totalVol = sessionTotalVolume(sess);
+  const totalSets = sess.exercises.reduce((a,ex) => a + ex.sets.filter(s=>s.done).length, 0);
+  const totalReps = sess.exercises.reduce((a,ex) => a + ex.sets.filter(s=>s.done).reduce((b,s)=>b+(parseFloat(s.reps)||0),0), 0);
+
+  let exercisesHtml = '';
+  sess.exercises.forEach(ex => {
+    if(ex.skipped) {
+      exercisesHtml += `<div style="padding:10px;margin-bottom:12px;border:1px solid #ddd;border-radius:6px;opacity:0.5;color:#888">⏭ ${ex.name} — pulado</div>`;
+      return;
+    }
+    const doneSets = ex.sets.filter(s=>s.done);
+    const exVol = doneSets.reduce((a,s)=>a+((parseFloat(s.reps)||0)*(parseFloat(s.weight)||0)),0);
+    const maxWeight = doneSets.length ? Math.max(...doneSets.map(s=>parseFloat(s.weight)||0)) : 0;
+    const totalExReps = doneSets.reduce((a,s)=>a+(parseFloat(s.reps)||0),0);
+    const avgReps = doneSets.length ? (totalExReps/doneSets.length).toFixed(1) : 0;
+    const isBodyweight = ex.bodyweight;
+
+    let setsRows = '';
+    doneSets.forEach((s, i) => {
+      const setVol = (parseFloat(s.reps)||0)*(parseFloat(s.weight)||0);
+      const label = s.isDrop ? 'D'+(i-ex.targetSets+1) : (i+1);
+      const isDropStyle = s.isDrop ? 'color:#e05a2b;font-weight:bold' : '';
+      setsRows += `<tr style="border-bottom:1px solid #f0f0f0">
+        <td style="padding:6px 8px;${isDropStyle}">${label}</td>
+        <td style="padding:6px 8px;text-align:center;font-weight:700">${s.reps || '—'}</td>
+        ${!isBodyweight ? `<td style="padding:6px 8px;text-align:center;color:#1a6fb5;font-weight:700">${s.weight ? s.weight+'kg' : '—'}</td>
+        <td style="padding:6px 8px;text-align:center;color:#666">${setVol > 0 ? setVol+'kg' : '—'}</td>` : ''}
+      </tr>`;
+    });
+
+    exercisesHtml += `
+      <div style="margin-bottom:16px;break-inside:avoid">
+        <div style="background:#f8f8f8;border-left:4px solid #1a1a2e;padding:10px 12px;border-radius:4px 4px 0 0;display:flex;justify-content:space-between;align-items:flex-start">
+          <div>
+            <div style="font-weight:700;font-size:14px;color:#1a1a2e">${ex.name}</div>
+            <div style="font-size:11px;color:#666;margin-top:2px">${ex.muscle} · ${ex.method}</div>
+          </div>
+          <div style="text-align:right">
+            ${!isBodyweight ? `<div style="font-weight:700;font-size:13px;color:#1a6fb5">${maxWeight}kg máx</div>` : ''}
+            <div style="font-size:11px;color:#888">${doneSets.length} séries · ${totalExReps} reps</div>
+          </div>
+        </div>
+        <table style="width:100%;border-collapse:collapse;border:1px solid #e0e0e0;border-top:none">
+          <thead>
+            <tr style="background:#efefef">
+              <th style="padding:6px 8px;text-align:left;font-size:10px;color:#888;text-transform:uppercase">#</th>
+              <th style="padding:6px 8px;text-align:center;font-size:10px;color:#888;text-transform:uppercase">Reps</th>
+              ${!isBodyweight ? `<th style="padding:6px 8px;text-align:center;font-size:10px;color:#888;text-transform:uppercase">Peso</th>
+              <th style="padding:6px 8px;text-align:center;font-size:10px;color:#888;text-transform:uppercase">Volume</th>` : ''}
+            </tr>
+          </thead>
+          <tbody>${setsRows}</tbody>
+          ${!isBodyweight && exVol > 0 ? `<tfoot>
+            <tr style="background:#fffde7">
+              <td colspan="2" style="padding:6px 8px;font-size:11px;color:#888">Volume total · Média reps</td>
+              <td colspan="2" style="padding:6px 8px;text-align:right;font-weight:700;color:#b8a000;font-size:12px">${exVol.toLocaleString('pt-BR')}kg · ${avgReps} reps/série</td>
+            </tr>
+          </tfoot>` : ''}
+        </table>
+      </div>`;
+  });
+
+  const pdfHtml = `<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>IronLog — ${sess.fichaName}</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family: Arial, sans-serif; color: #1a1a2e; padding: 32px; font-size: 13px; }
+  @media print { body { padding: 16px; } @page { margin: 1.5cm; } }
+</style>
+</head>
+<body>
+  <!-- Header -->
+  <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:24px;border-bottom:3px solid #e8ff47;padding-bottom:16px">
+    <div>
+      <div style="font-size:28px;font-weight:900;letter-spacing:2px;color:#1a1a2e">IRON<span style="color:#b8a000">LOG</span></div>
+      <div style="font-size:18px;font-weight:700;margin-top:4px">${sess.fichaName || 'Treino'}</div>
+      <div style="font-size:12px;color:#666;margin-top:2px">${dateStr} · ${timeStr}</div>
+    </div>
+    <div style="text-align:right">
+      <div style="font-size:11px;color:#888;text-transform:uppercase;letter-spacing:1px">Volume Total</div>
+      <div style="font-size:26px;font-weight:900;color:#b8a000">${totalVol > 0 ? totalVol.toLocaleString('pt-BR') + ' kg' : '—'}</div>
+    </div>
+  </div>
+
+  <!-- Stats summary -->
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:24px">
+    <div style="background:#f8f8f8;border-radius:6px;padding:12px;text-align:center">
+      <div style="font-size:24px;font-weight:900;color:#1a1a2e">${sess.exercises.filter(e=>!e.skipped).length}</div>
+      <div style="font-size:10px;color:#888;text-transform:uppercase;letter-spacing:0.5px">Exercícios</div>
+    </div>
+    <div style="background:#f8f8f8;border-radius:6px;padding:12px;text-align:center">
+      <div style="font-size:24px;font-weight:900;color:#1a1a2e">${totalSets}</div>
+      <div style="font-size:10px;color:#888;text-transform:uppercase;letter-spacing:0.5px">Séries</div>
+    </div>
+    <div style="background:#f8f8f8;border-radius:6px;padding:12px;text-align:center">
+      <div style="font-size:24px;font-weight:900;color:#1a1a2e">${totalReps}</div>
+      <div style="font-size:10px;color:#888;text-transform:uppercase;letter-spacing:0.5px">Reps Total</div>
+    </div>
+  </div>
+
+  <!-- Exercises -->
+  ${exercisesHtml}
+
+  <!-- Footer -->
+  <div style="margin-top:24px;padding-top:12px;border-top:1px solid #eee;font-size:10px;color:#aaa;text-align:center">
+    Gerado pelo IronLog · ${new Date().toLocaleDateString('pt-BR')}
+  </div>
+</body>
+</html>`;
+
+  const win = window.open('', '_blank');
+  win.document.write(pdfHtml);
+  win.document.close();
+  win.focus();
+  setTimeout(() => { win.print(); }, 800);
 }
 
 
