@@ -1036,15 +1036,64 @@ function addExerciseToForm(existing) {
         <input type="number" class="input" placeholder="4" min="1" max="20" value="${existing?.sets||4}" data-field="sets">
       </div>
       <div class="input-group" style="margin-bottom:0">
-        <label class="input-label">Repetições Alvo</label>
-        <input type="number" class="input" placeholder="12" min="1" max="100" value="${existing?.reps||12}" data-field="reps">
+        <label class="input-label">Reps Mín</label>
+        <input type="number" class="input" placeholder="8" min="1" max="100" value="${existing?.repsMin||8}" data-field="repsMin">
       </div>
+    </div>
+    <div class="grid2" style="margin-top:10px">
+      <div class="input-group" style="margin-bottom:0">
+        <label class="input-label">Reps Máx</label>
+        <input type="number" class="input" placeholder="12" min="1" max="100" value="${existing?.repsMax||12}" data-field="repsMax">
+      </div>
+      <div class="input-group" style="margin-bottom:0">
+        <label class="input-label">Séries de Drop</label>
+        <input type="number" class="input" placeholder="2" min="1" max="10" value="${existing?.dropSets||2}" data-field="dropSets"
+          style="display:${existing?.method==='Drop Set'?'block':'none'}">
+        <span style="display:${existing?.method==='Drop Set'?'none':'block'};color:var(--text3);font-size:12px;padding-top:10px">—</span>
+      </div>
+    </div>
+    <div id="biset-field-${id}" class="input-group" style="margin-top:10px;margin-bottom:0;display:${(existing?.method==='Bi-Set'||existing?.method==='Tri-Set')?'block':'none'}">
+      <label class="input-label">${existing?.method==='Tri-Set'?'Exercícios Conjugados (2)':'Exercício Conjugado'}</label>
+      <input type="text" class="input" placeholder="ex: Rosca Direta" value="${existing?.conjugado||''}" data-field="conjugado">
+      ${existing?.method==='Tri-Set'?`<input type="text" class="input" style="margin-top:6px" placeholder="ex: Rosca Martelo" value="${existing?.conjugado2||''}" data-field="conjugado2">`:''}
     </div>
     <div class="input-group" style="margin-top:10px;margin-bottom:0">
       <label class="input-label">Observações</label>
       <input type="text" class="input" placeholder="ex: Pegada fechada, 2s na descida" value="${existing?.obs||''}" data-field="obs">
     </div>
   `;
+
+  // Show/hide drop set and bi/tri-set fields based on method selection
+  const methodSelect = div.querySelector('[data-field="method"]');
+  methodSelect.addEventListener('change', function() {
+    const m = this.value;
+    const dropInput = div.querySelector('[data-field="dropSets"]');
+    const dropSpan = dropInput.nextElementSibling;
+    const bisetField = div.querySelector('#biset-field-' + id);
+    const bisetLabel = bisetField.querySelector('label');
+    const bisetInputs = bisetField.querySelectorAll('input');
+
+    dropInput.style.display = m === 'Drop Set' ? 'block' : 'none';
+    dropSpan.style.display = m === 'Drop Set' ? 'none' : 'block';
+
+    bisetField.style.display = (m === 'Bi-Set' || m === 'Tri-Set') ? 'block' : 'none';
+    if(m === 'Tri-Set') {
+      bisetLabel.textContent = 'Exercícios Conjugados (2)';
+      if(bisetInputs.length === 1) {
+        const extra = document.createElement('input');
+        extra.type = 'text';
+        extra.className = 'input';
+        extra.style.marginTop = '6px';
+        extra.placeholder = 'ex: Rosca Martelo';
+        extra.setAttribute('data-field', 'conjugado2');
+        bisetField.appendChild(extra);
+      }
+    } else {
+      bisetLabel.textContent = 'Exercício Conjugado';
+      const extra = bisetField.querySelector('[data-field="conjugado2"]');
+      if(extra) extra.remove();
+    }
+  });
   list.appendChild(div);
 }
 
@@ -1056,7 +1105,12 @@ function getExercisesFromForm() {
     muscle: item.querySelector('[data-field="muscle"]').value,
     method: item.querySelector('[data-field="method"]').value,
     sets: parseInt(item.querySelector('[data-field="sets"]').value) || 3,
-    reps: parseInt(item.querySelector('[data-field="reps"]').value) || 12,
+    repsMin: parseInt(item.querySelector('[data-field="repsMin"]').value) || 8,
+    repsMax: parseInt(item.querySelector('[data-field="repsMax"]').value) || 12,
+    reps: parseInt(item.querySelector('[data-field="repsMax"]').value) || 12, // backward compat
+    dropSets: parseInt(item.querySelector('[data-field="dropSets"]')?.value) || 2,
+    conjugado: item.querySelector('[data-field="conjugado"]')?.value.trim() || '',
+    conjugado2: item.querySelector('[data-field="conjugado2"]')?.value.trim() || '',
     obs: item.querySelector('[data-field="obs"]').value.trim(),
   })).filter(e => e.name);
 }
@@ -1144,8 +1198,13 @@ function startSession(fichaIdx) {
         method: ex.method,
         targetSets: ex.sets,
         targetReps: ex.reps,
+        targetRepsMin: ex.repsMin || ex.reps,
+        targetRepsMax: ex.repsMax || ex.reps,
+        dropSets: ex.dropSets || 2,
+        conjugado: ex.conjugado || '',
+        conjugado2: ex.conjugado2 || '',
         lastSets: last ? last.sets : null, // previous session data for reference
-        sets: Array.from({length: ex.sets}, (_, si) => ({
+        sets: Array.from({length: ex.method === 'Drop Set' ? ex.sets * (ex.dropSets||2) : ex.sets}, (_, si) => ({
           reps: '',
           weight: last && last.sets[si] && last.sets[si].done ? last.sets[si].weight : '',
           done: false
@@ -1179,14 +1238,19 @@ function renderSessionExercises() {
       const lastSet = ex.lastSets && ex.lastSets[si] && ex.lastSets[si].done ? ex.lastSets[si] : null;
       const lastReps = lastSet ? lastSet.reps : '';
       const lastWeight = lastSet ? lastSet.weight : '';
-      const repsHint = lastReps ? lastReps : ex.targetReps;
+      const repsHint = lastReps ? lastReps : ex.targetRepsMin;
       const weightHint = lastWeight ? lastWeight : '0';
       const doneClass = s.done ? 'done' : '';
       const checkInner = s.done ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" style="width:16px;height:16px"><path d="M20 6L9 17l-5-5"/></svg>' : '';
       const antReps = lastReps ? '<div style="font-size:9px;color:var(--accent2);text-align:center;margin-bottom:3px;letter-spacing:0.3px">ant: ' + lastReps + '</div>' : '';
       const antWeight = lastWeight ? '<div style="font-size:9px;color:var(--accent2);text-align:center;margin-bottom:3px;letter-spacing:0.3px">ant: ' + lastWeight + '</div>' : '';
-      setsHtml += '<div style="display:grid;grid-template-columns:24px 1fr 1fr 36px;gap:8px;align-items:end;padding:10px 0;border-bottom:1px solid var(--border)">'
-        + '<div style="font-family:Bebas Neue,sans-serif;font-size:20px;color:var(--text3);line-height:1;padding-bottom:2px">' + (si+1) + '</div>'
+      // Drop set label
+      const isDropSet = ex.method === 'Drop Set';
+      const setLabel = isDropSet
+        ? '<div style="font-family:Bebas Neue,sans-serif;font-size:14px;color:var(--accent3);line-height:1;padding-bottom:2px">' + (si+1) + '<span style="font-size:9px;color:var(--accent3);margin-left:2px">DROP</span></div>'
+        : '<div style="font-family:Bebas Neue,sans-serif;font-size:20px;color:var(--text3);line-height:1;padding-bottom:2px">' + (si+1) + '</div>';
+      setsHtml += '<div style="display:grid;grid-template-columns:36px 1fr 1fr 36px;gap:8px;align-items:end;padding:10px 0;border-bottom:1px solid var(--border)">'
+        + setLabel
         + '<div>' + antReps + '<input type="number" class="series-input ' + doneClass + '" placeholder="' + repsHint + '" value="' + s.reps + '" oninput="updateSet(' + ei + ',' + si + ',\'reps\',this.value)" min="0" style="width:100%"></div>'
         + '<div>' + antWeight + '<input type="number" class="series-input ' + doneClass + '" placeholder="' + weightHint + '" value="' + s.weight + '" oninput="updateSet(' + ei + ',' + si + ',\'weight\',this.value)" step="0.5" min="0" style="width:100%"></div>'
         + '<button class="series-check ' + doneClass + '" onclick="toggleSetDone(' + ei + ',' + si + ')" style="width:36px;height:36px;align-self:end;margin-bottom:0">' + checkInner + '</button>'
@@ -1195,9 +1259,12 @@ function renderSessionExercises() {
     html += '<div class="session-exercise">'
       + '<div class="session-exercise-header">'
       + '<div style="flex:1"><div style="font-weight:700;font-size:15px">' + ex.name + '</div>'
-      + '<div style="display:flex;gap:8px;margin-top:4px;flex-wrap:wrap"><span class="tag tag-muscle" style="font-size:10px">' + ex.muscle + '</span><span class="tag tag-method" style="font-size:10px">' + ex.method + '</span></div>'
+      + (ex.conjugado ? '<div style="font-size:11px;color:var(--accent4);margin-top:2px">⟳ ' + ex.conjugado + (ex.conjugado2 ? ' + ' + ex.conjugado2 : '') + '</div>' : '')
+      + '<div style="display:flex;gap:8px;margin-top:4px;flex-wrap:wrap"><span class="tag tag-muscle" style="font-size:10px">' + ex.muscle + '</span><span class="tag tag-method" style="font-size:10px">' + ex.method + '</span>'
+      + (ex.method === 'Drop Set' ? '<span style="font-size:10px;background:rgba(255,107,71,0.15);color:var(--accent3);padding:2px 6px;border-radius:4px;font-weight:700">↓ DROP</span>' : '')
+      + '</div>'
       + lastSummary + '</div>'
-      + '<div style="text-align:right;flex-shrink:0;margin-left:10px"><div style="font-family:JetBrains Mono,monospace;font-size:14px;color:var(--accent)">' + ex.targetSets + '×' + ex.targetReps + '</div><div style="font-size:10px;color:var(--text3)">alvo</div></div>'
+      + '<div style="text-align:right;flex-shrink:0;margin-left:10px"><div style="font-family:JetBrains Mono,monospace;font-size:14px;color:var(--accent)">' + ex.targetSets + '×' + ex.targetRepsMin + (ex.targetRepsMin !== ex.targetRepsMax ? '–' + ex.targetRepsMax : '') + '</div><div style="font-size:10px;color:var(--text3)">alvo</div></div>'
       + '</div>'
       + '<div class="session-exercise-body">'
       + '<div style="display:grid;grid-template-columns:24px 1fr 1fr 36px;gap:8px;padding-bottom:8px;border-bottom:1px solid var(--border);margin-bottom:2px">'
