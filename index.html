@@ -1374,65 +1374,74 @@ function renderEvolution() {
   const el = document.getElementById('evo-charts');
   if(!exId) { el.innerHTML = ''; return; }
 
-  // Get all sets for this exercise across sessions — only max weight set per session
-  const data = [];
+  // Collect best set (max weight) per session day
+  const byDate = {};
   sessions.forEach(sess => {
+    const dk = sess.date.split('T')[0];
     sess.exercises.forEach(ex => {
-      if(ex.id === exId) {
-        const doneSets = ex.sets.filter(s => s.done && s.weight);
-        if(!doneSets.length) return;
-        // Only keep the set with the highest weight
-        const best = doneSets.reduce((a, b) => (parseFloat(b.weight)||0) > (parseFloat(a.weight)||0) ? b : a);
-        data.push({
-          date: sess.date,
-          reps: parseFloat(best.reps)||0,
-          weight: parseFloat(best.weight)||0,
-          volume: (parseFloat(best.reps)||0)*(parseFloat(best.weight)||0)
-        });
+      if(ex.id !== exId) return;
+      const doneSets = ex.sets.filter(s => s.done && (s.weight || ex.bodyweight));
+      if(!doneSets.length) return;
+      const best = doneSets.reduce((a, b) => (parseFloat(b.weight)||0) > (parseFloat(a.weight)||0) ? b : a);
+      const w = parseFloat(best.weight)||0;
+      const r = parseFloat(best.reps)||0;
+      // Keep highest weight for this date
+      if(!byDate[dk] || w > byDate[dk].weight || (w === byDate[dk].weight && r > byDate[dk].reps)) {
+        byDate[dk] = { weight: w, reps: r, volume: r * w };
       }
     });
   });
 
-  if(!data.length) {
+  const allDates = Object.keys(byDate).sort();
+
+  if(!allDates.length) {
     el.innerHTML = '<div class="empty-state"><div class="empty-state-icon">📊</div><div class="empty-state-text">Nenhum dado de treino para este exercício ainda</div></div>';
     return;
   }
 
-  // Group by session date
-  const byDate = {};
-  data.forEach(d => {
-    const dk = d.date.split('T')[0];
-    if(!byDate[dk]) byDate[dk] = [];
-    byDate[dk].push(d);
-  });
-  const allDates = Object.keys(byDate).sort();
-
-  // Build raw series (max reps, max weight, force ratio per session)
-  const rawReps   = allDates.map(d => Math.max(...byDate[d].map(x=>x.reps)));
-  const rawWeight = allDates.map(d => Math.max(...byDate[d].map(x=>x.weight)));
+  const rawWeight = allDates.map(d => byDate[d].weight);
+  const rawReps   = allDates.map(d => byDate[d].reps);
   const rawForce  = allDates.map((d,i) => rawWeight[i]>0&&rawReps[i]>0 ? parseFloat((rawWeight[i]/rawReps[i]).toFixed(2)) : 0);
 
-  // Filter: only keep dates where value CHANGED vs previous recorded point
+  // Filter: keep a point ONLY when value changes vs previous.
+  // BUT also keep the LAST occurrence of a repeated value (to show first→last date range).
   function filterChanges(dates, vals) {
-    const filtDates = [], filtVals = [];
-    let lastVal = null;
-    dates.forEach((d,i) => {
-      if(lastVal === null || vals[i] !== lastVal) {
-        filtDates.push(d);
-        filtVals.push(vals[i]);
-        lastVal = vals[i];
-      }
-    });
-    return { dates: filtDates, vals: filtVals };
+    const filtDates = [], filtVals = [], filtFirstDates = [];
+    let i = 0;
+    while(i < dates.length) {
+      const v = vals[i];
+      const firstDate = dates[i];
+      let j = i;
+      // Scan forward while value stays the same
+      while(j + 1 < dates.length && vals[j+1] === v) j++;
+      const lastDate = dates[j];
+      filtDates.push(firstDate);
+      filtVals.push(v);
+      filtFirstDates.push({ first: firstDate, last: lastDate, repeated: j > i });
+      i = j + 1;
+    }
+    return { dates: filtDates, vals: filtVals, meta: filtFirstDates };
   }
 
-  const fReps   = filterChanges(allDates, rawReps);
   const fWeight = filterChanges(allDates, rawWeight);
+  const fReps   = filterChanges(allDates, rawReps);
   const fForce  = filterChanges(allDates, rawForce);
 
   const fmt = d => new Date(d+'T12:00:00').toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit',year:'2-digit'});
 
-  // Point color: green if up, red if down, yellow if first
+  // Current best stats
+  const peakWeight = Math.max(...rawWeight);
+  const peakDate = allDates[rawWeight.indexOf(peakWeight)];
+  const lastWeight = rawWeight[rawWeight.length-1];
+  const lastReps = rawReps[rawReps.length-1];
+  const firstDate = allDates[0];
+  const lastDate = allDates[allDates.length-1];
+  const trend = rawWeight.length > 1
+    ? (lastWeight > rawWeight[rawWeight.length-2] ? '▲ Subindo' : lastWeight < rawWeight[rawWeight.length-2] ? '▼ Caindo' : '→ Estável')
+    : '—';
+  const trendColor = trend.includes('▲') ? '#2ed573' : trend.includes('▼') ? '#ff4757' : '#888899';
+
+  // Point color: green=up, red=down, yellow=first, gray=same
   function pointColors(vals) {
     return vals.map((v,i) => {
       if(i===0) return '#e8ff47';
@@ -1441,16 +1450,28 @@ function renderEvolution() {
   }
 
   el.innerHTML =
-    '<div class="chart-container"><div class="chart-title">Repetições Máximas — apenas quando há mudança</div><canvas id="ch-reps" height="180"></canvas></div>' +
-    '<div class="chart-container"><div class="chart-title">Peso Máximo (kg) — apenas quando há mudança</div><canvas id="ch-weight" height="180"></canvas></div>' +
-    '<div class="chart-container"><div class="chart-title">Proporção de Força (kg ÷ reps) — domínio do peso</div><canvas id="ch-forca" height="180"></canvas></div>' +
-    '<div style="display:flex;gap:16px;font-size:11px;color:var(--text2);margin-bottom:16px;padding:0 4px">' +
+    // Summary card
+    '<div class="card" style="margin-bottom:16px">' +
+      '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;text-align:center">' +
+        '<div><div style="font-family:JetBrains Mono,monospace;font-size:20px;font-weight:700;color:var(--accent)">' + peakWeight + 'kg</div><div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:0.5px">Pico histórico</div><div style="font-size:10px;color:var(--text3)">' + fmt(peakDate) + '</div></div>' +
+        '<div><div style="font-family:JetBrains Mono,monospace;font-size:20px;font-weight:700;color:var(--accent2)">' + lastWeight + 'kg</div><div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:0.5px">Último treino</div><div style="font-size:10px;color:var(--text3)">' + lastReps + ' reps</div></div>' +
+        '<div><div style="font-family:JetBrains Mono,monospace;font-size:16px;font-weight:700;color:' + trendColor + '">' + trend + '</div><div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:0.5px">Tendência</div><div style="font-size:10px;color:var(--text3)">' + allDates.length + ' treinos</div></div>' +
+      '</div>' +
+      '<div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border);font-size:11px;color:var(--text3);text-align:center">' +
+        'Primeiro registro: <span style="color:var(--text2)">' + fmt(firstDate) + '</span> &nbsp;·&nbsp; Último: <span style="color:var(--text2)">' + fmt(lastDate) + '</span>' +
+      '</div>' +
+    '</div>' +
+    '<div class="chart-container"><div class="chart-title">Peso Máximo (kg) — cada mudança registrada</div><canvas id="ch-weight" height="180"></canvas></div>' +
+    '<div class="chart-container"><div class="chart-title">Repetições Máximas — cada mudança registrada</div><canvas id="ch-reps" height="180"></canvas></div>' +
+    '<div class="chart-container"><div class="chart-title">Proporção de Força (kg ÷ reps)</div><canvas id="ch-forca" height="180"></canvas></div>' +
+    '<div style="display:flex;gap:16px;font-size:11px;color:var(--text2);margin-bottom:16px;padding:0 4px;flex-wrap:wrap">' +
     '<span><span style="color:#2ed573;font-weight:700">●</span> Subiu</span>' +
     '<span><span style="color:#ff4757;font-weight:700">●</span> Caiu</span>' +
-    '<span><span style="color:#e8ff47;font-weight:700">●</span> Primeiro registro</span>' +
+    '<span><span style="color:#e8ff47;font-weight:700">●</span> Primeiro</span>' +
+    '<span><span style="color:#888899;font-weight:700">●</span> Manteve</span>' +
     '</div>';
 
-  function makeChart(canvasId, labels, vals, lineColor) {
+  function makeChart(canvasId, labels, vals, meta, lineColor) {
     const pColors = pointColors(vals);
     return new Chart(document.getElementById(canvasId), {
       type: 'line',
@@ -1473,10 +1494,17 @@ function renderEvolution() {
           legend: { display: false },
           tooltip: {
             callbacks: {
+              title: function(ctx) {
+                const m = meta[ctx[0].dataIndex];
+                if(m && m.repeated) return fmt(m.first) + ' → ' + fmt(m.last);
+                return fmt(labels[ctx[0].dataIndex].includes('/') ? allDates[0] : labels[ctx[0].dataIndex]);
+              },
               label: function(ctx) {
                 const diff = ctx.dataIndex > 0 ? (ctx.parsed.y - vals[ctx.dataIndex-1]).toFixed(1) : null;
-                const arrow = diff === null ? '' : parseFloat(diff) > 0 ? ' ▲+'+diff : parseFloat(diff) < 0 ? ' ▼'+diff : ' →';
-                return ctx.parsed.y + arrow;
+                const arrow = diff === null ? '' : parseFloat(diff) > 0 ? ' ▲ +'+diff : parseFloat(diff) < 0 ? ' ▼ '+diff : ' → igual';
+                const m = meta[ctx.dataIndex];
+                const rangeInfo = m && m.repeated ? ' (manteve ' + (new Date(m.last) - new Date(m.first)) / 86400000 | 0 + ' dias)' : '';
+                return ctx.parsed.y + arrow + rangeInfo;
               }
             }
           }
@@ -1494,9 +1522,9 @@ function renderEvolution() {
   if(chartPeso) chartPeso.destroy();
   if(chartForca) chartForca.destroy();
 
-  chartReps  = makeChart('ch-reps',   fReps.dates.map(fmt),   fReps.vals,   '#e8ff47');
-  chartPeso  = makeChart('ch-weight', fWeight.dates.map(fmt), fWeight.vals, '#47c8ff');
-  chartForca = makeChart('ch-forca',  fForce.dates.map(fmt),  fForce.vals,  '#b847ff');
+  chartPeso  = makeChart('ch-weight', fWeight.dates.map(fmt), fWeight.vals, fWeight.meta, '#47c8ff');
+  chartReps  = makeChart('ch-reps',   fReps.dates.map(fmt),   fReps.vals,   fReps.meta,   '#e8ff47');
+  chartForca = makeChart('ch-forca',  fForce.dates.map(fmt),  fForce.vals,  fForce.meta,  '#b847ff');
 }
 
 // ========================
@@ -1526,7 +1554,8 @@ function renderVolumeByMuscle() {
 
   // Recommended sets per muscle per week (scientific guidelines)
   const recommended = {
-    'Peito':12,'Costas':14,'Ombro':12,'Bíceps':10,'Tríceps':10,'Abdômen':12,
+    'Peito':12,'Costas':14,'Ombro Frontal':8,'Ombro Lateral':12,'Ombro Posterior':10,
+    'Bíceps':10,'Tríceps':10,'Abdômen':12,'Lombar':8,
     'Quadríceps':14,'Posterior de Coxa':12,'Glúteo':12,'Panturrilha':10,'Trapézio':8,'Antebraço':8
   };
 
