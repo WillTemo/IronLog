@@ -785,6 +785,33 @@ canvas { max-width: 100%; }
   </div>
 </div>
 
+<!-- PAGE: HISTÓRICO -->
+<div class="page" id="page-historico">
+  <div style="height:16px"></div>
+  <div class="section-title">Histórico de Treinos</div>
+
+  <!-- Filters -->
+  <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap">
+    <select class="input" id="hist-filter-ficha" onchange="renderHistorico()" style="flex:1;min-width:0">
+      <option value="">Todas as fichas</option>
+    </select>
+    <input type="month" class="input" id="hist-filter-month" onchange="renderHistorico()" style="flex:1;min-width:0">
+  </div>
+
+  <div id="historico-list"></div>
+</div>
+
+<!-- MODAL: DETALHE DO TREINO -->
+<div class="modal-overlay" id="modal-session-detail">
+  <div class="modal" style="border-radius:16px;margin:16px;max-height:95vh">
+    <div class="modal-title">
+      <span id="detail-title">Treino</span>
+      <button class="modal-close" onclick="closeModal('modal-session-detail')">✕</button>
+    </div>
+    <div id="detail-content"></div>
+  </div>
+</div>
+
 <!-- BOTTOM NAV -->
 <nav class="nav">
   <button class="nav-btn active" onclick="goPage('fichas', this)">
@@ -798,6 +825,10 @@ canvas { max-width: 100%; }
   <button class="nav-btn" onclick="goPage('evolucao', this)">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
     Evolução
+  </button>
+  <button class="nav-btn" onclick="goPage('historico', this)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 8v4l3 3"/><circle cx="12" cy="12" r="9"/></svg>
+    Histórico
   </button>
   <button class="nav-btn" onclick="goPage('corpo', this)">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="7" r="4"/><path d="M5.5 21c0-4 3-7 6.5-7s6.5 3 6.5 7"/></svg>
@@ -910,6 +941,7 @@ function goPage(page, btn) {
   if(page === 'fichas') renderFichas();
   if(page === 'treinar') renderTreinarPage();
   if(page === 'evolucao') { renderEvoExercises(); renderEvolution(); }
+  if(page === 'historico') renderHistorico();
   if(page === 'corpo') { renderPesoCharts(); renderBioCharts(); }
   if(page === 'backup') renderBackupStats();
 }
@@ -1883,8 +1915,197 @@ function renderBioCharts() {
 }
 
 // ========================
-// BACKUP / EXPORT / IMPORT
+// HISTÓRICO
 // ========================
+function renderHistorico() {
+  // Populate ficha filter
+  const fichaSelect = document.getElementById('hist-filter-ficha');
+  const currentFicha = fichaSelect.value;
+  fichaSelect.innerHTML = '<option value="">Todas as fichas</option>'
+    + fichas.map(f => `<option value="${f.id}" ${currentFicha===f.id?'selected':''}>${f.name}</option>`).join('');
+
+  const filterFicha = fichaSelect.value;
+  const filterMonth = document.getElementById('hist-filter-month').value; // "YYYY-MM"
+
+  let filtered = [...sessions].sort((a,b) => new Date(b.date) - new Date(a.date));
+  if(filterFicha) filtered = filtered.filter(s => s.fichaId === filterFicha);
+  if(filterMonth) filtered = filtered.filter(s => s.date.startsWith(filterMonth));
+
+  const el = document.getElementById('historico-list');
+  if(!filtered.length) {
+    el.innerHTML = '<div class="empty-state"><div class="empty-state-icon">📋</div><div class="empty-state-text">Nenhum treino encontrado</div></div>';
+    return;
+  }
+
+  // Group by month
+  const byMonth = {};
+  filtered.forEach(s => {
+    const mk = s.date.substring(0,7);
+    if(!byMonth[mk]) byMonth[mk] = [];
+    byMonth[mk].push(s);
+  });
+
+  let html = '';
+  Object.keys(byMonth).sort().reverse().forEach(mk => {
+    const [year, month] = mk.split('-');
+    const monthName = new Date(mk+'-15').toLocaleDateString('pt-BR',{month:'long',year:'numeric'});
+    const monthSessions = byMonth[mk];
+    const monthVol = monthSessions.reduce((a,s) => a + sessionTotalVolume(s), 0);
+
+    html += `<div style="font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:1px;color:var(--text2);margin:16px 0 8px;display:flex;justify-content:space-between;align-items:center">
+      <span>${monthName}</span>
+      <span style="font-size:12px;color:var(--text3)">${monthSessions.length} treinos · ${monthVol.toLocaleString('pt-BR')}kg vol</span>
+    </div>`;
+
+    monthSessions.forEach((sess, idx) => {
+      const date = new Date(sess.date);
+      const dateStr = date.toLocaleDateString('pt-BR',{weekday:'short',day:'2-digit',month:'2-digit'});
+      const timeStr = date.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+      const doneSets = sess.exercises.reduce((a,ex) => a + ex.sets.filter(s=>s.done).length, 0);
+      const totalVol = sessionTotalVolume(sess);
+      const muscles = [...new Set(sess.exercises.map(e=>e.muscle))].slice(0,3).join(', ');
+      const fichaColor = fichas.find(f=>f.id===sess.fichaId)?.color || '#e8ff47';
+
+      html += `<div class="card" style="cursor:pointer;border-left:3px solid ${fichaColor};margin-bottom:10px" onclick="openSessionDetail(${sessions.indexOf(sess)})">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px">
+          <div>
+            <div style="font-weight:700;font-size:14px">${sess.fichaName || 'Treino'}</div>
+            <div style="font-size:12px;color:var(--text3);margin-top:2px">${dateStr} · ${timeStr}</div>
+          </div>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" style="width:18px;height:18px;color:var(--text3);flex-shrink:0"><path d="M9 18l6-6-6-6"/></svg>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;text-align:center">
+          <div style="background:var(--surface2);border-radius:6px;padding:8px 4px">
+            <div style="font-family:'JetBrains Mono',monospace;font-size:16px;font-weight:700;color:var(--accent)">${sess.exercises.filter(e=>!e.skipped).length}</div>
+            <div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:0.5px">Exercícios</div>
+          </div>
+          <div style="background:var(--surface2);border-radius:6px;padding:8px 4px">
+            <div style="font-family:'JetBrains Mono',monospace;font-size:16px;font-weight:700;color:var(--accent2)">${doneSets}</div>
+            <div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:0.5px">Séries</div>
+          </div>
+          <div style="background:var(--surface2);border-radius:6px;padding:8px 4px">
+            <div style="font-family:'JetBrains Mono',monospace;font-size:14px;font-weight:700;color:var(--accent3)">${totalVol > 0 ? totalVol.toLocaleString('pt-BR')+'kg' : '—'}</div>
+            <div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:0.5px">Volume</div>
+          </div>
+        </div>
+        ${muscles ? `<div style="font-size:11px;color:var(--text3);margin-top:8px">🎯 ${muscles}${sess.exercises.length > 3 ? ' +' + (sess.exercises.length-3) : ''}</div>` : ''}
+      </div>`;
+    });
+  });
+
+  el.innerHTML = html;
+}
+
+function sessionTotalVolume(sess) {
+  return sess.exercises.reduce((total, ex) => {
+    return total + ex.sets.filter(s=>s.done).reduce((a,s) => a + ((parseFloat(s.reps)||0) * (parseFloat(s.weight)||0)), 0);
+  }, 0);
+}
+
+function openSessionDetail(sessionIdx) {
+  const sess = sessions[sessionIdx];
+  if(!sess) return;
+
+  const date = new Date(sess.date);
+  const dateStr = date.toLocaleDateString('pt-BR',{weekday:'long',day:'2-digit',month:'long',year:'numeric'});
+  const timeStr = date.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+  const totalVol = sessionTotalVolume(sess);
+  const totalSets = sess.exercises.reduce((a,ex) => a + ex.sets.filter(s=>s.done).length, 0);
+  const totalReps = sess.exercises.reduce((a,ex) => a + ex.sets.filter(s=>s.done).reduce((b,s)=>b+(parseFloat(s.reps)||0),0), 0);
+
+  document.getElementById('detail-title').textContent = sess.fichaName || 'Treino';
+
+  let html = `
+    <div style="font-size:12px;color:var(--text3);margin-bottom:16px">${dateStr} · ${timeStr}</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:20px">
+      <div class="stat-box"><span class="stat-box-val">${sess.exercises.filter(e=>!e.skipped).length}</span><span class="stat-box-lbl">Exercícios</span></div>
+      <div class="stat-box"><span class="stat-box-val">${totalSets}</span><span class="stat-box-lbl">Séries</span></div>
+      <div class="stat-box"><span class="stat-box-val">${totalReps}</span><span class="stat-box-lbl">Reps Total</span></div>
+    </div>
+    <div class="stat-box" style="text-align:center;margin-bottom:20px">
+      <span class="stat-box-val" style="font-size:28px">${totalVol > 0 ? totalVol.toLocaleString('pt-BR') + ' kg' : '—'}</span>
+      <span class="stat-box-lbl">Volume Total (reps × peso)</span>
+    </div>`;
+
+  sess.exercises.forEach(ex => {
+    if(ex.skipped) {
+      html += `<div style="background:var(--surface2);border-radius:8px;padding:12px;margin-bottom:12px;opacity:0.4">
+        <div style="font-weight:700;font-size:14px;color:var(--text3)">⏭ ${ex.name} — pulado</div>
+      </div>`;
+      return;
+    }
+
+    const doneSets = ex.sets.filter(s=>s.done);
+    const exVol = doneSets.reduce((a,s)=>a+((parseFloat(s.reps)||0)*(parseFloat(s.weight)||0)),0);
+    const maxWeight = doneSets.length ? Math.max(...doneSets.map(s=>parseFloat(s.weight)||0)) : 0;
+    const totalExReps = doneSets.reduce((a,s)=>a+(parseFloat(s.reps)||0),0);
+    const avgReps = doneSets.length ? (totalExReps/doneSets.length).toFixed(1) : 0;
+    const isBodyweight = ex.bodyweight;
+
+    html += `<div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;margin-bottom:12px;overflow:hidden">
+      <div style="padding:12px;background:var(--surface3);display:flex;justify-content:space-between;align-items:center">
+        <div>
+          <div style="font-weight:700;font-size:14px">${ex.name}</div>
+          <div style="display:flex;gap:6px;margin-top:4px">
+            <span class="tag tag-muscle" style="font-size:9px">${ex.muscle}</span>
+            <span class="tag tag-method" style="font-size:9px">${ex.method}</span>
+          </div>
+        </div>
+        <div style="text-align:right">
+          ${!isBodyweight ? `<div style="font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--accent);font-weight:700">${maxWeight}kg máx</div>` : ''}
+          <div style="font-size:11px;color:var(--text3)">${doneSets.length} séries · ${totalExReps} reps</div>
+        </div>
+      </div>
+      <div style="padding:10px 12px">
+        <div style="display:grid;grid-template-columns:28px ${isBodyweight?'1fr':'1fr 1fr 1fr'};gap:6px;padding-bottom:6px;border-bottom:1px solid var(--border);margin-bottom:4px">
+          <span style="font-size:9px;font-weight:700;text-transform:uppercase;color:var(--text3)">#</span>
+          <span style="font-size:9px;font-weight:700;text-transform:uppercase;color:var(--text3);text-align:center">REPS</span>
+          ${!isBodyweight ? '<span style="font-size:9px;font-weight:700;text-transform:uppercase;color:var(--text3);text-align:center">PESO</span><span style="font-size:9px;font-weight:700;text-transform:uppercase;color:var(--text3);text-align:center">VOL</span>' : ''}
+        </div>`;
+
+    ex.sets.forEach((s, si) => {
+      if(!s.done) return;
+      const setVol = (parseFloat(s.reps)||0) * (parseFloat(s.weight)||0);
+      const isDropLabel = s.isDrop ? `<span style="font-size:8px;color:var(--accent3);font-weight:700">D${si-ex.targetSets+1}</span>` : (si+1);
+      html += `<div style="display:grid;grid-template-columns:28px ${isBodyweight?'1fr':'1fr 1fr 1fr'};gap:6px;padding:5px 0;border-bottom:1px solid rgba(255,255,255,0.04)">
+        <span style="font-family:'Bebas Neue',sans-serif;font-size:16px;color:${s.isDrop?'var(--accent3)':'var(--text3)'}">${isDropLabel}</span>
+        <span style="font-family:'JetBrains Mono',monospace;font-size:14px;font-weight:700;color:var(--text);text-align:center">${s.reps || '—'}</span>
+        ${!isBodyweight ? `<span style="font-family:'JetBrains Mono',monospace;font-size:14px;font-weight:700;color:var(--accent2);text-align:center">${s.weight ? s.weight+'kg' : '—'}</span>
+        <span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--text3);text-align:center">${setVol > 0 ? setVol+'kg' : '—'}</span>` : ''}
+      </div>`;
+    });
+
+    html += `</div>`;
+
+    if(!isBodyweight && exVol > 0) {
+      html += `<div style="padding:8px 12px;background:rgba(232,255,71,0.05);border-top:1px solid var(--border);display:flex;justify-content:space-between">
+        <span style="font-size:11px;color:var(--text3)">Volume total · Média reps</span>
+        <span style="font-size:11px;font-weight:700;color:var(--accent)">${exVol.toLocaleString('pt-BR')}kg · ${avgReps} reps/série</span>
+      </div>`;
+    }
+
+    html += `</div>`;
+  });
+
+  // Delete button
+  html += `<button onclick="deleteSession(${sessionIdx})" class="btn btn-danger" style="width:100%;justify-content:center;margin-top:8px">
+    🗑 Excluir este treino
+  </button>`;
+
+  document.getElementById('detail-content').innerHTML = html;
+  openModal('modal-session-detail');
+}
+
+async function deleteSession(idx) {
+  if(!confirm('Excluir este treino? Essa ação não pode ser desfeita.')) return;
+  sessions.splice(idx, 1);
+  await DB.set('sessions', sessions);
+  closeModal('modal-session-detail');
+  renderHistorico();
+  toast('Treino excluído');
+}
+
+
 function renderBackupStats() {
   const el = document.getElementById('backup-stats');
   const totalSessions = sessions.length;
