@@ -966,7 +966,11 @@ canvas { max-width: 100%; }
       <button class="modal-close" onclick="closeModal('modal-session')">✕</button>
     </div>
 
-    <div id="session-date-display" style="font-size:12px;color:var(--text3);margin-bottom:16px"></div>
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:8px 12px">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" style="width:16px;height:16px;color:var(--text3);flex-shrink:0"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      <input type="date" id="session-date-input" style="background:none;border:none;color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;outline:none;flex:1;cursor:pointer" onchange="updateSessionDate(this.value)">
+      <span id="session-date-label" style="font-size:11px;color:var(--text3)"></span>
+    </div>
 
     <div id="session-exercises"></div>
 
@@ -1686,7 +1690,10 @@ function startSession(fichaIdx) {
   };
 
   document.getElementById('session-ficha-name').textContent = ficha.name;
-  document.getElementById('session-date-display').textContent = new Date().toLocaleDateString('pt-BR', {weekday:'long',day:'2-digit',month:'long',year:'numeric'});
+  const todayStr = new Date().toISOString().split('T')[0];
+  document.getElementById('session-date-input').value = todayStr;
+  document.getElementById('session-date-input').max = todayStr;
+  updateSessionDate(todayStr);
 
   renderSessionExercises();
   openModal('modal-session');
@@ -1798,8 +1805,28 @@ function toggleSetDone(ei, si) {
   renderSessionExercises();
 }
 
+function updateSessionDate(dateStr) {
+  const today = new Date().toISOString().split('T')[0];
+  const label = document.getElementById('session-date-label');
+  if(dateStr === today) {
+    label.textContent = 'Hoje';
+    label.style.color = 'var(--green)';
+  } else {
+    const diff = Math.round((new Date(today) - new Date(dateStr)) / 86400000);
+    label.textContent = diff === 1 ? 'Ontem' : diff + ' dias atrás';
+    label.style.color = 'var(--accent)';
+  }
+  if(currentSession) {
+    const time = new Date(currentSession.date).toTimeString().split(' ')[0];
+    currentSession.date = dateStr + 'T' + time;
+  }
+}
+
 function saveSession() {
-  const session = { ...currentSession, date: new Date().toISOString() };
+  const selectedDate = document.getElementById('session-date-input').value;
+  const time = new Date().toTimeString().split(' ')[0];
+  const sessionDate = selectedDate ? selectedDate + 'T' + time : new Date().toISOString();
+  const session = { ...currentSession, date: sessionDate };
   const anyDone = session.exercises.some(ex => ex.sets.some(s => s.done));
   if(!anyDone) {
     toast('Marque pelo menos uma série como concluída', 'var(--red)');
@@ -1854,7 +1881,10 @@ async function resumeDraft() {
   if(!draft) return;
   currentSession = draft;
   document.getElementById('session-ficha-name').textContent = draft.fichaName;
-  document.getElementById('session-date-display').textContent = new Date(draft.date).toLocaleDateString('pt-BR', {weekday:'long',day:'2-digit',month:'long',year:'numeric'});
+  const draftDateStr = draft.date.split('T')[0];
+  document.getElementById('session-date-input').value = draftDateStr;
+  document.getElementById('session-date-input').max = new Date().toISOString().split('T')[0];
+  updateSessionDate(draftDateStr);
   renderSessionExercises();
   openModal('modal-session');
   dismissDraftBanner();
