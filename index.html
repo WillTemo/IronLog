@@ -661,6 +661,55 @@ canvas { max-width: 100%; }
 }
 #btn-google-login:hover { transform: translateY(-1px); box-shadow: 0 4px 20px rgba(0,0,0,0.2); }
 
+/* SPLASH SCREEN */
+#splash-screen {
+  display: flex;
+  position: fixed;
+  inset: 0;
+  background: var(--bg);
+  z-index: 2000;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 0.4s ease, transform 0.4s ease;
+}
+#splash-screen.hide {
+  opacity: 0;
+  transform: scale(1.05);
+  pointer-events: none;
+}
+.splash-logo {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 64px;
+  letter-spacing: 4px;
+  color: var(--accent);
+  text-shadow: 0 0 60px rgba(232,255,71,0.5);
+  animation: splashPulse 1.5s ease-in-out infinite;
+}
+.splash-logo span { color: var(--text); }
+@keyframes splashPulse {
+  0%, 100% { text-shadow: 0 0 30px rgba(232,255,71,0.3); }
+  50% { text-shadow: 0 0 80px rgba(232,255,71,0.7); }
+}
+.splash-dots {
+  display: flex;
+  gap: 8px;
+  margin-top: 32px;
+}
+.splash-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent);
+  animation: dotBounce 1.2s ease-in-out infinite;
+}
+.splash-dot:nth-child(2) { animation-delay: 0.2s; }
+.splash-dot:nth-child(3) { animation-delay: 0.4s; }
+@keyframes dotBounce {
+  0%, 80%, 100% { transform: scale(0.6); opacity: 0.3; }
+  40% { transform: scale(1); opacity: 1; }
+}
+
 /* RESPONSIVE */
 @media (min-width: 600px) {
   .page { max-width: 600px; margin: 0 auto; }
@@ -668,6 +717,17 @@ canvas { max-width: 100%; }
 </style>
 </head>
 <body>
+
+<!-- SPLASH SCREEN -->
+<div id="splash-screen">
+  <div class="splash-logo">Iron<span>Log</span></div>
+  <div style="font-size:12px;color:var(--text3);letter-spacing:2px;text-transform:uppercase;margin-top:8px">Seu Diário de Força</div>
+  <div class="splash-dots">
+    <div class="splash-dot"></div>
+    <div class="splash-dot"></div>
+    <div class="splash-dot"></div>
+  </div>
+</div>
 
 <!-- LOGIN SCREEN -->
 <div id="login-screen" style="display:none;position:fixed;inset:0;background:var(--bg);z-index:1000;flex-direction:column;align-items:center;justify-content:center;padding:32px">
@@ -1390,7 +1450,7 @@ function addExerciseToForm(existing) {
     </div>
     <div class="grid2">
       <div class="input-group" style="margin-bottom:0">
-        <label class="input-label">Músculo Alvo</label>
+        <label class="input-label">Músculo Principal</label>
         <select class="input" data-field="muscle">
           ${MUSCLES.map(m => `<option value="${m}" ${existing?.muscle===m?'selected':''}>${m}</option>`).join('')}
         </select>
@@ -1400,6 +1460,24 @@ function addExerciseToForm(existing) {
         <select class="input" data-field="method">
           ${METHODS.map(m => `<option value="${m}" ${existing?.method===m?'selected':''}>${m}</option>`).join('')}
         </select>
+      </div>
+    </div>
+
+    <!-- Músculo Secundário -->
+    <div style="margin-top:10px;background:var(--surface3);border:1px solid var(--border);border-radius:8px;padding:10px 14px">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:0" id="muscle2-toggle-${id}">
+        <input type="checkbox" id="muscle2-check-${id}" data-field="hasSecondaryMuscle" ${existing?.muscle2?'checked':''} style="width:18px;height:18px;accent-color:var(--accent2);cursor:pointer;flex-shrink:0">
+        <label for="muscle2-check-${id}" style="font-size:13px;font-weight:600;color:var(--text2);cursor:pointer;user-select:none">
+          Exercício multiarticular <span style="font-size:11px;color:var(--text3)">(adicionar músculo secundário)</span>
+        </label>
+      </div>
+      <div id="muscle2-field-${id}" style="display:${existing?.muscle2?'block':'none'};margin-top:10px">
+        <label class="input-label">Músculo Secundário</label>
+        <select class="input" data-field="muscle2">
+          <option value="">— nenhum —</option>
+          ${MUSCLES.map(m => `<option value="${m}" ${existing?.muscle2===m?'selected':''}>${m}</option>`).join('')}
+        </select>
+        <div style="font-size:10px;color:var(--text3);margin-top:6px">O volume deste exercício será contado para ambos os músculos</div>
       </div>
     </div>
     <div class="grid2" style="margin-top:10px">
@@ -1441,6 +1519,14 @@ function addExerciseToForm(existing) {
     </div>
   `;
 
+  // Toggle secondary muscle field
+  const muscle2Check = div.querySelector('[data-field="hasSecondaryMuscle"]');
+  const muscle2Field = div.querySelector('#muscle2-field-' + id);
+  muscle2Check.addEventListener('change', function() {
+    muscle2Field.style.display = this.checked ? 'block' : 'none';
+    if(!this.checked) div.querySelector('[data-field="muscle2"]').value = '';
+  });
+
   // Show/hide drop set and bi/tri-set fields based on method selection
   const methodSelect = div.querySelector('[data-field="method"]');
   methodSelect.addEventListener('change', function() {
@@ -1481,6 +1567,7 @@ function getExercisesFromForm() {
     id: crypto.randomUUID(),
     name: item.querySelector('[data-field="name"]').value.trim(),
     muscle: item.querySelector('[data-field="muscle"]').value,
+    muscle2: item.querySelector('[data-field="muscle2"]')?.value || '',
     method: item.querySelector('[data-field="method"]').value,
     sets: parseInt(item.querySelector('[data-field="sets"]').value) || 3,
     repsMin: parseInt(item.querySelector('[data-field="repsMin"]').value) || 8,
@@ -1576,6 +1663,7 @@ function startSession(fichaIdx) {
         id: ex.id,
         name: ex.name,
         muscle: ex.muscle,
+        muscle2: ex.muscle2 || '',
         method: ex.method,
         targetSets: ex.sets,
         targetReps: ex.reps,
@@ -1674,7 +1762,9 @@ function renderSessionExercises() {
       + '<div class="session-exercise-header">'
       + '<div style="flex:1"><div style="font-weight:700;font-size:15px">' + ex.name + '</div>'
       + (ex.conjugado ? '<div style="font-size:11px;color:var(--accent4);margin-top:2px">⟳ ' + ex.conjugado + (ex.conjugado2 ? ' + ' + ex.conjugado2 : '') + '</div>' : '')
-      + '<div style="display:flex;gap:8px;margin-top:4px;flex-wrap:wrap"><span class="tag tag-muscle" style="font-size:10px">' + ex.muscle + '</span><span class="tag tag-method" style="font-size:10px">' + ex.method + '</span>'
+      + '<div style="display:flex;gap:8px;margin-top:4px;flex-wrap:wrap"><span class="tag tag-muscle" style="font-size:10px">' + ex.muscle + '</span>'
+      + (ex.muscle2 ? '<span class="tag tag-muscle" style="font-size:10px;opacity:0.7">' + ex.muscle2 + '</span>' : '')
+      + '<span class="tag tag-method" style="font-size:10px">' + ex.method + '</span>'
       + (ex.method === 'Drop Set' ? '<span style="font-size:10px;background:rgba(255,107,71,0.15);color:var(--accent3);padding:2px 6px;border-radius:4px;font-weight:700">↓ DROP</span>' : '')
       + '</div>'
       + lastSummary + '</div>'
@@ -1966,26 +2056,33 @@ function renderEvolution() {
 function renderVolumeByMuscle() {
   const el = document.getElementById('volume-content');
 
-  // Count sets done per muscle in last 7 days
   const now = Date.now();
   const week = 7*24*3600*1000;
   const muscleVol = {};
 
+  function addToMuscle(muscle, doneSets, sets) {
+    if(!muscle) return;
+    if(!muscleVol[muscle]) muscleVol[muscle] = { sets: 0, reps: 0, vol: 0, secondary: false };
+    muscleVol[muscle].sets += doneSets;
+    sets.filter(s=>s.done).forEach(s => {
+      muscleVol[muscle].reps += parseFloat(s.reps)||0;
+      muscleVol[muscle].vol += (parseFloat(s.reps)||0)*(parseFloat(s.weight)||0);
+    });
+  }
+
   sessions.forEach(sess => {
     const dt = new Date(sess.date).getTime();
-    if(now - dt > week*4) return; // last 4 weeks
+    if(now - dt > week*4) return;
     sess.exercises.forEach(ex => {
       const doneSets = ex.sets.filter(s => s.done).length;
-      if(!muscleVol[ex.muscle]) muscleVol[ex.muscle] = { sets: 0, reps: 0, vol: 0 };
-      muscleVol[ex.muscle].sets += doneSets;
-      ex.sets.filter(s=>s.done).forEach(s => {
-        muscleVol[ex.muscle].reps += parseFloat(s.reps)||0;
-        muscleVol[ex.muscle].vol += (parseFloat(s.reps)||0)*(parseFloat(s.weight)||0);
-      });
+      addToMuscle(ex.muscle, doneSets, ex.sets);
+      if(ex.muscle2) {
+        addToMuscle(ex.muscle2, doneSets, ex.sets);
+        if(muscleVol[ex.muscle2]) muscleVol[ex.muscle2].secondary = true;
+      }
     });
   });
 
-  // Recommended sets per muscle per week (scientific guidelines)
   const recommended = {
     'Peito':12,'Costas':14,'Ombro Frontal':8,'Ombro Lateral':12,'Ombro Posterior':10,
     'Bíceps':10,'Tríceps':10,'Abdômen':12,'Lombar':8,
@@ -2003,7 +2100,8 @@ function renderVolumeByMuscle() {
   el.innerHTML = `
     <div class="card" style="margin-bottom:16px">
       <div style="font-size:12px;color:var(--text2);line-height:1.6">
-        Volume das últimas <strong style="color:var(--accent)">4 semanas</strong>. Barras verdes = dentro do recomendado, vermelhas = abaixo.
+        Volume das últimas <strong style="color:var(--accent)">4 semanas</strong>. Barras verdes = dentro do recomendado, vermelhas = abaixo.<br>
+        <span style="color:var(--accent2)">●</span> Músculo secundário também é contabilizado.
       </div>
     </div>
     ${muscles.sort((a,b)=>muscleVol[b].sets-muscleVol[a].sets).map(m => {
@@ -2012,10 +2110,11 @@ function renderVolumeByMuscle() {
       const pct = Math.min(100, (v.sets / rec) * 100);
       const status = pct >= 80 ? 'var(--green)' : pct >= 50 ? 'var(--accent)' : 'var(--red)';
       const label = pct >= 80 ? '✅ OK' : pct >= 50 ? '⚠ Baixo' : '❌ Insuficiente';
+      const secTag = v.secondary ? '<span style="font-size:9px;background:rgba(71,200,255,0.15);color:var(--accent2);padding:2px 6px;border-radius:4px;margin-left:6px">2º músculo</span>' : '';
       return `
       <div class="muscle-bar-item">
         <div class="muscle-bar-header">
-          <span style="font-weight:600">${m}</span>
+          <span style="font-weight:600">${m}${secTag}</span>
           <span style="color:${status};font-size:12px;font-weight:700">${v.sets} séries ${label}</span>
         </div>
         <div class="muscle-bar-track">
@@ -2682,6 +2781,15 @@ async function importData(input) {
 // AUTH & USER SESSION
 // ========================
 let currentUser = null;
+let splashDismissed = false;
+
+function dismissSplash() {
+  if(splashDismissed) return;
+  splashDismissed = true;
+  const splash = document.getElementById('splash-screen');
+  splash.classList.add('hide');
+  setTimeout(() => { splash.style.display = 'none'; }, 400);
+}
 
 window.addEventListener('auth-state-changed', async (e) => {
   const user = e.detail.user;
@@ -2706,8 +2814,14 @@ window.addEventListener('auth-state-changed', async (e) => {
     document.getElementById('peso-date').value = today;
     const now = new Date();
     document.getElementById('bio-date').value = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+    // Dismiss splash after data loads
+    dismissSplash();
   } else {
-    document.getElementById('login-screen').style.display = 'flex';
+    // Not logged in — dismiss splash and show login
+    dismissSplash();
+    setTimeout(() => {
+      document.getElementById('login-screen').style.display = 'flex';
+    }, 50);
     document.getElementById('user-avatar-btn').style.display = 'none';
     document.getElementById('header-subtitle').style.display = 'block';
     document.getElementById('sync-indicator').style.display = 'none';
@@ -2768,8 +2882,9 @@ window.addEventListener('load', async () => {
   if('serviceWorker' in navigator) {
     navigator.serviceWorker.register('./sw.js').catch(e => console.warn('[IronLog] SW error:', e));
   }
-  // Show login screen while waiting for auth
-  document.getElementById('login-screen').style.display = 'flex';
+  // Splash shows by default — auth-state-changed will dismiss it
+  // Set a max timeout in case Firebase is slow
+  setTimeout(() => dismissSplash(), 5000);
 
   const isIos = /iphone|ipad|ipod/.test(navigator.userAgent.toLowerCase());
   const isInStandaloneMode = ('standalone' in window.navigator) && (window.navigator.standalone);
