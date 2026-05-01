@@ -1605,33 +1605,38 @@ function addExerciseToForm(existing) {
   list.appendChild(div);
 }
 
-function getExercisesFromForm() {
+function getExercisesFromForm(existingExercises) {
   const items = document.querySelectorAll('[id^="ex-form-"]');
-  return Array.from(items).map(item => ({
-    id: crypto.randomUUID(),
-    name: item.querySelector('[data-field="name"]').value.trim(),
-    muscle: item.querySelector('[data-field="muscle"]').value,
-    muscle2: item.querySelector('[data-field="muscle2"]')?.value || '',
-    method: item.querySelector('[data-field="method"]').value,
-    sets: parseInt(item.querySelector('[data-field="sets"]').value) || 3,
-    repsMin: parseInt(item.querySelector('[data-field="repsMin"]').value) || 8,
-    repsMax: parseInt(item.querySelector('[data-field="repsMax"]').value) || 12,
-    reps: parseInt(item.querySelector('[data-field="repsMax"]').value) || 12, // backward compat
-    dropSets: parseInt(item.querySelector('[data-field="dropSets"]')?.value) || 2,
-    conjugado: item.querySelector('[data-field="conjugado"]')?.value.trim() || '',
-    bodyweight: item.querySelector('[data-field="bodyweight"]')?.checked || false,
-  })).filter(e => e.name);
+  return Array.from(items).map((item, idx) => {
+    const name = item.querySelector('[data-field="name"]').value.trim();
+    // Try to find matching existing exercise by name to preserve its ID
+    const existingMatch = existingExercises && existingExercises.find(e => e.name.trim().toLowerCase() === name.toLowerCase());
+    return {
+      id: existingMatch ? existingMatch.id : crypto.randomUUID(),
+      name,
+      muscle: item.querySelector('[data-field="muscle"]').value,
+      muscle2: item.querySelector('[data-field="muscle2"]')?.value || '',
+      method: item.querySelector('[data-field="method"]').value,
+      sets: parseInt(item.querySelector('[data-field="sets"]').value) || 3,
+      repsMin: parseInt(item.querySelector('[data-field="repsMin"]').value) || 8,
+      repsMax: parseInt(item.querySelector('[data-field="repsMax"]').value) || 12,
+      reps: parseInt(item.querySelector('[data-field="repsMax"]').value) || 12, // backward compat
+      dropSets: parseInt(item.querySelector('[data-field="dropSets"]')?.value) || 2,
+      conjugado: item.querySelector('[data-field="conjugado"]')?.value.trim() || '',
+      bodyweight: item.querySelector('[data-field="bodyweight"]')?.checked || false,
+    };
+  }).filter(e => e.name);
 }
 
 async function saveFicha() {
   const name = document.getElementById('ficha-name').value.trim();
   const color = document.getElementById('ficha-color').value || '#e8ff47';
-  const exercises = getExercisesFromForm();
+  const editingId = document.getElementById('editing-ficha-id').value;
+  const existingExercises = editingId !== '' ? fichas[parseInt(editingId)].exercises : null;
+  const exercises = getExercisesFromForm(existingExercises);
 
   if(!name) { toast('Digite o nome da ficha', 'var(--red)'); return; }
   if(!exercises.length) { toast('Adicione pelo menos um exercício', 'var(--red)'); return; }
-
-  const editingId = document.getElementById('editing-ficha-id').value;
 
   if(editingId !== '') {
     const existingId = fichas[parseInt(editingId)].id;
@@ -1967,12 +1972,17 @@ function renderEvolution() {
   const el = document.getElementById('evo-charts');
   if(!exId) { el.innerHTML = ''; return; }
 
+  // Find the exercise name for fallback matching by name
+  let exName = null;
+  fichas.forEach(f => f.exercises.forEach(e => { if(e.id === exId) exName = e.name; }));
+
   // Collect best set (max weight) per session day
   const byDate = {};
   sessions.forEach(sess => {
     const dk = sess.date.split('T')[0];
     sess.exercises.forEach(ex => {
-      if(ex.id !== exId) return;
+      // Match by ID (primary) or by name (fallback for sessions saved before ficha edit)
+      if(ex.id !== exId && !(exName && ex.name && ex.name.trim().toLowerCase() === exName.trim().toLowerCase())) return;
       const doneSets = ex.sets.filter(s => s.done && (s.weight || ex.bodyweight));
       if(!doneSets.length) return;
       const best = doneSets.reduce((a, b) => (parseFloat(b.weight)||0) > (parseFloat(a.weight)||0) ? b : a);
@@ -2277,7 +2287,7 @@ function getWeekNumber(d) {
 // ========================
 let chartBioPizza = null, chartBioLinha = null;
 
-function saveBio() {
+async function saveBio() {
   const date = document.getElementById('bio-date').value;
   const peso = parseFloat(document.getElementById('bio-peso').value);
   const massa = parseFloat(document.getElementById('bio-massa').value);
@@ -2290,7 +2300,7 @@ function saveBio() {
   if(existing>=0) bios[existing] = entry;
   else bios.push(entry);
   bios.sort((a,b)=>a.date.localeCompare(b.date));
-  DB.set('bios', bios);
+  await DB.set('bios', bios);
 
   // Registrar peso da bio também na balança (usando o 1º dia do mês como referência)
   const weightDate = date + '-01';
@@ -2298,7 +2308,7 @@ function saveBio() {
   if(existingW>=0) weights[existingW] = { date: weightDate, val: peso, fromBio: true };
   else weights.push({ date: weightDate, val: peso, fromBio: true });
   weights.sort((a,b)=>a.date.localeCompare(b.date));
-  DB.set('weights', weights);
+  await DB.set('weights', weights);
 
   document.getElementById('bio-peso').value='';
   document.getElementById('bio-massa').value='';
@@ -2306,7 +2316,7 @@ function saveBio() {
 
   renderBioCharts();
   renderPesoCharts();
-  toast('Bioimpedância salva e peso registrado na balança!');
+  toast('Bioimpedância salva! Peso ' + peso + 'kg registrado na guia Peso Bruto 🔥');
 }
 
 function editBio(bioId) {
@@ -2430,6 +2440,7 @@ function renderBioCharts() {
   });
   const histEl = document.getElementById('bio-history-list');
   if(histEl) histEl.innerHTML = histHtml;
+  if(chartBioPizza) { chartBioPizza.destroy(); chartBioPizza = null; }
   chartBioPizza = new Chart(document.getElementById('chart-bio-pizza'), {
     type: 'doughnut',
     data: {
