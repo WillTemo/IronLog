@@ -1680,7 +1680,7 @@ function startSession(fichaIdx) {
         skipped: false,
         lastSets: last ? last.sets : null,
         sets: Array.from({length: totalSets}, (_, si) => ({
-          reps: '',
+          reps: last && last.sets[si] && last.sets[si].done ? last.sets[si].reps : '',
           weight: last && last.sets[si] && last.sets[si].done ? last.sets[si].weight : '',
           done: false,
           isDrop: isDropSet && si >= ex.sets // mark drop series
@@ -1727,9 +1727,10 @@ function renderSessionExercises() {
         const repsHint = lastReps ? lastReps : ex.targetRepsMin;
         const weightHint = lastWeight ? lastWeight : '0';
         const doneClass = s.done ? 'done' : '';
+        const hasRef = !s.done && (lastReps || lastWeight);
         const checkInner = s.done ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" style="width:16px;height:16px"><path d="M20 6L9 17l-5-5"/></svg>' : '';
-        const antReps = lastReps ? '<div style="font-size:9px;color:var(--accent2);text-align:center;margin-bottom:3px;letter-spacing:0.3px">ant: ' + lastReps + '</div>' : '';
-        const antWeight = lastWeight ? '<div style="font-size:9px;color:var(--accent2);text-align:center;margin-bottom:3px;letter-spacing:0.3px">ant: ' + lastWeight + '</div>' : '';
+        const antReps = lastReps && !s.done ? '<div style="font-size:9px;color:var(--accent2);text-align:center;margin-bottom:3px;letter-spacing:0.3px">↑ ref</div>' : '';
+        const antWeight = lastWeight && !s.done ? '<div style="font-size:9px;color:var(--accent2);text-align:center;margin-bottom:3px;letter-spacing:0.3px">↑ ref</div>' : '';
 
         // Drop separator line before first drop set
         let dropSeparator = '';
@@ -1751,8 +1752,8 @@ function renderSessionExercises() {
         setsHtml += dropSeparator
           + '<div style="display:grid;grid-template-columns:' + gridCols + ';gap:8px;align-items:end;padding:10px 0;border-bottom:1px solid var(--border)">'
           + setLabel
-          + '<div>' + antReps + '<input type="number" class="series-input ' + doneClass + (s.isDrop?' drop-input':'') + '" placeholder="' + repsHint + '" value="' + s.reps + '" oninput="updateSet(' + ei + ',' + si + ',\'reps\',this.value)" min="0" style="width:100%' + (s.isDrop?';border-color:rgba(255,107,71,0.4)':'') + '"></div>'
-          + (!isBodyweight ? '<div>' + antWeight + '<input type="number" class="series-input ' + doneClass + '" placeholder="' + weightHint + '" value="' + s.weight + '" oninput="updateSet(' + ei + ',' + si + ',\'weight\',this.value)" step="0.5" min="0" style="width:100%' + (s.isDrop?';border-color:rgba(255,107,71,0.4)':'') + '"></div>' : '')
+          + '<div>' + antReps + '<input type="number" class="series-input ' + doneClass + (s.isDrop?' drop-input':'') + '" placeholder="' + repsHint + '" value="' + s.reps + '" oninput="updateSet(' + ei + ',' + si + ',\'reps\',this.value)" min="0" style="width:100%' + (s.isDrop?';border-color:rgba(255,107,71,0.4)':'') + (hasRef && !s.done && !s.isDrop?';border-color:rgba(71,200,255,0.5);color:var(--accent2)':'') + '"></div>'
+          + (!isBodyweight ? '<div>' + antWeight + '<input type="number" class="series-input ' + doneClass + '" placeholder="' + weightHint + '" value="' + s.weight + '" oninput="updateSet(' + ei + ',' + si + ',\'weight\',this.value)" step="0.5" min="0" style="width:100%' + (s.isDrop?';border-color:rgba(255,107,71,0.4)':'') + (hasRef && !s.done && !s.isDrop?';border-color:rgba(71,200,255,0.5);color:var(--accent2)':'') + '"></div>' : '')
           + '<button class="series-check ' + doneClass + '" onclick="toggleSetDone(' + ei + ',' + si + ')" style="width:36px;height:36px;align-self:end;margin-bottom:0">' + checkInner + '</button>'
           + '</div>';
       });
