@@ -846,6 +846,7 @@ canvas { max-width: 100%; }
   <div class="tabs">
     <button class="tab-btn active" onclick="switchCorpoTab('peso')">Peso Bruto</button>
     <button class="tab-btn" onclick="switchCorpoTab('bio')">Bioimpedância</button>
+    <button class="tab-btn" onclick="switchCorpoTab('seg')">Segmentar</button>
   </div>
 
   <!-- PESO -->
@@ -912,6 +913,89 @@ canvas { max-width: 100%; }
 
     <div id="bio-history-list"></div>
   </div>
+
+  <!-- SEGMENTAR -->
+  <div id="corpo-seg" style="display:none">
+    <div class="card">
+      <div class="input-label" style="margin-bottom:10px">Registrar Composição Segmentar</div>
+      <div class="grid2">
+        <div class="input-group" style="margin-bottom:0;grid-column:1/-1">
+          <label class="input-label">Mês/Ano</label>
+          <input type="month" class="input" id="seg-date">
+        </div>
+      </div>
+      <!-- Tronco -->
+      <div style="margin-top:14px;margin-bottom:6px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--accent)">🫁 Tronco</div>
+      <div class="grid2">
+        <div class="input-group" style="margin-bottom:0">
+          <label class="input-label">Massa Magra (kg)</label>
+          <input type="number" class="input seg-input" id="seg-tronco-massa" placeholder="28.0" step="0.1">
+        </div>
+        <div class="input-group" style="margin-bottom:0">
+          <label class="input-label">Gordura (kg)</label>
+          <input type="number" class="input seg-input" id="seg-tronco-gordura" placeholder="8.0" step="0.1">
+        </div>
+      </div>
+      <!-- Braço Direito -->
+      <div style="margin-top:14px;margin-bottom:6px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--accent2)">💪 Braço Direito</div>
+      <div class="grid2">
+        <div class="input-group" style="margin-bottom:0">
+          <label class="input-label">Massa Magra (kg)</label>
+          <input type="number" class="input seg-input" id="seg-braco-dir-massa" placeholder="3.5" step="0.1">
+        </div>
+        <div class="input-group" style="margin-bottom:0">
+          <label class="input-label">Gordura (kg)</label>
+          <input type="number" class="input seg-input" id="seg-braco-dir-gordura" placeholder="1.2" step="0.1">
+        </div>
+      </div>
+      <!-- Braço Esquerdo -->
+      <div style="margin-top:14px;margin-bottom:6px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--accent2)">💪 Braço Esquerdo</div>
+      <div class="grid2">
+        <div class="input-group" style="margin-bottom:0">
+          <label class="input-label">Massa Magra (kg)</label>
+          <input type="number" class="input seg-input" id="seg-braco-esq-massa" placeholder="3.4" step="0.1">
+        </div>
+        <div class="input-group" style="margin-bottom:0">
+          <label class="input-label">Gordura (kg)</label>
+          <input type="number" class="input seg-input" id="seg-braco-esq-gordura" placeholder="1.2" step="0.1">
+        </div>
+      </div>
+      <!-- Perna Direita -->
+      <div style="margin-top:14px;margin-bottom:6px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--accent3)">🦵 Perna Direita</div>
+      <div class="grid2">
+        <div class="input-group" style="margin-bottom:0">
+          <label class="input-label">Massa Magra (kg)</label>
+          <input type="number" class="input seg-input" id="seg-perna-dir-massa" placeholder="9.0" step="0.1">
+        </div>
+        <div class="input-group" style="margin-bottom:0">
+          <label class="input-label">Gordura (kg)</label>
+          <input type="number" class="input seg-input" id="seg-perna-dir-gordura" placeholder="3.0" step="0.1">
+        </div>
+      </div>
+      <!-- Perna Esquerda -->
+      <div style="margin-top:14px;margin-bottom:6px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--accent3)">🦵 Perna Esquerda</div>
+      <div class="grid2">
+        <div class="input-group" style="margin-bottom:0">
+          <label class="input-label">Massa Magra (kg)</label>
+          <input type="number" class="input seg-input" id="seg-perna-esq-massa" placeholder="8.9" step="0.1">
+        </div>
+        <div class="input-group" style="margin-bottom:0">
+          <label class="input-label">Gordura (kg)</label>
+          <input type="number" class="input seg-input" id="seg-perna-esq-gordura" placeholder="3.0" step="0.1">
+        </div>
+      </div>
+      <button class="btn btn-primary btn-sm" onclick="saveSeg()" style="width:100%;justify-content:center;margin-top:16px">Salvar</button>
+    </div>
+
+    <div id="seg-latest-card"></div>
+
+    <div class="chart-container" style="padding:20px 16px">
+      <div class="chart-title">Composição Segmentar — Massa Magra (kg)</div>
+      <canvas id="chart-seg-radar" height="300"></canvas>
+    </div>
+
+    <div id="seg-history-list"></div>
+  </div>
 </div>
 
 <!-- MODAL: EDITAR BIO -->
@@ -946,6 +1030,50 @@ canvas { max-width: 100%; }
     <div style="display:flex;gap:10px;margin-top:16px">
       <button class="btn btn-secondary" onclick="closeModal('modal-edit-bio')" style="flex:1;justify-content:center">Cancelar</button>
       <button class="btn btn-primary" onclick="saveEditBio()" style="flex:1;justify-content:center">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: EDITAR SEGMENTAR -->
+<div class="modal-overlay" id="modal-edit-seg">
+  <div class="modal" style="max-height:90vh;overflow-y:auto">
+    <div class="modal-title">
+      <span>Editar Segmentar</span>
+      <button class="modal-close" onclick="closeModal('modal-edit-seg')">✕</button>
+    </div>
+    <input type="hidden" id="edit-seg-id">
+    <div class="input-group">
+      <label class="input-label">Mês/Ano</label>
+      <input type="month" class="input" id="edit-seg-date">
+    </div>
+    <div style="margin-bottom:6px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--accent)">🫁 Tronco</div>
+    <div class="grid2" style="margin-bottom:12px">
+      <div class="input-group" style="margin-bottom:0"><label class="input-label">Massa Magra</label><input type="number" class="input" id="edit-seg-tronco-massa" step="0.1"></div>
+      <div class="input-group" style="margin-bottom:0"><label class="input-label">Gordura</label><input type="number" class="input" id="edit-seg-tronco-gordura" step="0.1"></div>
+    </div>
+    <div style="margin-bottom:6px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--accent2)">💪 Braço Direito</div>
+    <div class="grid2" style="margin-bottom:12px">
+      <div class="input-group" style="margin-bottom:0"><label class="input-label">Massa Magra</label><input type="number" class="input" id="edit-seg-braco-dir-massa" step="0.1"></div>
+      <div class="input-group" style="margin-bottom:0"><label class="input-label">Gordura</label><input type="number" class="input" id="edit-seg-braco-dir-gordura" step="0.1"></div>
+    </div>
+    <div style="margin-bottom:6px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--accent2)">💪 Braço Esquerdo</div>
+    <div class="grid2" style="margin-bottom:12px">
+      <div class="input-group" style="margin-bottom:0"><label class="input-label">Massa Magra</label><input type="number" class="input" id="edit-seg-braco-esq-massa" step="0.1"></div>
+      <div class="input-group" style="margin-bottom:0"><label class="input-label">Gordura</label><input type="number" class="input" id="edit-seg-braco-esq-gordura" step="0.1"></div>
+    </div>
+    <div style="margin-bottom:6px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--accent3)">🦵 Perna Direita</div>
+    <div class="grid2" style="margin-bottom:12px">
+      <div class="input-group" style="margin-bottom:0"><label class="input-label">Massa Magra</label><input type="number" class="input" id="edit-seg-perna-dir-massa" step="0.1"></div>
+      <div class="input-group" style="margin-bottom:0"><label class="input-label">Gordura</label><input type="number" class="input" id="edit-seg-perna-dir-gordura" step="0.1"></div>
+    </div>
+    <div style="margin-bottom:6px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--accent3)">🦵 Perna Esquerda</div>
+    <div class="grid2" style="margin-bottom:12px">
+      <div class="input-group" style="margin-bottom:0"><label class="input-label">Massa Magra</label><input type="number" class="input" id="edit-seg-perna-esq-massa" step="0.1"></div>
+      <div class="input-group" style="margin-bottom:0"><label class="input-label">Gordura</label><input type="number" class="input" id="edit-seg-perna-esq-gordura" step="0.1"></div>
+    </div>
+    <div style="display:flex;gap:10px;margin-top:8px">
+      <button class="btn btn-secondary" onclick="closeModal('modal-edit-seg')" style="flex:1;justify-content:center">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveEditSeg()" style="flex:1;justify-content:center">Salvar</button>
     </div>
   </div>
 </div>
@@ -1219,28 +1347,30 @@ async function loadAllData() {
   // If logged in, try cloud first
   if(window.CloudDB && window.CloudDB._uid) {
     try {
-      const [cf, cs, cw, cb] = await Promise.all([
+      const [cf, cs, cw, cb, csg] = await Promise.all([
         window.CloudDB.get('fichas'),
         window.CloudDB.get('sessions'),
         window.CloudDB.get('weights'),
-        window.CloudDB.get('bios')
+        window.CloudDB.get('bios'),
+        window.CloudDB.get('segs')
       ]);
       // Get local as fallback
-      const [lf, ls, lw, lb] = await Promise.all([
-        DB.get('fichas'), DB.get('sessions'), DB.get('weights'), DB.get('bios')
+      const [lf, ls, lw, lb, lsg] = await Promise.all([
+        DB.get('fichas'), DB.get('sessions'), DB.get('weights'), DB.get('bios'), DB.get('segs')
       ]);
       fichas   = mergeArrays(cf, lf) || [];
       sessions = mergeArrays(cs, ls) || [];
       weights  = mergeArrays(cw, lw) || [];
       bios     = mergeArrays(cb, lb) || [];
+      segs     = mergeArrays(csg, lsg) || [];
       // Save merged back to both
       await Promise.all([
         DB.set('fichas', fichas), DB.set('sessions', sessions),
-        DB.set('weights', weights), DB.set('bios', bios)
+        DB.set('weights', weights), DB.set('bios', bios), DB.set('segs', segs)
       ]);
       await Promise.all([
         window.CloudDB.set('fichas', fichas), window.CloudDB.set('sessions', sessions),
-        window.CloudDB.set('weights', weights), window.CloudDB.set('bios', bios)
+        window.CloudDB.set('weights', weights), window.CloudDB.set('bios', bios), window.CloudDB.set('segs', segs)
       ]);
       return;
     } catch(e) {
@@ -1248,13 +1378,14 @@ async function loadAllData() {
     }
   }
   // Fallback to local only
-  const [f, s, w, b] = await Promise.all([
-    DB.get('fichas'), DB.get('sessions'), DB.get('weights'), DB.get('bios')
+  const [f, s, w, b, sg] = await Promise.all([
+    DB.get('fichas'), DB.get('sessions'), DB.get('weights'), DB.get('bios'), DB.get('segs')
   ]);
   fichas   = f || [];
   sessions = s || [];
   weights  = w || [];
   bios     = b || [];
+  segs     = sg || [];
 }
 
 // Mescla dois arrays: nuvem tem prioridade, deduplicado por id ou date
@@ -1322,6 +1453,7 @@ let fichas = [];
 let sessions = [];
 let weights = [];
 let bios = [];
+let segs = []; // segmental body composition records
 
 let currentSession = null; // { fichaId, exercises: [{id, name, muscle, sets:[{reps,weight,done}]}] }
 
@@ -1338,7 +1470,14 @@ function goPage(page, btn) {
   if(page === 'treinar') renderTreinarPage();
   if(page === 'evolucao') { renderEvoExercises(); renderEvolution(); }
   if(page === 'historico') renderHistorico();
-  if(page === 'corpo') { renderPesoCharts(); renderBioCharts(); }
+  if(page === 'corpo') {
+    const now = new Date();
+    const ym = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+    const segDate = document.getElementById('seg-date');
+    if(segDate && !segDate.value) segDate.value = ym;
+    renderPesoCharts();
+    renderBioCharts();
+  }
   if(page === 'backup') { renderBackupStats(); updateCloudStatus(); }
 }
 
@@ -2190,11 +2329,16 @@ function renderVolumeByMuscle() {
 // ========================
 let chartPesoLine = null;
 function switchCorpoTab(tab) {
-  document.querySelectorAll('#page-corpo .tab-btn').forEach((b,i)=>b.classList.toggle('active',i===(tab==='peso'?0:1)));
-  document.getElementById('corpo-peso').style.display = tab==='peso'?'block':'none';
-  document.getElementById('corpo-bio').style.display = tab==='bio'?'block':'none';
-  if(tab==='peso') renderPesoCharts();
-  if(tab==='bio') renderBioCharts();
+  const tabs = ['peso','bio','seg'];
+  document.querySelectorAll('#page-corpo .tab-btn').forEach((b,i) => b.classList.toggle('active', tabs[i]===tab));
+  document.getElementById('corpo-peso').style.display = tab==='peso' ? 'block' : 'none';
+  document.getElementById('corpo-bio').style.display  = tab==='bio'  ? 'block' : 'none';
+  document.getElementById('corpo-seg').style.display  = tab==='seg'  ? 'block' : 'none';
+  requestAnimationFrame(() => {
+    if(tab==='peso') renderPesoCharts();
+    if(tab==='bio')  renderBioCharts();
+    if(tab==='seg')  renderSegCharts();
+  });
 }
 
 function savePeso() {
@@ -2253,8 +2397,8 @@ function renderPesoCharts() {
     type: 'line',
     data: { labels: wks.map(w=>w.replace('-W','·W')), datasets: [{
       label:'Média semanal',data:avgs,
-      borderColor:'#e8ff47',backgroundColor:'rgba(232,255,71,0.08)',
-      fill:true,tension:0.4,pointBackgroundColor:'#e8ff47',pointRadius:5
+      borderColor:'#e8ff47',backgroundColor:'transparent',
+      fill:false,tension:0.4,pointBackgroundColor:'#e8ff47',pointRadius:5
     }]},
     options: { plugins:{legend:{display:false}}, scales:{
       x:{ticks:{color:'#888',font:{size:10}},grid:{color:'#2a2a3a'}},
@@ -2510,6 +2654,257 @@ function renderBioCharts() {
       }, responsive:true
     }
   });
+}
+
+// ========================
+// COMPOSIÇÃO SEGMENTAR
+// ========================
+let chartSegRadar = null;
+
+function _segFields() {
+  return [
+    { key:'tronco',    label:'Tronco',         ids:['seg-tronco-massa','seg-tronco-gordura'] },
+    { key:'bracoDir',  label:'Braço Dir.',      ids:['seg-braco-dir-massa','seg-braco-dir-gordura'] },
+    { key:'bracoEsq',  label:'Braço Esq.',      ids:['seg-braco-esq-massa','seg-braco-esq-gordura'] },
+    { key:'pernaDir',  label:'Perna Dir.',       ids:['seg-perna-dir-massa','seg-perna-dir-gordura'] },
+    { key:'pernaEsq',  label:'Perna Esq.',       ids:['seg-perna-esq-massa','seg-perna-esq-gordura'] },
+  ];
+}
+
+async function saveSeg() {
+  const date = document.getElementById('seg-date').value;
+  if(!date) { toast('Selecione o mês','var(--red)'); return; }
+  const fields = _segFields();
+  const entry = { id: crypto.randomUUID(), date };
+  for(const f of fields) {
+    const m = parseFloat(document.getElementById(f.ids[0]).value);
+    const g = parseFloat(document.getElementById(f.ids[1]).value);
+    if(isNaN(m) || isNaN(g) || !m || !g) { toast('Preencha todos os campos','var(--red)'); return; }
+    entry[f.key] = { massa: m, gordura: g };
+  }
+  const existing = segs.findIndex(s => s.date === date);
+  if(existing >= 0) { entry.id = segs[existing].id; segs[existing] = entry; }
+  else segs.push(entry);
+  segs.sort((a,b) => a.date.localeCompare(b.date));
+  await DB.set('segs', segs);
+  // Clear inputs
+  fields.forEach(f => { document.getElementById(f.ids[0]).value=''; document.getElementById(f.ids[1]).value=''; });
+  renderSegCharts();
+  toast('Segmentar salvo!');
+}
+
+function editSeg(segId) {
+  const seg = segs.find(s => s.id === segId);
+  if(!seg) return;
+  document.getElementById('edit-seg-id').value = segId;
+  document.getElementById('edit-seg-date').value = seg.date;
+  const map = {
+    tronco:   ['edit-seg-tronco-massa',   'edit-seg-tronco-gordura'],
+    bracoDir: ['edit-seg-braco-dir-massa','edit-seg-braco-dir-gordura'],
+    bracoEsq: ['edit-seg-braco-esq-massa','edit-seg-braco-esq-gordura'],
+    pernaDir: ['edit-seg-perna-dir-massa','edit-seg-perna-dir-gordura'],
+    pernaEsq: ['edit-seg-perna-esq-massa','edit-seg-perna-esq-gordura'],
+  };
+  for(const [k, ids] of Object.entries(map)) {
+    document.getElementById(ids[0]).value = seg[k]?.massa || '';
+    document.getElementById(ids[1]).value = seg[k]?.gordura || '';
+  }
+  openModal('modal-edit-seg');
+}
+
+async function saveEditSeg() {
+  const segId = document.getElementById('edit-seg-id').value;
+  const date  = document.getElementById('edit-seg-date').value;
+  if(!date) { toast('Selecione o mês','var(--red)'); return; }
+  const idx = segs.findIndex(s => s.id === segId);
+  if(idx < 0) { toast('Registro não encontrado','var(--red)'); return; }
+  const map = {
+    tronco:   ['edit-seg-tronco-massa',   'edit-seg-tronco-gordura'],
+    bracoDir: ['edit-seg-braco-dir-massa','edit-seg-braco-dir-gordura'],
+    bracoEsq: ['edit-seg-braco-esq-massa','edit-seg-braco-esq-gordura'],
+    pernaDir: ['edit-seg-perna-dir-massa','edit-seg-perna-dir-gordura'],
+    pernaEsq: ['edit-seg-perna-esq-massa','edit-seg-perna-esq-gordura'],
+  };
+  const entry = { id: segId, date };
+  for(const [k, ids] of Object.entries(map)) {
+    const m = parseFloat(document.getElementById(ids[0]).value);
+    const g = parseFloat(document.getElementById(ids[1]).value);
+    if(isNaN(m)||isNaN(g)||!m||!g) { toast('Preencha todos os campos','var(--red)'); return; }
+    entry[k] = { massa: m, gordura: g };
+  }
+  segs[idx] = entry;
+  segs.sort((a,b) => a.date.localeCompare(b.date));
+  await DB.set('segs', segs);
+  closeModal('modal-edit-seg');
+  renderSegCharts();
+  toast('Segmentar atualizado!');
+}
+
+async function deleteSeg(segId) {
+  if(!confirm('Excluir este registro segmentar?')) return;
+  segs = segs.filter(s => s.id !== segId);
+  await DB.set('segs', segs);
+  renderSegCharts();
+  toast('Registro excluído!', 'var(--red)');
+}
+
+function renderSegCharts() {
+  // Set default month
+  const segDateInput = document.getElementById('seg-date');
+  if(segDateInput && !segDateInput.value) {
+    const now = new Date();
+    segDateInput.value = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+  }
+
+  const latestCard = document.getElementById('seg-latest-card');
+  const histEl     = document.getElementById('seg-history-list');
+
+  if(!segs.length) {
+    if(latestCard) latestCard.innerHTML = '';
+    if(histEl) histEl.innerHTML = '';
+    return;
+  }
+
+  const latest = segs[segs.length - 1];
+  const segments = [
+    { key:'tronco',   label:'Tronco',      color:'var(--accent)',  emoji:'🫁' },
+    { key:'bracoDir', label:'Braço Dir.',   color:'var(--accent2)', emoji:'💪' },
+    { key:'bracoEsq', label:'Braço Esq.',   color:'var(--accent2)', emoji:'💪' },
+    { key:'pernaDir', label:'Perna Dir.',    color:'var(--accent3)', emoji:'🦵' },
+    { key:'pernaEsq', label:'Perna Esq.',    color:'var(--accent3)', emoji:'🦵' },
+  ];
+
+  // Latest card
+  if(latestCard) {
+    const totalMassa   = segments.reduce((s,sg) => s + (latest[sg.key]?.massa||0), 0).toFixed(1);
+    const totalGordura = segments.reduce((s,sg) => s + (latest[sg.key]?.gordura||0), 0).toFixed(1);
+    latestCard.innerHTML = `
+      <div class="card card-accent" style="margin-bottom:16px">
+        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text3);margin-bottom:12px">Última Medição — ${latest.date}</div>
+        <div class="stats-grid" style="grid-template-columns:repeat(2,1fr)">
+          <div class="stat-box"><span class="stat-box-val" style="color:var(--accent2)">${totalMassa}</span><span class="stat-box-lbl">Massa Magra kg</span></div>
+          <div class="stat-box"><span class="stat-box-val" style="color:var(--accent3)">${totalGordura}</span><span class="stat-box-lbl">Gordura kg</span></div>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:12px">
+          ${segments.map(sg => `
+            <div style="background:var(--surface2);border-radius:8px;padding:8px 10px;border:1px solid var(--border)">
+              <div style="font-size:10px;font-weight:700;color:${sg.color};text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px">${sg.emoji} ${sg.label}</div>
+              <div style="font-size:12px"><span style="color:var(--accent2);font-weight:700">${latest[sg.key]?.massa||0}kg</span> <span style="color:var(--text3)">massa</span></div>
+              <div style="font-size:12px"><span style="color:var(--accent3);font-weight:700">${latest[sg.key]?.gordura||0}kg</span> <span style="color:var(--text3)">gordura</span></div>
+            </div>
+          `).join('')}
+        </div>
+      </div>`;
+  }
+
+  // Pentagon radar chart — uses Chart.js radar type
+  const canvas = document.getElementById('chart-seg-radar');
+  if(canvas && canvas.offsetParent !== null) {
+    const existingChart = Chart.getChart('chart-seg-radar');
+    if(existingChart) existingChart.destroy();
+    chartSegRadar = null;
+
+    // Pentagon order: Tronco (top), Braço Dir (upper-right), Perna Dir (lower-right),
+    // Perna Esq (lower-left), Braço Esq (upper-left)
+    const pentaOrder = ['tronco','bracoDir','pernaDir','pernaEsq','bracoEsq'];
+    const pentaLabels = ['Tronco','Braço Dir.','Perna Dir.','Perna Esq.','Braço Esq.'];
+
+    // Build datasets — one per month recorded, highlight latest
+    const allDatasets = segs.map((seg, i) => {
+      const isLatest = i === segs.length - 1;
+      const massaVals = pentaOrder.map(k => seg[k]?.massa || 0);
+      const gorduraVals = pentaOrder.map(k => seg[k]?.gordura || 0);
+      return [
+        {
+          label: `${seg.date} — Massa`,
+          data: massaVals,
+          borderColor: isLatest ? '#47c8ff' : 'rgba(71,200,255,0.25)',
+          backgroundColor: isLatest ? 'rgba(71,200,255,0.15)' : 'rgba(71,200,255,0.04)',
+          borderWidth: isLatest ? 2.5 : 1,
+          pointBackgroundColor: isLatest ? '#47c8ff' : 'rgba(71,200,255,0.3)',
+          pointRadius: isLatest ? 5 : 3,
+        },
+        {
+          label: `${seg.date} — Gordura`,
+          data: gorduraVals,
+          borderColor: isLatest ? '#ff6b47' : 'rgba(255,107,71,0.25)',
+          backgroundColor: isLatest ? 'rgba(255,107,71,0.12)' : 'rgba(255,107,71,0.03)',
+          borderWidth: isLatest ? 2 : 1,
+          pointBackgroundColor: isLatest ? '#ff6b47' : 'rgba(255,107,71,0.3)',
+          pointRadius: isLatest ? 4 : 2,
+          borderDash: [4,3],
+        }
+      ];
+    }).flat();
+
+    chartSegRadar = new Chart(canvas, {
+      type: 'radar',
+      data: { labels: pentaLabels, datasets: allDatasets },
+      options: {
+        scales: {
+          r: {
+            beginAtZero: true,
+            angleLines: { color: 'rgba(255,255,255,0.1)' },
+            grid: { color: 'rgba(255,255,255,0.08)' },
+            pointLabels: {
+              color: '#aaa',
+              font: { size: 12, weight: '700', family: 'DM Sans' }
+            },
+            ticks: {
+              color: '#555',
+              backdropColor: 'transparent',
+              font: { size: 9 }
+            }
+          }
+        },
+        plugins: {
+          legend: {
+            position: 'bottom',
+            labels: {
+              color: '#888',
+              font: { size: 10 },
+              filter: (item) => item.datasetIndex === segs.length * 2 - 2 || item.datasetIndex === segs.length * 2 - 1
+            }
+          }
+        },
+        responsive: true,
+        maintainAspectRatio: true,
+      }
+    });
+  }
+
+  // History list
+  if(histEl) {
+    let histHtml = '<div class="section-title" style="margin-top:8px;font-size:16px">Histórico Segmentar</div>';
+    [...segs].reverse().forEach(seg => {
+      seg.id = seg.id || crypto.randomUUID();
+      const rows = segments.map(sg => `
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid var(--border)">
+          <span style="font-size:12px;color:${sg.color};font-weight:600">${sg.emoji} ${sg.label}</span>
+          <span style="font-size:12px">
+            <span style="color:var(--accent2)">${seg[sg.key]?.massa||0}kg massa</span>
+            &nbsp;·&nbsp;
+            <span style="color:var(--accent3)">${seg[sg.key]?.gordura||0}kg gord.</span>
+          </span>
+        </div>`).join('');
+      histHtml += `
+        <div class="card" style="margin-bottom:10px">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+            <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text3)">${seg.date}</div>
+            <div style="display:flex;gap:6px">
+              <button class="btn-icon" onclick="editSeg('${seg.id}')" style="color:var(--accent2);border-color:rgba(71,200,255,0.3)">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" style="width:14px;height:14px"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+              </button>
+              <button class="btn-icon" onclick="deleteSeg('${seg.id}')" style="color:var(--red);border-color:rgba(255,71,87,0.3)">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" style="width:14px;height:14px"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+              </button>
+            </div>
+          </div>
+          ${rows}
+        </div>`;
+    });
+    histEl.innerHTML = histHtml;
+  }
 }
 
 // ========================
