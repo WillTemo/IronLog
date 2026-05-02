@@ -2202,8 +2202,12 @@ function savePeso() {
   const val = parseFloat(document.getElementById('peso-val').value);
   if(!date || !val) { toast('Preencha data e peso','var(--red)'); return; }
   const existing = weights.findIndex(w=>w.date===date);
-  if(existing>=0) weights[existing].val = val;
-  else weights.push({date, val});
+  if(existing>=0) {
+    weights[existing].val = val;
+    if(!weights[existing].id) weights[existing].id = crypto.randomUUID();
+  } else {
+    weights.push({ id: crypto.randomUUID(), date, val });
+  }
   weights.sort((a,b)=>a.date.localeCompare(b.date));
   DB.set('weights', weights);
   document.getElementById('peso-val').value='';
@@ -2243,7 +2247,8 @@ function renderPesoCharts() {
   const wks = Object.keys(byWeek).sort();
   const avgs = wks.map(k => (byWeek[k].reduce((a,b)=>a+b,0)/byWeek[k].length).toFixed(1));
 
-  if(chartPesoLine) chartPesoLine.destroy();
+  const existingPeso = Chart.getChart('chart-peso');
+  if(existingPeso) existingPeso.destroy();
   chartPesoLine = new Chart(document.getElementById('chart-peso'), {
     type: 'line',
     data: { labels: wks.map(w=>w.replace('-W','·W')), datasets: [{
@@ -2293,8 +2298,11 @@ async function saveBio() {
   const massa = parseFloat(document.getElementById('bio-massa').value);
   const gordura = parseFloat(document.getElementById('bio-gordura').value);
 
-  if(!date||!peso||!massa||!gordura) { toast('Preencha todos os campos','var(--red)'); return; }
+  if(!date||isNaN(peso)||isNaN(massa)||isNaN(gordura)||!peso||!massa||!gordura) {
+    toast('Preencha todos os campos','var(--red)'); return;
+  }
 
+  // Salvar bio
   const existing = bios.findIndex(b=>b.date===date);
   const entry = { id: existing>=0 ? bios[existing].id : crypto.randomUUID(), date, peso, massa, gordura };
   if(existing>=0) bios[existing] = entry;
@@ -2302,12 +2310,9 @@ async function saveBio() {
   bios.sort((a,b)=>a.date.localeCompare(b.date));
   await DB.set('bios', bios);
 
-  // Registrar peso da bio também na balança (usando o 1º dia do mês como referência)
+  // Registrar peso total da bio na guia Peso Bruto (1º dia do mês)
   const weightDate = date + '-01';
-  const existingW = weights.findIndex(w=>w.date===weightDate);
-  if(existingW>=0) weights[existingW] = { date: weightDate, val: peso, fromBio: true };
-  else weights.push({ date: weightDate, val: peso, fromBio: true });
-  weights.sort((a,b)=>a.date.localeCompare(b.date));
+  _upsertWeight(weightDate, peso, true);
   await DB.set('weights', weights);
 
   document.getElementById('bio-peso').value='';
@@ -2316,7 +2321,19 @@ async function saveBio() {
 
   renderBioCharts();
   renderPesoCharts();
-  toast('Bioimpedância salva! Peso ' + peso + 'kg registrado na guia Peso Bruto 🔥');
+  toast('✅ Bioimpedância salva! Peso ' + peso + 'kg adicionado ao Peso Bruto.');
+}
+
+// Helper: insert or update a weight entry in the global weights array
+// Always preserves or creates an 'id' so mergeArrays can deduplicate correctly
+function _upsertWeight(date, val, fromBio) {
+  const idx = weights.findIndex(w => w.date === date);
+  if(idx >= 0) {
+    weights[idx] = { id: weights[idx].id || crypto.randomUUID(), date, val, fromBio: fromBio || false };
+  } else {
+    weights.push({ id: crypto.randomUUID(), date, val, fromBio: fromBio || false });
+  }
+  weights.sort((a,b) => a.date.localeCompare(b.date));
 }
 
 function editBio(bioId) {
@@ -2350,11 +2367,16 @@ async function saveEditBio() {
   // Atualiza também o peso na balança — remove o antigo (se era do bio) e insere novo
   const oldWeightDate = oldDate + '-01';
   const newWeightDate = date + '-01';
+  // Preserve the id of the old weight entry if dates match, otherwise remove old and upsert new
   const oldWIdx = weights.findIndex(w=>w.date===oldWeightDate && w.fromBio);
+  const preservedId = (oldWIdx>=0 && oldWeightDate===newWeightDate) ? weights[oldWIdx].id : null;
   if(oldWIdx>=0) weights.splice(oldWIdx,1);
   const newWIdx = weights.findIndex(w=>w.date===newWeightDate);
-  if(newWIdx>=0) weights[newWIdx] = { date: newWeightDate, val: peso, fromBio: true };
-  else weights.push({ date: newWeightDate, val: peso, fromBio: true });
+  if(newWIdx>=0) {
+    weights[newWIdx] = { id: weights[newWIdx].id || preservedId || crypto.randomUUID(), date: newWeightDate, val: peso, fromBio: true };
+  } else {
+    weights.push({ id: preservedId || crypto.randomUUID(), date: newWeightDate, val: peso, fromBio: true });
+  }
   weights.sort((a,b)=>a.date.localeCompare(b.date));
   await DB.set('weights', weights);
 
@@ -2440,7 +2462,10 @@ function renderBioCharts() {
   });
   const histEl = document.getElementById('bio-history-list');
   if(histEl) histEl.innerHTML = histHtml;
-  if(chartBioPizza) { chartBioPizza.destroy(); chartBioPizza = null; }
+
+  const existingPizza = Chart.getChart('chart-bio-pizza');
+  if(existingPizza) existingPizza.destroy();
+  chartBioPizza = null;
   chartBioPizza = new Chart(document.getElementById('chart-bio-pizza'), {
     type: 'doughnut',
     data: {
@@ -2460,7 +2485,9 @@ function renderBioCharts() {
 
   // Line chart (all bios)
   const labels = bios.map(b=>b.date);
-  if(chartBioLinha) chartBioLinha.destroy();
+  const existingLinha = Chart.getChart('chart-bio-linha');
+  if(existingLinha) existingLinha.destroy();
+  chartBioLinha = null;
   chartBioLinha = new Chart(document.getElementById('chart-bio-linha'), {
     type: 'line',
     data: {
