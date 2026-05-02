@@ -2314,6 +2314,9 @@ async function saveBio() {
   const weightDate = date + '-01';
   _upsertWeight(weightDate, peso, true);
   await DB.set('weights', weights);
+  // Re-read weights from DB to ensure in-memory state matches persisted state
+  const savedWeights = await DB.get('weights');
+  if(savedWeights) weights = savedWeights;
 
   document.getElementById('bio-peso').value='';
   document.getElementById('bio-massa').value='';
@@ -2435,7 +2438,8 @@ function renderBioCharts() {
       </div>
     </div>`;
 
-  // History list
+  // History list — garante que cada bio tenha id antes de gerar botões
+  bios.forEach(b => { if(!b.id) b.id = crypto.randomUUID(); });
   let histHtml = '<div class="section-title" style="margin-top:8px;font-size:16px">Histórico de Medições</div>';
   [...bios].reverse().forEach(bio => {
     const gPctH = ((bio.gordura/bio.peso)*100).toFixed(1);
@@ -3010,6 +3014,14 @@ window.addEventListener('auth-state-changed', async (e) => {
     showSyncStatus('syncing');
     await migrateFromLocalStorage();
     await loadAllData();
+    // Migrate any bios/weights that were saved without an 'id' field
+    let needsSave = false;
+    bios.forEach(b => { if(!b.id) { b.id = crypto.randomUUID(); needsSave = true; } });
+    weights.forEach(w => { if(!w.id) { w.id = crypto.randomUUID(); needsSave = true; } });
+    if(needsSave) {
+      await DB.set('bios', bios);
+      await DB.set('weights', weights);
+    }
     renderFichas();
     await checkForDraft();
     showSyncStatus('synced');
