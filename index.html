@@ -714,6 +714,35 @@ canvas { max-width: 100%; }
 @media (min-width: 600px) {
   .page { max-width: 600px; margin: 0 auto; }
 }
+
+/* ========================
+   IRONPOINTS / REWARDS
+   ======================== */
+.comp-toggle-wrap { display:flex;align-items:center;gap:8px;cursor:pointer;user-select:none }
+.comp-toggle-track { width:44px;height:24px;background:#2a2a2a;border-radius:12px;position:relative;transition:.2s;border:1px solid #333 }
+.comp-toggle-track.on { background:var(--accent);border-color:var(--accent) }
+.comp-toggle-knob { width:18px;height:18px;background:#fff;border-radius:50%;position:absolute;top:2px;left:2px;transition:.2s;box-shadow:0 1px 4px rgba(0,0,0,.5) }
+.comp-toggle-track.on .comp-toggle-knob { left:22px;background:#000 }
+
+.reward-card { background:#1a1a1a;border:1px solid #2a2a2a;border-radius:12px;padding:14px 16px;display:flex;align-items:center;gap:12px;transition:.15s }
+.reward-card:active { transform:scale(.98) }
+.reward-card.locked { opacity:.5 }
+.reward-cost { font-family:'JetBrains Mono',monospace;font-size:22px;font-weight:900;color:var(--accent);min-width:48px;text-align:center }
+.reward-cost .pts-label { font-size:9px;font-weight:400;letter-spacing:1px;display:block;color:var(--muted) }
+.reward-info { flex:1 }
+.reward-title { font-weight:700;font-size:14px;margin-bottom:2px }
+.reward-sub { font-size:11px;color:var(--muted) }
+.reward-btn { background:var(--accent);color:#000;border:none;border-radius:8px;padding:8px 14px;font-weight:900;font-size:12px;cursor:pointer;white-space:nowrap }
+.reward-btn:disabled { background:#2a2a2a;color:#555;cursor:not-allowed }
+
+.pts-hist-row { display:flex;align-items:center;gap:8px;padding:8px 10px;background:#141414;border-radius:8px }
+.pts-hist-icon { font-size:16px;min-width:20px;text-align:center }
+.pts-hist-desc { flex:1;font-size:12px }
+.pts-hist-date { font-size:10px;color:var(--muted) }
+.pts-hist-val { font-family:'JetBrains Mono',monospace;font-weight:700;font-size:13px }
+.pts-hist-val.pos { color:var(--accent) }
+.pts-hist-val.neg { color:#ff6b6b }
+
 </style>
 </head>
 <body>
@@ -1156,6 +1185,104 @@ canvas { max-width: 100%; }
 <!-- TOAST -->
 <div class="toast" id="toast"></div>
 
+
+<!-- PAGE: RECOMPENSAS -->
+<div class="page" id="page-recompensas">
+  <div class="section-title" style="display:flex;align-items:center;justify-content:space-between">
+    <span>⭐ IronPoints</span>
+    <label class="comp-toggle-wrap" title="Modo Competição">
+      <span style="font-size:11px;color:var(--muted)">MODO COMP.</span>
+      <div class="comp-toggle-track" onclick="toggleCompMode()">
+        <div class="comp-toggle-knob" id="comp-knob"></div>
+      </div>
+    </label>
+  </div>
+
+  <!-- POINTS HERO -->
+  <div id="pts-hero" style="background:linear-gradient(135deg,#1a1a1a,#111);border:1px solid #2a2a2a;border-radius:16px;padding:20px;margin-bottom:12px;text-align:center">
+    <div style="font-size:11px;letter-spacing:2px;color:var(--muted);margin-bottom:4px">SEUS PONTOS</div>
+    <div id="pts-display" style="font-family:'JetBrains Mono',monospace;font-size:56px;font-weight:900;line-height:1;color:var(--accent)">0</div>
+    <div id="pts-status-msg" style="font-size:12px;color:var(--muted);margin-top:6px"></div>
+  </div>
+
+  <!-- STREAK + META -->
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">
+    <div style="background:#1a1a1a;border-radius:12px;padding:14px;text-align:center">
+      <div style="font-size:10px;color:var(--muted);letter-spacing:1px">SEMANA ATUAL</div>
+      <div id="pts-week-count" style="font-size:28px;font-weight:900;font-family:'JetBrains Mono',monospace;color:var(--accent2)">0</div>
+      <div id="pts-week-target" style="font-size:10px;color:var(--muted)">treinos / meta</div>
+    </div>
+    <div style="background:#1a1a1a;border-radius:12px;padding:14px;text-align:center">
+      <div style="font-size:10px;color:var(--muted);letter-spacing:1px">META SEMANAL</div>
+      <div id="pts-goal-val" style="font-size:28px;font-weight:900;font-family:'JetBrains Mono',monospace;color:var(--accent)">—</div>
+      <div style="font-size:10px;color:var(--muted)">fichas distintas</div>
+    </div>
+  </div>
+
+  <!-- JUSTIFICATIVA -->
+  <div id="justif-section" style="margin-bottom:12px">
+    <div class="section-title" style="font-size:12px;margin-bottom:6px">🛡️ Modo Proteção</div>
+    <div id="justif-active-banner" style="display:none;background:#1a2a1a;border:1px solid #2a4a2a;border-radius:10px;padding:12px;margin-bottom:8px">
+      <div id="justif-active-txt" style="font-size:13px;font-weight:700;color:#4aff4a"></div>
+      <div id="justif-active-sub" style="font-size:11px;color:var(--muted);margin-top:2px"></div>
+      <div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap">
+        <button onclick="openDeclararMelhora()" style="background:#1a3a2a;color:#4aff4a;border:1px solid #4aff4a44;border-radius:6px;padding:6px 12px;font-size:11px;font-weight:700;cursor:pointer">✅ Declarar melhora</button>
+        <button onclick="cancelJustif()" style="background:#2a1a1a;color:#ff6b6b;border:1px solid #ff6b6b33;border-radius:6px;padding:6px 10px;font-size:11px;cursor:pointer">✕ Cancelar proteção</button>
+      </div>
+    </div>
+    <div id="justif-btn-row" style="display:flex;gap:6px;flex-wrap:wrap">
+      <button class="btn btn-sm" onclick="openJustifModal('lesao')" style="flex:1;min-width:80px;font-size:11px">🩹 Lesão</button>
+      <button class="btn btn-sm" onclick="openJustifModal('infortunio')" style="flex:1;min-width:80px;font-size:11px">❤️ Infortúnio</button>
+      <button class="btn btn-sm" onclick="openJustifModal('prova')" style="flex:1;min-width:80px;font-size:11px">📚 Prova</button>
+    </div>
+  </div>
+
+  <!-- REWARDS LIST -->
+  <div class="section-title" style="font-size:12px;margin-bottom:8px">🍔 Resgatar Recompensa</div>
+  <div id="rewards-list" style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px">
+    <!-- rendered by JS -->
+  </div>
+
+  <!-- HISTORY -->
+  <div class="section-title" style="font-size:12px;margin-bottom:8px">📋 Histórico</div>
+  <div id="pts-history" style="display:flex;flex-direction:column;gap:4px;font-size:12px"></div>
+</div>
+
+<!-- MODAL: DECLARAR MELHORA -->
+<div class="modal-overlay" id="modal-melhora">
+  <div class="modal">
+    <div class="modal-header">
+      <span id="melhora-modal-title">✅ Declarar Melhora</span>
+      <button class="modal-close" onclick="closeModal('modal-melhora')">✕</button>
+    </div>
+    <div id="melhora-modal-body" style="padding:16px"></div>
+  </div>
+</div>
+
+<!-- MODAL: JUSTIFICATIVA -->
+<div class="modal-overlay" id="modal-justif">
+  <div class="modal">
+    <div class="modal-header">
+      <span id="justif-modal-title">Modo Proteção</span>
+      <button class="modal-close" onclick="closeModal('modal-justif')">✕</button>
+    </div>
+    <div id="justif-modal-body" style="padding:16px">
+      <!-- dynamic -->
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: CONFIRM REDEEM -->
+<div class="modal-overlay" id="modal-redeem">
+  <div class="modal">
+    <div class="modal-header">
+      <span>🍔 Confirmar Resgate</span>
+      <button class="modal-close" onclick="closeModal('modal-redeem')">✕</button>
+    </div>
+    <div id="redeem-body" style="padding:16px"></div>
+  </div>
+</div>
+
 <!-- PAGE: BACKUP -->
 <div class="page" id="page-backup">
   <div style="height:16px"></div>
@@ -1282,6 +1409,11 @@ canvas { max-width: 100%; }
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="7" r="4"/><path d="M5.5 21c0-4 3-7 6.5-7s6.5 3 6.5 7"/></svg>
     Corpo
   </button>
+  <button class="nav-btn" onclick="goPage('recompensas', this)" id="nav-recompensas" style="position:relative">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+    Rewards
+    <span id="nav-pts-badge" style="display:none;position:absolute;top:6px;right:6px;background:var(--accent);color:#000;font-size:8px;font-weight:900;border-radius:10px;padding:1px 5px;font-family:'JetBrains Mono',monospace;line-height:1.4"></span>
+  </button>
   <button class="nav-btn" onclick="goPage('backup', this)">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
     Backup
@@ -1380,17 +1512,19 @@ async function loadAllData() {
         window.CloudDB.get('sessions'),
         window.CloudDB.get('weights'),
         window.CloudDB.get('bios'),
-        window.CloudDB.get('segs')
+        window.CloudDB.get('segs'),
+        window.CloudDB.get('ironpoints')
       ]);
       // Get local as fallback
-      const [lf, ls, lw, lb, lsg] = await Promise.all([
-        DB.get('fichas'), DB.get('sessions'), DB.get('weights'), DB.get('bios'), DB.get('segs')
+      const [lf, ls, lw, lb, lsg, lpts] = await Promise.all([
+        DB.get('fichas'), DB.get('sessions'), DB.get('weights'), DB.get('bios'), DB.get('segs'), DB.get('ironpoints')
       ]);
       fichas   = mergeArrays(cf, lf) || [];
       sessions = mergeArrays(cs, ls) || [];
       weights  = mergeArrays(cw, lw) || [];
       bios     = mergeArrays(cb, lb) || [];
       segs     = mergeArrays(csg, lsg) || [];
+      ironPointsData = (window.CloudDB && cpts) ? cpts : (lpts || ironPointsData);
       // Save merged back to both
       await Promise.all([
         DB.set('fichas', fichas), DB.set('sessions', sessions),
@@ -1406,14 +1540,15 @@ async function loadAllData() {
     }
   }
   // Fallback to local only
-  const [f, s, w, b, sg] = await Promise.all([
-    DB.get('fichas'), DB.get('sessions'), DB.get('weights'), DB.get('bios'), DB.get('segs')
+  const [f, s, w, b, sg, pts] = await Promise.all([
+    DB.get('fichas'), DB.get('sessions'), DB.get('weights'), DB.get('bios'), DB.get('segs'), DB.get('ironpoints')
   ]);
   fichas   = f || [];
   sessions = s || [];
   weights  = w || [];
   bios     = b || [];
   segs     = sg || [];
+  if(pts) ironPointsData = pts;
 }
 
 // Mescla dois arrays: nuvem tem prioridade, deduplicado por id ou date
@@ -1483,6 +1618,20 @@ let weights = [];
 let bios = [];
 let segs = []; // segmental body composition records
 
+// ========================
+// IRONPOINTS DATA
+// ========================
+let ironPointsData = {
+  enabled: false,          // competition mode on/off
+  points: 0,               // current balance
+  toggleCount: 0,          // how many times toggled (for penalty scaling)
+  freeToggleUsed: false,   // first toggle is free
+  history: [],             // [{type, desc, delta, date, balance}]
+  justif: null,            // active justification {type, until, label}
+  lastInertiaCheck: null,  // ISO date string of last inertia check
+  weeklyGoalMet: {}        // {YYYY-WW: true/false}
+};
+
 let currentSession = null; // { fichaId, exercises: [{id, name, muscle, sets:[{reps,weight,done}]}] }
 
 // ========================
@@ -1507,6 +1656,7 @@ function goPage(page, btn) {
     renderBioCharts();
   }
   if(page === 'backup') { renderBackupStats(); updateCloudStatus(); }
+  if(page === 'recompensas') { renderRecompensasPage(); }
 }
 
 // ========================
@@ -2048,8 +2198,46 @@ function saveSession() {
   DB.set('sessions', sessions);
   clearDraft();
   closeModal('modal-session');
+
+
+  // ---- IRONPOINTS: award for workout ----
+  if(ironPointsData.enabled) {
+    const totalDoneSets = session.exercises.reduce((a, ex) => a + ex.sets.filter(s => s.done).length, 0);
+
+    // Determine effective minimum based on injury
+    const j = ironPointsData.justif;
+    const hasActiveMuscleInjury = j && !j.grave && j.injuredMuscle;
+    let effectiveMin = 16;
+    let injuryNote = '';
+    if(hasActiveMuscleInjury) {
+      // Check if this session uses the injured muscle
+      const usesInjuredMuscle = session.exercises.some(ex =>
+        ex.muscle === j.injuredMuscle || ex.muscle2 === j.injuredMuscle
+      );
+      if(usesInjuredMuscle) {
+        effectiveMin = 12;
+        injuryNote = ` (mín. reduzido: lesão em ${j.injuredMuscle})`;
+      }
+    }
+
+    if(totalDoneSets >= effectiveMin) {
+      addPoints(1, '🏋 Treino concluído' + injuryNote, 'workout');
+      checkWeeklyGoal();
+    } else {
+      toast('Treino salvo! (abaixo de ' + effectiveMin + ' séries — sem ponto desta vez)', 'var(--muted)');
+    }
+  }
+
   currentSession = null;
-  toast('Treino salvo! 🔥');
+  const totalDoneSets2 = session.exercises.reduce((a, ex) => a + ex.sets.filter(s => s.done).length, 0);
+  if(!ironPointsData.enabled || totalDoneSets2 >= 16) toast('Treino salvo! 🔥');
+  else if(ironPointsData.enabled) {
+    const j2 = ironPointsData.justif;
+    if(j2 && !j2.grave && j2.injuredMuscle && new Date(j2.until) > new Date()) {
+      const usesInjured = session.exercises.some(ex => ex.muscle===j2.injuredMuscle||ex.muscle2===j2.injuredMuscle);
+      if(usesInjured && totalDoneSets2 >= 12) toast('Treino salvo! 🔥 (modo lesão)');
+    }
+  }
 }
 
 // ========================
@@ -2497,6 +2685,10 @@ async function saveBio() {
   renderBioCharts();
   renderPesoCharts();
   toast('✅ Bioimpedância salva! Peso ' + peso + 'kg adicionado ao Peso Bruto.');
+
+  // IronPoints: check for fat gain on first bio of the month
+  const savedEntry = bios.find(b => b.date === date);
+  if(savedEntry) checkBioFatGain(savedEntry);
 }
 
 // Helper: insert or update a weight entry in the global weights array
@@ -3934,6 +4126,10 @@ window.addEventListener('load', async () => {
 
   const isIos = /iphone|ipad|ipod/.test(navigator.userAgent.toLowerCase());
   const isInStandaloneMode = ('standalone' in window.navigator) && (window.navigator.standalone);
+  // Init ironpoints badge on boot
+  updateNavBadge();
+  checkInertia();
+
   if(isIos && !isInStandaloneMode && !localStorage.getItem('pwa_ios_hint_shown')) {
     setTimeout(() => {
       toast('📲 Para instalar: toque em Compartilhar → "Adicionar à tela de início"', 'var(--accent2)');
@@ -3941,6 +4137,505 @@ window.addEventListener('load', async () => {
     }, 3000);
   }
 });
+
+// ======================================================
+// IRONPOINTS ENGINE
+// ======================================================
+
+const REWARDS = [
+  { id: 'small',  cost: 5,  icon: '🍦', title: 'Refeição Livre Pequena', sub: 'Açaí, sorvete, bolo, balinhas…', color: '#47c8ff' },
+  { id: 'medium', cost: 7,  icon: '🍔', title: 'Refeição Livre',         sub: 'Hambúrguer, comida congelada, miojo…', color: '#ffaa47' },
+  { id: 'large',  cost: 10, icon: '🍕', title: 'Refeição Livre Grande',  sub: 'Pizza, rodízio, prato à vontade…', color: '#ff6b47' }
+];
+
+function saveIronPoints() {
+  DB.set('ironpoints', ironPointsData);
+  if(window.CloudDB && window.CloudDB._uid) {
+    window.CloudDB.set('ironpoints', ironPointsData).catch(()=>{});
+  }
+}
+
+function addPoints(delta, desc, type, skipSave) {
+  ironPointsData.points += delta;
+  const entry = {
+    type: type || 'manual',
+    desc,
+    delta,
+    date: new Date().toISOString(),
+    balance: ironPointsData.points
+  };
+  ironPointsData.history.unshift(entry);
+  if(ironPointsData.history.length > 200) ironPointsData.history = ironPointsData.history.slice(0,200);
+  if(!skipSave) saveIronPoints();
+  updateNavBadge();
+}
+
+function updateNavBadge() {
+  const badge = document.getElementById('nav-pts-badge');
+  if(!badge) return;
+  if(ironPointsData.enabled && ironPointsData.points !== 0) {
+    badge.style.display = 'block';
+    badge.textContent = ironPointsData.points > 0 ? '+'+ironPointsData.points : ironPointsData.points;
+  } else {
+    badge.style.display = 'none';
+  }
+}
+
+// ---- WEEK HELPERS ----
+function getWeekKey(date) {
+  const d = new Date(date || Date.now());
+  // ISO week: Monday-based
+  const day = d.getDay() === 0 ? 7 : d.getDay();
+  d.setDate(d.getDate() - day + 1);
+  return d.getFullYear() + '-W' + String(getISOWeek(d)).padStart(2,'0');
+}
+
+function getISOWeek(d) {
+  const date = new Date(d);
+  date.setHours(0,0,0,0);
+  date.setDate(date.getDate() + 3 - (date.getDay()+6)%7);
+  const week1 = new Date(date.getFullYear(),0,4);
+  return 1 + Math.round(((date.getTime()-week1.getTime())/86400000 - 3 + (week1.getDay()+6)%7)/7);
+}
+
+function getCalendarWeekStart(date) {
+  // Returns Monday of the current calendar week
+  const d = new Date(date || Date.now());
+  d.setHours(0,0,0,0);
+  const day = d.getDay() === 0 ? 7 : d.getDay();
+  d.setDate(d.getDate() - day + 1);
+  return d;
+}
+
+// ---- WEEKLY GOAL ----
+function getWeeklyGoal() {
+  // Goal = number of distinct fichas (workout plans); min 1
+  return Math.max(1, fichas.length);
+}
+
+function getEffectiveMinSets(session) {
+  // Returns the minimum valid sets needed for a workout to count as a point
+  const j = ironPointsData.justif;
+  if(!j || j.grave || !j.injuredMuscle || new Date(j.until) <= new Date()) return 16;
+  const usesInjured = session.exercises.some(ex => ex.muscle === j.injuredMuscle || ex.muscle2 === j.injuredMuscle);
+  return usesInjured ? 12 : 16;
+}
+
+function getSessionsThisWeek() {
+  const weekStart = getCalendarWeekStart();
+  return sessions.filter(s => {
+    if(new Date(s.date) < weekStart) return false;
+    const done = s.exercises.reduce((a,ex)=>a+ex.sets.filter(st=>st.done).length,0);
+    return done >= getEffectiveMinSets(s);
+  });
+}
+
+function checkWeeklyGoal() {
+  if(!ironPointsData.enabled) return;
+  const wk = getWeekKey();
+  if(ironPointsData.weeklyGoalMet[wk]) return; // already awarded this week
+
+  const goal = getWeeklyGoal();
+  const weekSessions = getSessionsThisWeek();
+
+  // Check: must have done each unique ficha at least once
+  const fichaIdsDone = new Set(weekSessions.map(s => s.fichaId));
+  const allFichasDone = fichas.every(f => fichaIdsDone.has(f.id));
+  const countMet = weekSessions.length >= goal;
+
+  if(countMet && allFichasDone) {
+    ironPointsData.weeklyGoalMet[wk] = true;
+    addPoints(2, '🏆 Meta semanal concluída! (+2)', 'goal_bonus');
+    toast('🏆 Meta semanal concluída! +2 pontos!', 'var(--accent)');
+  }
+}
+
+// ---- INERTIA CHECK ----
+function checkInertia() {
+  if(!ironPointsData.enabled) return;
+
+  // Don't check if under any active protection
+  if(ironPointsData.justif) return;
+
+  const today = new Date();
+  today.setHours(0,0,0,0);
+  const weekStart = getCalendarWeekStart();
+
+  // Count business days since week started with no workout
+  const sessionsDaysThisWeek = new Set(
+    sessions
+      .filter(s => new Date(s.date) >= weekStart)
+      .map(s => new Date(s.date).toISOString().split('T')[0])
+  );
+
+  // Count business days elapsed since week start
+  let bizDays = 0;
+  const d = new Date(weekStart);
+  while(d < today) {
+    const dow = d.getDay();
+    if(dow !== 0 && dow !== 6) bizDays++;
+    d.setDate(d.getDate() + 1);
+  }
+
+  const lastCheck = ironPointsData.lastInertiaCheck ? new Date(ironPointsData.lastInertiaCheck) : null;
+  const alreadyCheckedToday = lastCheck && lastCheck.toISOString().split('T')[0] === today.toISOString().split('T')[0];
+  if(alreadyCheckedToday) return;
+
+  if(sessionsDaysThisWeek.size === 0 && bizDays >= 3) {
+    const weeksInactive = Math.floor(bizDays / 5);
+    const penalty = weeksInactive >= 1 ? 2 : 1;
+    ironPointsData.lastInertiaCheck = today.toISOString();
+    addPoints(-penalty, `😴 Inércia: ${bizDays} dias úteis sem treinar (-${penalty})`, 'inertia');
+    toast(`⚠️ -${penalty} ponto(s) por inércia`, '#ff6b47');
+  }
+}
+
+// ---- TOGGLE COMP MODE ----
+function toggleCompMode() {
+  const enabling = !ironPointsData.enabled;
+
+  if(!enabling) {
+    // Turning OFF: apply penalty
+    const isFirstFree = !ironPointsData.freeToggleUsed;
+    if(isFirstFree) {
+      ironPointsData.freeToggleUsed = true;
+      ironPointsData.enabled = false;
+      ironPointsData.toggleCount++;
+      saveIronPoints();
+      toast('Modo Competição desativado (1ª vez gratuita)');
+    } else {
+      ironPointsData.toggleCount++;
+      const penalty = 3 + (ironPointsData.toggleCount - 2) * 2; // 3, 5, 7, 9…
+      ironPointsData.enabled = false;
+      addPoints(-penalty, `🔴 Modo Competição desativado (-${penalty})`, 'toggle_off');
+      toast(`Modo desativado. -${penalty} pontos de multa.`, '#ff6b47');
+    }
+  } else {
+    // Turning ON
+    ironPointsData.enabled = true;
+    ironPointsData.lastInertiaCheck = null; // reset inertia on re-enable
+    saveIronPoints();
+    toast('🟢 Modo Competição ativado! Cada treino conta.', 'var(--accent)');
+  }
+
+  renderRecompensasPage();
+}
+
+// ---- REDEEM ----
+function openRedeemModal(rewardId) {
+  const reward = REWARDS.find(r => r.id === rewardId);
+  if(!reward) return;
+  const canAfford = ironPointsData.points >= reward.cost;
+  const body = document.getElementById('redeem-body');
+  body.innerHTML = `
+    <div style="text-align:center;padding:8px 0 16px">
+      <div style="font-size:48px;margin-bottom:8px">${reward.icon}</div>
+      <div style="font-size:18px;font-weight:700;margin-bottom:4px">${reward.title}</div>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:16px">${reward.sub}</div>
+      <div style="font-size:13px;margin-bottom:4px">Custo: <strong style="color:${canAfford?'var(--accent)':'#ff6b6b'}">${reward.cost} pts</strong></div>
+      <div style="font-size:13px;margin-bottom:20px">Saldo atual: <strong>${ironPointsData.points} pts</strong></div>
+      ${canAfford
+        ? `<button onclick="confirmRedeem('${reward.id}')" style="background:var(--accent);color:#000;border:none;border-radius:10px;padding:12px 28px;font-weight:900;font-size:14px;cursor:pointer;width:100%">✅ Confirmar Resgate</button>`
+        : `<div style="color:#ff6b6b;font-weight:700;font-size:13px">⚠️ Pontos insuficientes</div>`
+      }
+    </div>`;
+  openModal('modal-redeem');
+}
+
+function confirmRedeem(rewardId) {
+  const reward = REWARDS.find(r => r.id === rewardId);
+  if(!reward) return;
+  if(ironPointsData.points < reward.cost) {
+    toast('Pontos insuficientes!', 'var(--red)'); return;
+  }
+  addPoints(-reward.cost, `${reward.icon} Resgate: ${reward.title}`, 'redeem');
+  closeModal('modal-redeem');
+  toast(`${reward.icon} Bom proveito! ${reward.title} resgatada.`, 'var(--accent2)');
+  renderRecompensasPage();
+}
+
+// ---- JUSTIFICATIVA ----
+function openJustifModal(type) {
+  const titles = { lesao:'🩹 Justificativa: Lesão', infortunio:'❤️ Justificativa: Infortúnio', prova:'📚 Justificativa: Prova' };
+  document.getElementById('justif-modal-title').textContent = titles[type];
+  const body = document.getElementById('justif-modal-body');
+
+  const tomorrow = new Date(); tomorrow.setDate(tomorrow.getDate()+1);
+  const fmt = d => d.toISOString().split('T')[0];
+
+  if(type === 'lesao') {
+    const muscleOpts = MUSCLES.map(m => `<option value="${m}">${m}</option>`).join('');
+    body.innerHTML = `
+      <p style="font-size:13px;color:var(--muted);margin-bottom:12px">Inércia suspensa enquanto a lesão estiver ativa. Declare melhora quando estiver recuperado. Para lesão muscular: fichas com aquele músculo precisam de apenas 12 séries válidas para valer 1 pt.</p>
+
+      <label style="font-size:12px;color:var(--muted)">Tipo de lesão</label>
+      <select id="justif-lesao-tipo" class="input" style="margin-bottom:8px" onchange="toggleLesaoTipo()">
+        <option value="muscular">Lesão muscular (músculo específico)</option>
+        <option value="grave">Lesão grave (impossibilitado de treinar)</option>
+      </select>
+
+      <div id="justif-muscle-row" style="margin-bottom:8px">
+        <label style="font-size:12px;color:var(--muted)">Músculo lesionado</label>
+        <select id="justif-muscle" class="input">
+          <option value="">— selecione —</option>
+          ${muscleOpts}
+        </select>
+        <p style="font-size:11px;color:var(--muted);margin-top:4px">
+          Treinos que usam esse músculo terão mínimo de 12 séries (em vez de 16) para ganhar 1 pt.<br>
+          A proteção de inércia dura 1 semana, depois volta a contar normalmente (mas mínimo reduzido permanece até o retorno previsto).
+        </p>
+      </div>
+
+      <button onclick="saveJustif('lesao')" class="btn btn-primary" style="width:100%;justify-content:center;margin-top:8px">Confirmar</button>`;
+  } else if(type === 'infortunio') {
+    const weekOut = new Date(); weekOut.setDate(weekOut.getDate()+7);
+    body.innerHTML = `
+      <p style="font-size:13px;color:var(--muted);margin-bottom:12px">1 semana de proteção, prorrogável por mais 1. Nenhuma penalidade por inércia nesse período.</p>
+      <label style="display:flex;align-items:center;gap:8px;font-size:12px;cursor:pointer;margin-bottom:16px">
+        <input type="checkbox" id="justif-prorrogar">
+        Prorrogar por mais 1 semana (total: 2 semanas)
+      </label>
+      <button onclick="saveJustif('infortunio')" class="btn btn-primary" style="width:100%;justify-content:center">Confirmar</button>`;
+  } else if(type === 'prova') {
+    body.innerHTML = `
+      <p style="font-size:13px;color:var(--muted);margin-bottom:12px">Defina o período de provas. Nenhuma penalidade por inércia durante esse período.</p>
+      <label style="font-size:12px;color:var(--muted)">Início</label>
+      <input type="date" id="justif-start" class="input" value="${fmt(new Date())}" style="margin-bottom:8px">
+      <label style="font-size:12px;color:var(--muted)">Fim</label>
+      <input type="date" id="justif-end" class="input" min="${fmt(tomorrow)}" style="margin-bottom:16px">
+      <button onclick="saveJustif('prova')" class="btn btn-primary" style="width:100%;justify-content:center">Confirmar</button>`;
+  }
+
+  openModal('modal-justif');
+}
+
+function saveJustif(type) {
+  let until, label, grave = false;
+
+  if(type === 'lesao') {
+    until = '9999-12-31T23:59:59'; // active until user declares melhora
+    const tipoEl = document.getElementById('justif-lesao-tipo');
+    grave = tipoEl && tipoEl.value === 'grave';
+    const muscleEl = document.getElementById('justif-muscle');
+    const injuredMuscle = (!grave && muscleEl) ? muscleEl.value : '';
+    if(!grave && !injuredMuscle) { toast('Selecione o músculo lesionado', 'var(--red)'); return; }
+    label = grave ? '🩹 Lesão grave' : `🩹 Lesão: ${injuredMuscle}`;
+    ironPointsData.justif = { type, until, label, grave, injuredMuscle };
+    ironPointsData.history.unshift({
+      type: 'justif', desc: `${label} ativada`, delta: 0, date: new Date().toISOString(), balance: ironPointsData.points
+    });
+    saveIronPoints();
+    closeModal('modal-justif');
+    toast(`${label} ativada — declare melhora quando estiver recuperado`, 'var(--accent2)');
+    renderRecompensasPage();
+    return;
+  } else if(type === 'infortunio') {
+    const weeks = document.getElementById('justif-prorrogar').checked ? 14 : 7;
+    const d = new Date(); d.setDate(d.getDate() + weeks);
+    until = d.toISOString();
+    label = '❤️ Infortúnio familiar';
+  } else if(type === 'prova') {
+    const endVal = document.getElementById('justif-end').value;
+    if(!endVal) { toast('Selecione a data de fim', 'var(--red)'); return; }
+    until = endVal + 'T23:59:59';
+    label = '📚 Semana de provas';
+  }
+
+  ironPointsData.justif = { type, until, label, grave };
+  ironPointsData.history.unshift({
+    type: 'justif', desc: `${label} ativada`, delta: 0, date: new Date().toISOString(), balance: ironPointsData.points
+  });
+  saveIronPoints();
+  closeModal('modal-justif');
+  toast(`${label} ativada até ${new Date(until).toLocaleDateString('pt-BR')}`, 'var(--accent2)');
+  renderRecompensasPage();
+}
+
+function cancelJustif() {
+  ironPointsData.justif = null;
+  saveIronPoints();
+  renderRecompensasPage();
+}
+
+// ── Declarar Melhora ──
+function openDeclararMelhora() {
+  const j = ironPointsData.justif;
+  if(!j) return;
+  const title = j.grave ? '✅ Melhora: Lesão Grave' : `✅ Melhora: ${j.injuredMuscle}`;
+  document.getElementById('melhora-modal-title').textContent = title;
+  const desc = j.grave
+    ? 'Ao declarar melhora, a proteção de inércia é encerrada e você volta ao regime normal de 16 séries.'
+    : `Ao declarar melhora, o mínimo de séries para fichas com <strong>${j.injuredMuscle}</strong> volta a 16 e a proteção de inércia é encerrada.`;
+  document.getElementById('melhora-modal-body').innerHTML = `
+    <p style="font-size:13px;color:var(--muted);margin-bottom:20px">${desc}</p>
+    <button onclick="confirmarMelhora()" class="btn btn-primary" style="width:100%;justify-content:center">
+      ✅ Confirmar — estou recuperado
+    </button>`;
+  openModal('modal-melhora');
+}
+
+function confirmarMelhora() {
+  const j = ironPointsData.justif;
+  const label = j ? j.label : 'Lesão';
+  ironPointsData.justif = null;
+  ironPointsData.history.unshift({
+    type: 'justif', desc: `✅ Melhora declarada: ${label}`, delta: 0,
+    date: new Date().toISOString(), balance: ironPointsData.points
+  });
+  saveIronPoints();
+  closeModal('modal-melhora');
+  toast('✅ Melhora declarada! Voltando ao regime normal.', 'var(--accent)');
+  renderRecompensasPage();
+}
+
+// ---- TOGGLE LESAO TYPE UI ----
+function toggleLesaoTipo() {
+  const tipo = document.getElementById('justif-lesao-tipo');
+  const muscleRow = document.getElementById('justif-muscle-row');
+  if(!tipo || !muscleRow) return;
+  muscleRow.style.display = tipo.value === 'grave' ? 'none' : 'block';
+}
+
+// ---- BIO FAT CHECK (called from saveBio) ----
+function checkBioFatGain(newBio) {
+  if(!ironPointsData.enabled) return;
+
+  // Find the previous first-of-month bio (before this one)
+  const sortedBios = [...bios].sort((a,b) => a.date.localeCompare(b.date));
+  const thisIdx = sortedBios.findIndex(b => b.id === newBio.id);
+
+  // We want the immediately preceding bio entry
+  if(thisIdx <= 0) return; // no previous bio to compare
+  const prevBio = sortedBios[thisIdx - 1];
+
+  // Only penalise if this is the first bio of its month
+  const thisMonth = newBio.date.substring(0, 7); // YYYY-MM
+  const biosThisMonth = sortedBios.filter(b => b.date.substring(0,7) === thisMonth);
+  const isFirstOfMonth = biosThisMonth[0].id === newBio.id;
+  if(!isFirstOfMonth) return;
+
+  // Check already penalised this month
+  const alreadyPenalised = ironPointsData.history.some(h =>
+    h.type === 'bio_fat' && h.date.substring(0,7) === new Date().toISOString().substring(0,7)
+  );
+  if(alreadyPenalised) return;
+
+  const fatDiff = (newBio.gordura - prevBio.gordura) * 10; // kg (gordura stored in %)
+  // Convert % to kg: fatDiff in % points, need kg
+  // gordura field = kg of fat (based on saveBio reading bio-gordura as kg)
+  const fatDiffKg = newBio.gordura - prevBio.gordura; // both in kg
+
+  if(fatDiffKg > 0.5) {
+    addPoints(-3, `📈 Ganho de gordura: +${fatDiffKg.toFixed(1)}kg vs mês anterior (-3)`, 'bio_fat');
+    toast(`⚠️ Ganho de gordura detectado (+${fatDiffKg.toFixed(1)}kg). -3 pontos.`, '#ff6b47');
+  }
+}
+
+// ---- RENDER PAGE ----
+function renderRecompensasPage() {
+  if(!document.getElementById('page-recompensas')) return;
+
+  // Run inertia check on page open
+  if(ironPointsData.enabled) checkInertia();
+
+  // Toggle knob
+  const track = document.querySelector('.comp-toggle-track');
+  if(track) {
+    if(ironPointsData.enabled) track.classList.add('on');
+    else track.classList.remove('on');
+  }
+
+  // Points display
+  const pts = ironPointsData.points;
+  document.getElementById('pts-display').textContent = pts;
+  document.getElementById('pts-display').style.color = pts < 0 ? '#ff6b6b' : 'var(--accent)';
+
+  // Status message
+  const statusMsg = document.getElementById('pts-status-msg');
+  if(!ironPointsData.enabled) {
+    statusMsg.textContent = '⏸ Modo Competição desativado';
+    statusMsg.style.color = 'var(--muted)';
+  } else if(ironPointsData.justif) {
+    statusMsg.textContent = `🛡️ Modo Proteção ativo: ${ironPointsData.justif.label}`;
+    statusMsg.style.color = '#4aff4a';
+  } else {
+    statusMsg.textContent = '🟢 Modo Competição ativo';
+    statusMsg.style.color = 'var(--accent)';
+  }
+
+  // Week stats
+  const weekSessions = getSessionsThisWeek();
+  const goal = getWeeklyGoal();
+  document.getElementById('pts-week-count').textContent = weekSessions.length;
+  document.getElementById('pts-week-target').textContent = `treinos / meta: ${goal}`;
+  document.getElementById('pts-goal-val').textContent = goal;
+
+  // Justificativa active banner
+  const hasJustif = !!ironPointsData.justif;
+  document.getElementById('justif-active-banner').style.display = hasJustif ? 'block' : 'none';
+  if(hasJustif) {
+    const jj = ironPointsData.justif;
+    document.getElementById('justif-active-txt').textContent = jj.label;
+    let subTxt = '';
+    if(jj.injuredMuscle) {
+      subTxt = `Músculo: ${jj.injuredMuscle} · Treinos com esse músculo: mín. 12 séries`;
+    } else if(jj.grave) {
+      subTxt = 'Lesão grave · Inércia suspensa · Declare melhora para retomar o regime normal';
+    } else {
+      subTxt = 'Proteção de inércia ativa';
+    }
+    document.getElementById('justif-active-sub').textContent = subTxt;
+  }
+
+  // Rewards
+  const rewardsList = document.getElementById('rewards-list');
+  rewardsList.innerHTML = REWARDS.map(r => {
+    const canAfford = ironPointsData.points >= r.cost;
+    const isEnabled = ironPointsData.enabled;
+    return `
+      <div class="reward-card ${!canAfford ? 'locked' : ''}">
+        <div class="reward-cost" style="color:${r.color}">
+          ${r.cost}
+          <span class="pts-label">PTS</span>
+        </div>
+        <div style="font-size:28px;margin:0 4px">${r.icon}</div>
+        <div class="reward-info">
+          <div class="reward-title">${r.title}</div>
+          <div class="reward-sub">${r.sub}</div>
+        </div>
+        <button class="reward-btn"
+          onclick="openRedeemModal('${r.id}')"
+          ${(!canAfford || !isEnabled) ? 'disabled' : ''}>
+          ${!isEnabled ? '⏸' : canAfford ? 'Resgatar' : `Faltam ${r.cost - ironPointsData.points}`}
+        </button>
+      </div>`;
+  }).join('');
+
+  // History
+  const hist = document.getElementById('pts-history');
+  if(ironPointsData.history.length === 0) {
+    hist.innerHTML = '<div style="color:var(--muted);font-size:12px;text-align:center;padding:16px">Nenhum registro ainda</div>';
+  } else {
+    const icons = { workout:'🏋', goal_bonus:'🏆', redeem:'🍔', inertia:'😴', toggle_off:'🔴', justif:'🛡️', bio_fat:'📈', manual:'⭐' };
+    hist.innerHTML = ironPointsData.history.slice(0,30).map(h => {
+      const d = new Date(h.date);
+      const dateStr = d.toLocaleDateString('pt-BR', {day:'2-digit',month:'2-digit'}) + ' ' + d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+      return `
+        <div class="pts-hist-row">
+          <div class="pts-hist-icon">${icons[h.type] || '⭐'}</div>
+          <div style="flex:1">
+            <div class="pts-hist-desc">${h.desc}</div>
+            <div class="pts-hist-date">${dateStr} · saldo: ${h.balance} pts</div>
+          </div>
+          <div class="pts-hist-val ${h.delta > 0 ? 'pos' : h.delta < 0 ? 'neg' : ''}">${h.delta > 0 ? '+'+h.delta : h.delta === 0 ? '—' : h.delta}</div>
+        </div>`;
+    }).join('');
+  }
+
+  updateNavBadge();
+}
+
+
 </script>
 </body>
 </html>
