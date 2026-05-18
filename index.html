@@ -1173,6 +1173,29 @@ canvas { max-width: 100%; }
     </button>
   </div>
 
+  <!-- RELATÓRIO PARA PERSONAL -->
+  <div class="card" style="margin-bottom:16px;border-color:var(--accent2)">
+    <div style="font-weight:700;font-size:15px;margin-bottom:6px">📊 Relatório para Personal</div>
+    <div style="font-size:13px;color:var(--text2);margin-bottom:14px;line-height:1.5">
+      Gera um relatório detalhado em <strong style="color:var(--accent2)">HTML</strong> com histórico de treinos, pesos, volume semanal e métricas úteis para análise profissional.
+    </div>
+    <div style="display:flex;gap:8px;margin-bottom:10px">
+      <div style="flex:1">
+        <label class="input-label">Período</label>
+        <select class="input" id="report-period">
+          <option value="week">Última semana</option>
+          <option value="2weeks">Últimas 2 semanas</option>
+          <option value="month" selected>Último mês</option>
+          <option value="3months">Últimos 3 meses</option>
+        </select>
+      </div>
+    </div>
+    <button class="btn" onclick="exportPersonalReport()" style="width:100%;justify-content:center;background:var(--accent2);color:#000;font-weight:700">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" style="width:18px;height:18px"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+      Gerar Relatório
+    </button>
+  </div>
+
   <!-- IMPORT -->
   <div class="card" style="margin-bottom:16px;border-color:var(--accent3)">
     <div style="font-weight:700;font-size:15px;margin-bottom:6px">📥 Importar Dados</div>
@@ -3396,6 +3419,319 @@ function renderBackupStats() {
     '🧬 <strong>' + totalBios + '</strong> registros de bioimpedância<br>' +
     '📅 Primeiro treino: <strong>' + firstSession + '</strong><br>' +
     '📅 Último treino: <strong>' + lastSession + '</strong>';
+}
+
+// ========================
+// RELATÓRIO PARA PERSONAL
+// ========================
+async function exportPersonalReport() {
+  await loadAllData();
+  const period = document.getElementById('report-period').value;
+  const now = new Date();
+  let startDate;
+  if (period === 'week')    startDate = new Date(now - 7  * 86400000);
+  else if (period === '2weeks') startDate = new Date(now - 14 * 86400000);
+  else if (period === 'month')  startDate = new Date(now - 30 * 86400000);
+  else                          startDate = new Date(now - 90 * 86400000);
+
+  const periodLabel = { week:'Última Semana', '2weeks':'Últimas 2 Semanas', month:'Último Mês', '3months':'Últimos 3 Meses' }[period];
+  const filteredSessions = sessions.filter(s => new Date(s.date) >= startDate);
+
+  if (!filteredSessions.length) {
+    toast('⚠️ Nenhum treino encontrado neste período', 'var(--accent)');
+    return;
+  }
+
+  // ---- PESO ----
+  const weightsSorted = [...weights].sort((a,b) => new Date(a.date) - new Date(b.date));
+  const lastWeight = weightsSorted[weightsSorted.length - 1];
+  const prevWeightInPeriod = weightsSorted.filter(w => new Date(w.date) < startDate).slice(-1)[0];
+  const weightDiff = (lastWeight && prevWeightInPeriod) ? (parseFloat(lastWeight.weight) - parseFloat(prevWeightInPeriod.weight)) : null;
+  const firstWeightEver = weightsSorted[0];
+  const totalWeightDiff = (lastWeight && firstWeightEver && lastWeight.id !== firstWeightEver.id)
+    ? (parseFloat(lastWeight.weight) - parseFloat(firstWeightEver.weight)) : null;
+
+  // ---- VOLUME POR MÚSCULO (séries totais por músculo no período) ----
+  const muscleVolume = {};
+  filteredSessions.forEach(s => {
+    s.exercises.forEach(ex => {
+      if (ex.skipped) return;
+      const doneSets = ex.sets.filter(st => st.done).length;
+      if (!doneSets) return;
+      [ex.muscle, ex.muscle2].filter(Boolean).forEach(m => {
+        muscleVolume[m] = (muscleVolume[m] || 0) + doneSets;
+      });
+    });
+  });
+  const muscleVolumeArr = Object.entries(muscleVolume).sort((a,b) => b[1]-a[1]);
+
+  // ---- VOLUME SEMANAL (treinos por semana) ----
+  const weekMap = {};
+  filteredSessions.forEach(s => {
+    const d = new Date(s.date);
+    const startOfWeek = new Date(d);
+    startOfWeek.setDate(d.getDate() - d.getDay());
+    const key = startOfWeek.toISOString().split('T')[0];
+    weekMap[key] = (weekMap[key] || 0) + 1;
+  });
+  const weekKeys = Object.keys(weekMap).sort();
+  const avgPerWeek = weekKeys.length ? (filteredSessions.length / weekKeys.length).toFixed(1) : '—';
+
+  // ---- POR EXERCÍCIO: maior carga e progressão ----
+  const exMap = {};
+  filteredSessions.forEach(s => {
+    s.exercises.forEach(ex => {
+      if (ex.skipped) return;
+      const doneSets = ex.sets.filter(st => st.done && st.weight);
+      if (!doneSets.length) return;
+      const maxW = Math.max(...doneSets.map(st => parseFloat(st.weight) || 0));
+      const totalVol = doneSets.reduce((acc, st) => acc + ((parseFloat(st.weight)||0) * (parseInt(st.reps)||0)), 0);
+      if (!exMap[ex.name]) exMap[ex.name] = { muscle: ex.muscle, entries: [] };
+      exMap[ex.name].entries.push({ date: s.date, maxWeight: maxW, totalVolume: totalVol, sets: doneSets });
+    });
+  });
+
+  // ---- HISTÓRICO DETALHADO DE TREINOS ----
+  const sessionsByDate = [...filteredSessions].sort((a,b) => new Date(b.date)-new Date(a.date));
+
+  const fmt = d => new Date(d).toLocaleDateString('pt-BR', { day:'2-digit', month:'short', year:'numeric' });
+  const fmtShort = d => new Date(d).toLocaleDateString('pt-BR', { day:'2-digit', month:'short' });
+  const weekDay = d => ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'][new Date(d).getDay()];
+
+  // ---- GERA HTML DO RELATÓRIO ----
+  const html = `<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>IronLog — Relatório ${periodLabel}</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family: Arial, sans-serif; color: #1a1a2e; background: #fff; padding: 32px; font-size: 13px; max-width: 900px; margin: 0 auto; }
+  @media print { body { padding: 16px; } @page { margin: 1.5cm; } .no-break { break-inside: avoid; } }
+  h1 { font-size: 28px; font-weight: 900; letter-spacing: 2px; color: #1a1a2e; margin-bottom: 2px; }
+  h1 span { color: #b8a000; }
+  h2 { font-size: 15px; font-weight: 800; text-transform: uppercase; letter-spacing: 1.5px; color: #1a1a2e; margin: 28px 0 12px; padding-bottom: 6px; border-bottom: 2px solid #e8ff47; }
+  .meta { font-size: 11px; color: #888; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 28px; border-bottom: 3px solid #e8ff47; padding-bottom: 14px; }
+  .grid3 { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-bottom:12px; }
+  .grid2 { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:12px; }
+  .kpi { background:#f8f8f8; border:1px solid #e0e0e0; border-radius:6px; padding:12px; }
+  .kpi-label { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:1px; color:#888; margin-bottom:4px; }
+  .kpi-val { font-family: 'Courier New', monospace; font-size:26px; font-weight:700; color:#1a1a2e; line-height:1; }
+  .kpi-sub { font-size:11px; color:#aaa; margin-top:4px; }
+  .kpi.blue .kpi-val { color:#1a6fb5; }
+  .kpi.orange .kpi-val { color:#e05a2b; }
+  .kpi.green .kpi-val { color:#1a8a4a; }
+  .kpi.red .kpi-val { color:#c0392b; }
+  .card { background:#fff; border:1px solid #e0e0e0; border-radius:6px; padding:14px; margin-bottom:10px; }
+  table { width:100%; border-collapse:collapse; font-size:12px; }
+  th { background:#efefef; color:#888; font-size:10px; text-transform:uppercase; letter-spacing:1px; font-weight:700; padding:7px 9px; text-align:left; }
+  td { padding:7px 9px; border-bottom:1px solid #f0f0f0; color:#1a1a2e; vertical-align:top; }
+  tr:last-child td { border-bottom:none; }
+  .ex-name { font-weight:700; font-size:13px; }
+  .tag { display:inline-block; padding:2px 7px; border-radius:12px; font-size:10px; font-weight:700; letter-spacing:0.5px; margin-right:4px; }
+  .tag-m { background:#e8f4fd; color:#1a6fb5; border:1px solid #c0dcf0; }
+  .tag-g { background:#e8f8ee; color:#1a8a4a; border:1px solid #b0dfc0; }
+  .tag-r { background:#fdecea; color:#c0392b; border:1px solid #f0c0bb; }
+  .week-row { display:flex; align-items:center; gap:10px; padding:7px 0; border-bottom:1px solid #f0f0f0; }
+  .week-label { width:120px; font-size:11px; color:#666; flex-shrink:0; }
+  .week-bar-wrap { flex:1; background:#f0f0f0; border-radius:4px; height:14px; overflow:hidden; }
+  .week-bar { background:linear-gradient(90deg,#1a6fb5,#b8a000); height:100%; border-radius:4px; display:flex; align-items:center; padding-left:6px; }
+  .week-count { font-size:10px; font-weight:700; color:#fff; }
+  .sess-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; }
+  .sess-date { font-size:16px; font-weight:900; letter-spacing:1px; color:#1a1a2e; }
+  .sess-ficha { font-size:10px; color:#888; text-transform:uppercase; letter-spacing:1px; margin-top:2px; }
+  .prog-pos { color:#1a8a4a; font-weight:700; }
+  .prog-neg { color:#c0392b; font-weight:700; }
+  .prog-neu { color:#aaa; }
+  .footer { margin-top:36px; padding-top:10px; border-top:1px solid #eee; text-align:center; font-size:10px; color:#aaa; letter-spacing:1px; }
+</style>
+</head>
+<body>
+
+<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px">
+  <div>
+    <h1>IRON<span>LOG</span></h1>
+    <div class="meta">Relatório de Treino · ${periodLabel} · Gerado em ${fmt(now)}</div>
+  </div>
+  <div style="text-align:right;padding-top:4px">
+    <div style="font-size:10px;color:#888;text-transform:uppercase;letter-spacing:1px">Período</div>
+    <div style="font-size:15px;font-weight:800;color:#b8a000">${filteredSessions.length} treinos</div>
+    <div style="font-size:11px;color:#aaa">${fmtShort(startDate)} – ${fmtShort(now)}</div>
+  </div>
+</div>
+
+<h2>📊 Resumo do Período</h2>
+<div class="grid3">
+  <div class="kpi">
+    <div class="kpi-label">Treinos Realizados</div>
+    <div class="kpi-val">${filteredSessions.length}</div>
+    <div class="kpi-sub">${avgPerWeek} por semana</div>
+  </div>
+  <div class="kpi blue">
+    <div class="kpi-label">Total de Séries</div>
+    <div class="kpi-val">${filteredSessions.reduce((a,s)=>a+s.exercises.reduce((b,ex)=>b+ex.sets.filter(st=>st.done).length,0),0)}</div>
+    <div class="kpi-sub">séries concluídas</div>
+  </div>
+  <div class="kpi orange">
+    <div class="kpi-label">Exercícios Diferentes</div>
+    <div class="kpi-val">${Object.keys(exMap).length}</div>
+    <div class="kpi-sub">no período</div>
+  </div>
+</div>
+
+${lastWeight ? `
+<h2>⚖️ Peso Corporal</h2>
+<div class="grid3">
+  <div class="kpi green">
+    <div class="kpi-label">Último Peso Registrado</div>
+    <div class="kpi-val">${lastWeight.weight} kg</div>
+    <div class="kpi-sub">${fmt(lastWeight.date)}</div>
+  </div>
+  ${weightDiff !== null ? `
+  <div class="kpi ${weightDiff > 0 ? 'orange' : weightDiff < 0 ? 'red' : ''}">
+    <div class="kpi-label">Variação no Período</div>
+    <div class="kpi-val">${weightDiff > 0 ? '+' : ''}${weightDiff.toFixed(1)} kg</div>
+    <div class="kpi-sub">vs início do período (${prevWeightInPeriod.weight} kg)</div>
+  </div>` : '<div class="kpi"><div class="kpi-label">Variação no Período</div><div class="kpi-val" style="color:#aaa">—</div><div class="kpi-sub">sem reg. anterior</div></div>'}
+  ${totalWeightDiff !== null ? `
+  <div class="kpi ${totalWeightDiff > 0 ? 'orange' : totalWeightDiff < 0 ? 'green' : ''}">
+    <div class="kpi-label">Variação Total (histórico)</div>
+    <div class="kpi-val">${totalWeightDiff > 0 ? '+' : ''}${totalWeightDiff.toFixed(1)} kg</div>
+    <div class="kpi-sub">desde ${fmt(firstWeightEver.date)}</div>
+  </div>` : '<div class="kpi"><div class="kpi-label">Variação Total</div><div class="kpi-val" style="color:#aaa">—</div><div class="kpi-sub">apenas 1 registro</div></div>'}
+</div>
+${weightsSorted.filter(w => new Date(w.date) >= startDate).length > 1 ? `
+<div class="card">
+  <table>
+    <thead><tr><th>Data</th><th>Peso (kg)</th><th>Variação</th></tr></thead>
+    <tbody>
+      ${weightsSorted.filter(w => new Date(w.date) >= startDate).map((w,i,arr) => {
+        const prev = arr[i-1];
+        const diff = prev ? (parseFloat(w.weight) - parseFloat(prev.weight)) : null;
+        return `<tr>
+          <td>${fmt(w.date)}</td>
+          <td style="font-family:'Courier New',monospace;font-weight:700">${w.weight} kg</td>
+          <td class="${diff===null?'prog-neu':diff>0?'prog-pos':'prog-neg'}">${diff===null?'—':(diff>0?'+':'')+diff.toFixed(1)+' kg'}</td>
+        </tr>`;
+      }).join('')}
+    </tbody>
+  </table>
+</div>` : ''}` : ''}
+
+<h2>💪 Volume por Grupo Muscular</h2>
+<div class="card">
+  ${muscleVolumeArr.map(([m, v]) => {
+    const maxV = muscleVolumeArr[0][1];
+    const pct = Math.round((v / maxV) * 100);
+    return `<div class="week-row">
+      <div class="week-label">${m}</div>
+      <div class="week-bar-wrap"><div class="week-bar" style="width:${pct}%"><span class="week-count">${v}s</span></div></div>
+      <div style="font-family:'Courier New',monospace;font-size:13px;color:#666;width:40px;text-align:right">${v}</div>
+    </div>`;
+  }).join('')}
+  <div style="font-size:11px;color:#aaa;margin-top:10px">s = séries completadas</div>
+</div>
+
+<h2>📅 Frequência Semanal</h2>
+<div class="card">
+  ${weekKeys.map(wk => {
+    const cnt = weekMap[wk];
+    const maxC = Math.max(...Object.values(weekMap));
+    const pct = Math.round((cnt / maxC) * 100);
+    const d = new Date(wk);
+    const end = new Date(d); end.setDate(d.getDate() + 6);
+    return `<div class="week-row">
+      <div class="week-label">${fmtShort(wk)} – ${fmtShort(end)}</div>
+      <div class="week-bar-wrap"><div class="week-bar" style="width:${pct}%"><span class="week-count">${cnt}</span></div></div>
+      <div style="font-family:'Courier New',monospace;font-size:13px;color:#666;width:40px;text-align:right">${cnt}</div>
+    </div>`;
+  }).join('')}
+</div>
+
+<h2>🏋️ Evolução por Exercício</h2>
+<div class="card">
+  <table>
+    <thead><tr><th>Exercício</th><th>Músculo</th><th>Séries</th><th>Maior Carga</th><th>Volume Total</th><th>Progresso</th></tr></thead>
+    <tbody>
+      ${Object.entries(exMap).map(([name, data]) => {
+        const entries = data.entries;
+        const first = entries[0];
+        const last  = entries[entries.length-1];
+        const progW = entries.length > 1 ? (last.maxWeight - first.maxWeight) : null;
+        const totalSets = entries.reduce((a,e)=>a+e.sets.length,0);
+        const maxLoad = Math.max(...entries.map(e=>e.maxWeight));
+        const totalVol = entries.reduce((a,e)=>a+e.totalVolume,0);
+        return `<tr>
+          <td class="ex-name">${name}</td>
+          <td><span class="tag tag-m">${data.muscle}</span></td>
+          <td style="font-family:'Courier New',monospace">${totalSets}</td>
+          <td style="font-family:'Courier New',monospace;font-weight:700;color:#b8a000">${maxLoad > 0 ? maxLoad + ' kg' : '—'}</td>
+          <td style="font-family:'Courier New',monospace">${totalVol > 0 ? Math.round(totalVol) + ' kg' : '—'}</td>
+          <td class="${progW===null?'prog-neu':progW>0?'prog-pos':progW<0?'prog-neg':'prog-neu'}">${progW===null?'1 treino':progW===0?'=':(progW>0?'▲+':('▼'))+progW.toFixed(1)+' kg'}</td>
+        </tr>`;
+      }).join('')}
+    </tbody>
+  </table>
+</div>
+
+<h2>📋 Histórico Detalhado de Treinos</h2>
+${sessionsByDate.map(s => {
+  const fichaObj = fichas.find(f => f.id === s.fichaId);
+  const fichaName = s.fichaName || (fichaObj ? fichaObj.name : 'Treino');
+  const fichaColor = fichaObj ? (fichaObj.color || '#e8ff47') : '#e8ff47';
+  const totalSets = s.exercises.reduce((a,ex)=>a+ex.sets.filter(st=>st.done).length,0);
+  const totalVol = s.exercises.reduce((a,ex)=>a+ex.sets.filter(st=>st.done).reduce((b,st)=>b+((parseFloat(st.weight)||0)*(parseInt(st.reps)||0)),0),0);
+  return `
+  <div class="card" style="border-left:3px solid ${fichaColor}">
+    <div class="sess-header">
+      <div>
+        <div class="sess-date">${weekDay(s.date)}, ${fmt(s.date)}</div>
+        <div class="sess-ficha">${fichaName}</div>
+      </div>
+      <div style="text-align:right">
+        <div style="font-family:'Courier New',monospace;font-size:13px;color:#1a6fb5">${totalSets} séries</div>
+        ${totalVol > 0 ? `<div style="font-size:11px;color:#aaa">${Math.round(totalVol)} kg volume</div>` : ''}
+      </div>
+    </div>
+    <table>
+      <thead><tr><th>Exercício</th><th>Músculo</th><th>Séries Completas</th><th>Detalhes</th></tr></thead>
+      <tbody>
+        ${s.exercises.map(ex => {
+          if (ex.skipped) return `<tr><td colspan="4" style="color:#aaa;font-style:italic">⏭ ${ex.name} — pulado</td></tr>`;
+          const doneSets = ex.sets.filter(st => st.done);
+          const totalExVol = doneSets.reduce((a,st)=>a+((parseFloat(st.weight)||0)*(parseInt(st.reps)||0)),0);
+          const setsDetail = doneSets.map((st,i) => {
+            const w = st.weight ? st.weight + 'kg' : (ex.bodyweight ? 'PC' : '—');
+            const r = st.reps ? st.reps + 'r' : '—';
+            return `<span style="display:inline-block;margin-right:8px;font-family:'Courier New',monospace;font-size:11px">${i+1}: ${r} × ${w}</span>`;
+          }).join('');
+          return `<tr>
+            <td class="ex-name">${ex.name}${ex.skipped ? ' <span style="color:#aaa">(pulado)</span>' : ''}</td>
+            <td><span class="tag tag-m">${ex.muscle}</span>${ex.muscle2 ? `<span class="tag tag-m" style="opacity:0.6">${ex.muscle2}</span>` : ''}</td>
+            <td style="font-family:'Courier New',monospace;font-weight:700;color:#1a8a4a">${doneSets.length}/${ex.sets.length}</td>
+            <td>${setsDetail}${totalExVol > 0 ? `<br><span style="font-size:11px;color:#aaa">${Math.round(totalExVol)} kg vol.</span>` : ''}</td>
+          </tr>`;
+        }).join('')}
+      </tbody>
+    </table>
+  </div>`;
+}).join('')}
+
+<div class="footer">
+  <div style="font-size:20px;font-weight:900;letter-spacing:2px;color:#1a1a2e;margin-bottom:4px">IRON<span style="color:#b8a000">LOG</span></div>
+  Relatório gerado automaticamente em ${now.toLocaleString('pt-BR')} · ironlog-657e8.firebaseapp.com
+</div>
+
+</body>
+</html>`;
+
+  const win = window.open('', '_blank');
+  win.document.write(html);
+  win.document.close();
+  win.focus();
+  setTimeout(() => { win.print(); }, 800);
+  toast('📊 Relatório pronto para exportar como PDF!', 'var(--accent2)');
 }
 
 async function exportData() {
