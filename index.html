@@ -3429,8 +3429,13 @@ async function exportPersonalReport() {
   const period = document.getElementById('report-period').value;
   const now = new Date();
   let startDate;
-  if (period === 'week')    startDate = new Date(now - 7  * 86400000);
-  else if (period === '2weeks') startDate = new Date(now - 14 * 86400000);
+  if (period === 'week') {
+    // Calendar week: Sunday to Saturday of current week
+    const d = new Date(now);
+    d.setHours(0,0,0,0);
+    d.setDate(d.getDate() - d.getDay()); // go back to Sunday
+    startDate = d;
+  } else if (period === '2weeks') startDate = new Date(now - 14 * 86400000);
   else if (period === 'month')  startDate = new Date(now - 30 * 86400000);
   else                          startDate = new Date(now - 90 * 86400000);
 
@@ -3446,10 +3451,10 @@ async function exportPersonalReport() {
   const weightsSorted = [...weights].sort((a,b) => new Date(a.date) - new Date(b.date));
   const lastWeight = weightsSorted[weightsSorted.length - 1];
   const prevWeightInPeriod = weightsSorted.filter(w => new Date(w.date) < startDate).slice(-1)[0];
-  const weightDiff = (lastWeight && prevWeightInPeriod) ? (parseFloat(lastWeight.weight) - parseFloat(prevWeightInPeriod.weight)) : null;
+  const weightDiff = (lastWeight && prevWeightInPeriod) ? (parseFloat(lastWeight.val) - parseFloat(prevWeightInPeriod.val)) : null;
   const firstWeightEver = weightsSorted[0];
   const totalWeightDiff = (lastWeight && firstWeightEver && lastWeight.id !== firstWeightEver.id)
-    ? (parseFloat(lastWeight.weight) - parseFloat(firstWeightEver.weight)) : null;
+    ? (parseFloat(lastWeight.val) - parseFloat(firstWeightEver.val)) : null;
 
   // ---- VOLUME POR MÚSCULO (séries totais por músculo no período) ----
   const muscleVolume = {};
@@ -3585,14 +3590,14 @@ ${lastWeight ? `
 <div class="grid3">
   <div class="kpi green">
     <div class="kpi-label">Último Peso Registrado</div>
-    <div class="kpi-val">${lastWeight.weight} kg</div>
+    <div class="kpi-val">${lastWeight.val} kg</div>
     <div class="kpi-sub">${fmt(lastWeight.date)}</div>
   </div>
   ${weightDiff !== null ? `
   <div class="kpi ${weightDiff > 0 ? 'orange' : weightDiff < 0 ? 'red' : ''}">
     <div class="kpi-label">Variação no Período</div>
     <div class="kpi-val">${weightDiff > 0 ? '+' : ''}${weightDiff.toFixed(1)} kg</div>
-    <div class="kpi-sub">vs início do período (${prevWeightInPeriod.weight} kg)</div>
+    <div class="kpi-sub">vs início do período (${prevWeightInPeriod.val} kg)</div>
   </div>` : '<div class="kpi"><div class="kpi-label">Variação no Período</div><div class="kpi-val" style="color:#aaa">—</div><div class="kpi-sub">sem reg. anterior</div></div>'}
   ${totalWeightDiff !== null ? `
   <div class="kpi ${totalWeightDiff > 0 ? 'orange' : totalWeightDiff < 0 ? 'green' : ''}">
@@ -3608,10 +3613,10 @@ ${weightsSorted.filter(w => new Date(w.date) >= startDate).length > 1 ? `
     <tbody>
       ${weightsSorted.filter(w => new Date(w.date) >= startDate).map((w,i,arr) => {
         const prev = arr[i-1];
-        const diff = prev ? (parseFloat(w.weight) - parseFloat(prev.weight)) : null;
+        const diff = prev ? (parseFloat(w.val) - parseFloat(prev.val)) : null;
         return `<tr>
           <td>${fmt(w.date)}</td>
-          <td style="font-family:'Courier New',monospace;font-weight:700">${w.weight} kg</td>
+          <td style="font-family:'Courier New',monospace;font-weight:700">${w.val} kg</td>
           <td class="${diff===null?'prog-neu':diff>0?'prog-pos':'prog-neg'}">${diff===null?'—':(diff>0?'+':'')+diff.toFixed(1)+' kg'}</td>
         </tr>`;
       }).join('')}
@@ -3704,7 +3709,8 @@ ${sessionsByDate.map(s => {
           const setsDetail = doneSets.map((st,i) => {
             const w = st.weight ? st.weight + 'kg' : (ex.bodyweight ? 'PC' : '—');
             const r = st.reps ? st.reps + 'r' : '—';
-            return `<span style="display:inline-block;margin-right:8px;font-family:'Courier New',monospace;font-size:11px">${i+1}: ${r} × ${w}</span>`;
+            const label = st.isDrop ? ('D'+(i+1)) : (i+1);
+            return `<span style="display:inline-block;margin-right:8px;font-family:'Courier New',monospace;font-size:11px">${label}: ${r} × ${w}</span>`;
           }).join('');
           return `<tr>
             <td class="ex-name">${ex.name}${ex.skipped ? ' <span style="color:#aaa">(pulado)</span>' : ''}</td>
