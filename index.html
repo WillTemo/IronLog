@@ -2359,7 +2359,7 @@ function renderEvolution() {
 
   const rawWeight = allDates.map(d => byDate[d].weight);
   const rawReps   = allDates.map(d => byDate[d].reps);
-  const rawForce  = allDates.map((d,i) => rawWeight[i]>0&&rawReps[i]>0 ? parseFloat((rawWeight[i]/rawReps[i]).toFixed(2)) : 0);
+  const rawForce  = allDates.map((d,i) => rawWeight[i]>0&&rawReps[i]>0 ? parseFloat(((rawWeight[i]*rawReps[i])*(rawWeight[i]*(1+rawReps[i]/30))/1000).toFixed(2)) : 0);
 
   // Use all sessions directly — no filtering by change.
   // Each point is one training day, using best set (max weight; if equal weight, max reps).
@@ -2403,7 +2403,7 @@ function renderEvolution() {
     '</div>' +
     '<div class="chart-container"><div class="chart-title">Peso Máximo por Treino (kg)</div><canvas id="ch-weight" height="180"></canvas></div>' +
     '<div class="chart-container"><div class="chart-title">Repetições — melhor série por treino</div><canvas id="ch-reps" height="180"></canvas></div>' +
-    '<div class="chart-container"><div class="chart-title">Proporção de Força (kg ÷ reps)</div><canvas id="ch-forca" height="180"></canvas></div>' +
+    '<div class="chart-container"><div class="chart-title">ITR — Índice de Trabalho Relativo</div><canvas id="ch-forca" height="180"></canvas></div>' +
     '<div style="display:flex;gap:16px;font-size:11px;color:var(--text2);margin-bottom:16px;padding:0 4px;flex-wrap:wrap">' +
     '<span><span style="color:#2ed573;font-weight:700">●</span> Subiu</span>' +
     '<span><span style="color:#ff4757;font-weight:700">●</span> Caiu</span>' +
