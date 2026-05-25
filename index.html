@@ -1634,6 +1634,9 @@ let ironPointsData = {
 
 let currentSession = null; // { fichaId, exercises: [{id, name, muscle, sets:[{reps,weight,done}]}] }
 
+// Série válida = marcada como feita E com reps > 0
+function isValidSet(s) { return s.done && parseFloat(s.reps) > 0; }
+
 // ========================
 // NAVIGATION
 // ========================
@@ -2202,7 +2205,7 @@ function saveSession() {
 
   // ---- IRONPOINTS: award for workout ----
   if(ironPointsData.enabled) {
-    const totalDoneSets = session.exercises.reduce((a, ex) => a + ex.sets.filter(s => s.done).length, 0);
+    const totalDoneSets = session.exercises.reduce((a, ex) => a + ex.sets.filter(isValidSet).length, 0);
 
     // Determine effective minimum based on injury
     const j = ironPointsData.justif;
@@ -2229,7 +2232,7 @@ function saveSession() {
   }
 
   currentSession = null;
-  const totalDoneSets2 = session.exercises.reduce((a, ex) => a + ex.sets.filter(s => s.done).length, 0);
+  const totalDoneSets2 = session.exercises.reduce((a, ex) => a + ex.sets.filter(isValidSet).length, 0);
   if(!ironPointsData.enabled || totalDoneSets2 >= 16) toast('Treino salvo! 🔥');
   else if(ironPointsData.enabled) {
     const j2 = ironPointsData.justif;
@@ -2258,7 +2261,7 @@ async function checkForDraft() {
   if(!draft) return;
 
   const fichaName = draft.fichaName || 'Treino';
-  const doneCount = draft.exercises.reduce((a, ex) => a + ex.sets.filter(s => s.done).length, 0);
+  const doneCount = draft.exercises.reduce((a, ex) => a + ex.sets.filter(isValidSet).length, 0);
   const startTime = new Date(draft.date).toLocaleTimeString('pt-BR', {hour:'2-digit',minute:'2-digit'});
 
   const banner = document.createElement('div');
@@ -2338,7 +2341,7 @@ function renderEvolution() {
     sess.exercises.forEach(ex => {
       // Match by ID (primary) or by name (fallback for sessions saved before ficha edit)
       if(ex.id !== exId && !(exName && ex.name && ex.name.trim().toLowerCase() === exName.trim().toLowerCase())) return;
-      const doneSets = ex.sets.filter(s => s.done && (s.weight || ex.bodyweight));
+      const doneSets = ex.sets.filter(s => isValidSet(s) && (s.weight || ex.bodyweight));
       if(!doneSets.length) return;
       const best = doneSets.reduce((a, b) => (parseFloat(b.weight)||0) > (parseFloat(a.weight)||0) ? b : a);
       const w = parseFloat(best.weight)||0;
@@ -2478,7 +2481,7 @@ function renderVolumeByMuscle() {
     if(!muscle) return;
     if(!muscleVol[muscle]) muscleVol[muscle] = { sets: 0, reps: 0, vol: 0, secondary: false };
     muscleVol[muscle].sets += doneSets;
-    sets.filter(s=>s.done).forEach(s => {
+    sets.filter(isValidSet).forEach(s => {
       muscleVol[muscle].reps += parseFloat(s.reps)||0;
       muscleVol[muscle].vol += (parseFloat(s.reps)||0)*(parseFloat(s.weight)||0);
     });
@@ -2488,7 +2491,7 @@ function renderVolumeByMuscle() {
     const dt = new Date(sess.date).getTime();
     if(now - dt > week*4) return;
     sess.exercises.forEach(ex => {
-      const doneSets = ex.sets.filter(s => s.done).length;
+      const doneSets = ex.sets.filter(isValidSet).length;
       addToMuscle(ex.muscle, doneSets, ex.sets);
       if(ex.muscle2) {
         addToMuscle(ex.muscle2, doneSets, ex.sets);
@@ -3263,7 +3266,7 @@ function renderHistorico() {
       const date = new Date(sess.date);
       const dateStr = date.toLocaleDateString('pt-BR',{weekday:'short',day:'2-digit',month:'2-digit'});
       const timeStr = date.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
-      const doneSets = sess.exercises.reduce((a,ex) => a + ex.sets.filter(s=>s.done).length, 0);
+      const doneSets = sess.exercises.reduce((a,ex) => a + ex.sets.filter(isValidSet).length, 0);
       const totalVol = sessionTotalVolume(sess);
       const muscles = [...new Set(sess.exercises.map(e=>e.muscle))].slice(0,3).join(', ');
       const fichaColor = fichas.find(f=>f.id===sess.fichaId)?.color || '#e8ff47';
@@ -3300,7 +3303,7 @@ function renderHistorico() {
 
 function sessionTotalVolume(sess) {
   return sess.exercises.reduce((total, ex) => {
-    return total + ex.sets.filter(s=>s.done).reduce((a,s) => a + ((parseFloat(s.reps)||0) * (parseFloat(s.weight)||0)), 0);
+    return total + ex.sets.filter(isValidSet).reduce((a,s) => a + (parseFloat(s.reps) * (parseFloat(s.weight)||0)), 0);
   }, 0);
 }
 
@@ -3312,8 +3315,8 @@ function openSessionDetail(sessionIdx) {
   const dateStr = date.toLocaleDateString('pt-BR',{weekday:'long',day:'2-digit',month:'long',year:'numeric'});
   const timeStr = date.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
   const totalVol = sessionTotalVolume(sess);
-  const totalSets = sess.exercises.reduce((a,ex) => a + ex.sets.filter(s=>s.done).length, 0);
-  const totalReps = sess.exercises.reduce((a,ex) => a + ex.sets.filter(s=>s.done).reduce((b,s)=>b+(parseFloat(s.reps)||0),0), 0);
+  const totalSets = sess.exercises.reduce((a,ex) => a + ex.sets.filter(isValidSet).length, 0);
+  const totalReps = sess.exercises.reduce((a,ex) => a + ex.sets.filter(isValidSet).reduce((b,s)=>b+parseFloat(s.reps),0), 0);
 
   document.getElementById('detail-title').textContent = sess.fichaName || 'Treino';
 
@@ -3337,10 +3340,10 @@ function openSessionDetail(sessionIdx) {
       return;
     }
 
-    const doneSets = ex.sets.filter(s=>s.done);
-    const exVol = doneSets.reduce((a,s)=>a+((parseFloat(s.reps)||0)*(parseFloat(s.weight)||0)),0);
+    const doneSets = ex.sets.filter(isValidSet);
+    const exVol = doneSets.reduce((a,s)=>a+(parseFloat(s.reps)*(parseFloat(s.weight)||0)),0);
     const maxWeight = doneSets.length ? Math.max(...doneSets.map(s=>parseFloat(s.weight)||0)) : 0;
-    const totalExReps = doneSets.reduce((a,s)=>a+(parseFloat(s.reps)||0),0);
+    const totalExReps = doneSets.reduce((a,s)=>a+parseFloat(s.reps),0);
     const avgReps = doneSets.length ? (totalExReps/doneSets.length).toFixed(1) : 0;
     const isBodyweight = ex.bodyweight;
 
@@ -3366,7 +3369,7 @@ function openSessionDetail(sessionIdx) {
         </div>`;
 
     ex.sets.forEach((s, si) => {
-      if(!s.done) return;
+      if(!isValidSet(s)) { if(s.done) { html += `<div style="display:grid;grid-template-columns:28px ${isBodyweight?'1fr':'1fr 1fr 1fr'};gap:6px;padding:5px 0;border-bottom:1px solid rgba(255,255,255,0.04);opacity:0.35"><span style="font-family:'Bebas Neue',sans-serif;font-size:16px;color:var(--text3)">${si+1}</span><span style="font-size:11px;color:var(--text3);align-self:center;text-align:center">pulada</span></div>`; } return; }
       const setVol = (parseFloat(s.reps)||0) * (parseFloat(s.weight)||0);
       const isDropLabel = s.isDrop ? `<span style="font-size:8px;color:var(--accent3);font-weight:700">D${si-ex.targetSets+1}</span>` : (si+1);
       html += `<div style="display:grid;grid-template-columns:28px ${isBodyweight?'1fr':'1fr 1fr 1fr'};gap:6px;padding:5px 0;border-bottom:1px solid rgba(255,255,255,0.04)">
@@ -3422,8 +3425,8 @@ function exportSessionPDF(sessionIdx) {
   const dateStr = date.toLocaleDateString('pt-BR',{weekday:'long',day:'2-digit',month:'long',year:'numeric'});
   const timeStr = date.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
   const totalVol = sessionTotalVolume(sess);
-  const totalSets = sess.exercises.reduce((a,ex) => a + ex.sets.filter(s=>s.done).length, 0);
-  const totalReps = sess.exercises.reduce((a,ex) => a + ex.sets.filter(s=>s.done).reduce((b,s)=>b+(parseFloat(s.reps)||0),0), 0);
+  const totalSets = sess.exercises.reduce((a,ex) => a + ex.sets.filter(isValidSet).length, 0);
+  const totalReps = sess.exercises.reduce((a,ex) => a + ex.sets.filter(isValidSet).reduce((b,s)=>b+parseFloat(s.reps),0), 0);
 
   let exercisesHtml = '';
   sess.exercises.forEach(ex => {
@@ -3431,16 +3434,19 @@ function exportSessionPDF(sessionIdx) {
       exercisesHtml += `<div style="padding:10px;margin-bottom:12px;border:1px solid #ddd;border-radius:6px;opacity:0.5;color:#888">⏭ ${ex.name} — pulado</div>`;
       return;
     }
-    const doneSets = ex.sets.filter(s=>s.done);
-    const exVol = doneSets.reduce((a,s)=>a+((parseFloat(s.reps)||0)*(parseFloat(s.weight)||0)),0);
+    const doneSets = ex.sets.filter(isValidSet);
+    const exVol = doneSets.reduce((a,s)=>a+(parseFloat(s.reps)*(parseFloat(s.weight)||0)),0);
     const maxWeight = doneSets.length ? Math.max(...doneSets.map(s=>parseFloat(s.weight)||0)) : 0;
-    const totalExReps = doneSets.reduce((a,s)=>a+(parseFloat(s.reps)||0),0);
+    const totalExReps = doneSets.reduce((a,s)=>a+parseFloat(s.reps),0);
     const avgReps = doneSets.length ? (totalExReps/doneSets.length).toFixed(1) : 0;
     const isBodyweight = ex.bodyweight;
 
     let setsRows = '';
+    ex.sets.filter(s=>s.done&&!isValidSet(s)).forEach((s,i)=>{
+      setsRows += `<tr style="border-bottom:1px solid #f0f0f0;opacity:0.4"><td style="color:#aaa">${i+1}</td><td colspan="${isBodyweight?1:3}" style="color:#aaa;font-style:italic;text-align:center">pulada</td></tr>`;
+    });
     doneSets.forEach((s, i) => {
-      const setVol = (parseFloat(s.reps)||0)*(parseFloat(s.weight)||0);
+      const setVol = parseFloat(s.reps)*(parseFloat(s.weight)||0);
       const label = s.isDrop ? 'D'+(i-ex.targetSets+1) : (i+1);
       const isDropStyle = s.isDrop ? 'color:#e05a2b;font-weight:bold' : '';
       setsRows += `<tr style="border-bottom:1px solid #f0f0f0">
@@ -3653,7 +3659,7 @@ async function exportPersonalReport() {
   filteredSessions.forEach(s => {
     s.exercises.forEach(ex => {
       if (ex.skipped) return;
-      const doneSets = ex.sets.filter(st => st.done).length;
+      const doneSets = ex.sets.filter(isValidSet).length;
       if (!doneSets) return;
       [ex.muscle, ex.muscle2].filter(Boolean).forEach(m => {
         muscleVolume[m] = (muscleVolume[m] || 0) + doneSets;
@@ -3679,10 +3685,10 @@ async function exportPersonalReport() {
   filteredSessions.forEach(s => {
     s.exercises.forEach(ex => {
       if (ex.skipped) return;
-      const doneSets = ex.sets.filter(st => st.done && st.weight);
+      const doneSets = ex.sets.filter(st => isValidSet(st) && st.weight);
       if (!doneSets.length) return;
       const maxW = Math.max(...doneSets.map(st => parseFloat(st.weight) || 0));
-      const totalVol = doneSets.reduce((acc, st) => acc + ((parseFloat(st.weight)||0) * (parseInt(st.reps)||0)), 0);
+      const totalVol = doneSets.reduce((acc, st) => acc + (parseFloat(st.weight) * parseFloat(st.reps)), 0);
       if (!exMap[ex.name]) exMap[ex.name] = { muscle: ex.muscle, entries: [] };
       exMap[ex.name].entries.push({ date: s.date, maxWeight: maxW, totalVolume: totalVol, sets: doneSets });
     });
@@ -3767,7 +3773,7 @@ async function exportPersonalReport() {
   </div>
   <div class="kpi blue">
     <div class="kpi-label">Total de Séries</div>
-    <div class="kpi-val">${filteredSessions.reduce((a,s)=>a+s.exercises.reduce((b,ex)=>b+ex.sets.filter(st=>st.done).length,0),0)}</div>
+    <div class="kpi-val">${filteredSessions.reduce((a,s)=>a+s.exercises.reduce((b,ex)=>b+ex.sets.filter(isValidSet).length,0),0)}</div>
     <div class="kpi-sub">séries concluídas</div>
   </div>
   <div class="kpi orange">
@@ -3877,8 +3883,8 @@ ${sessionsByDate.map(s => {
   const fichaObj = fichas.find(f => f.id === s.fichaId);
   const fichaName = s.fichaName || (fichaObj ? fichaObj.name : 'Treino');
   const fichaColor = fichaObj ? (fichaObj.color || '#e8ff47') : '#e8ff47';
-  const totalSets = s.exercises.reduce((a,ex)=>a+ex.sets.filter(st=>st.done).length,0);
-  const totalVol = s.exercises.reduce((a,ex)=>a+ex.sets.filter(st=>st.done).reduce((b,st)=>b+((parseFloat(st.weight)||0)*(parseInt(st.reps)||0)),0),0);
+  const totalSets = s.exercises.reduce((a,ex)=>a+ex.sets.filter(isValidSet).length,0);
+  const totalVol = s.exercises.reduce((a,ex)=>a+ex.sets.filter(isValidSet).reduce((b,st)=>b+(parseFloat(st.reps)*(parseFloat(st.weight)||0)),0),0);
   return `
   <div class="card" style="border-left:3px solid ${fichaColor}">
     <div class="sess-header">
@@ -3896,14 +3902,14 @@ ${sessionsByDate.map(s => {
       <tbody>
         ${s.exercises.map(ex => {
           if (ex.skipped) return `<tr><td colspan="4" style="color:#aaa;font-style:italic">⏭ ${ex.name} — pulado</td></tr>`;
-          const doneSets = ex.sets.filter(st => st.done);
-          const totalExVol = doneSets.reduce((a,st)=>a+((parseFloat(st.weight)||0)*(parseInt(st.reps)||0)),0);
+          const doneSets = ex.sets.filter(isValidSet);
+          const skippedSets = ex.sets.filter(st=>st.done&&!isValidSet(st));
+          const totalExVol = doneSets.reduce((a,st)=>a+(parseFloat(st.reps)*(parseFloat(st.weight)||0)),0);
           const setsDetail = doneSets.map((st,i) => {
             const w = st.weight ? st.weight + 'kg' : (ex.bodyweight ? 'PC' : '—');
-            const r = st.reps ? st.reps + 'r' : '—';
             const label = st.isDrop ? ('D'+(i+1)) : (i+1);
-            return `<span style="display:inline-block;margin-right:8px;font-family:'Courier New',monospace;font-size:11px">${label}: ${r} × ${w}</span>`;
-          }).join('');
+            return `<span style="display:inline-block;margin-right:8px;font-family:'Courier New',monospace;font-size:11px">${label}: ${st.reps}r × ${w}</span>`;
+          }).join('') + (skippedSets.length ? `<span style="font-size:10px;color:#aaa;font-style:italic"> · ${skippedSets.length} pulada(s)</span>` : '');
           return `<tr>
             <td class="ex-name">${ex.name}${ex.skipped ? ' <span style="color:#aaa">(pulado)</span>' : ''}</td>
             <td><span class="tag tag-m">${ex.muscle}</span>${ex.muscle2 ? `<span class="tag tag-m" style="opacity:0.6">${ex.muscle2}</span>` : ''}</td>
@@ -4225,7 +4231,7 @@ function getSessionsThisWeek() {
   const weekStart = getCalendarWeekStart();
   return sessions.filter(s => {
     if(new Date(s.date) < weekStart) return false;
-    const done = s.exercises.reduce((a,ex)=>a+ex.sets.filter(st=>st.done).length,0);
+    const done = s.exercises.reduce((a,ex)=>a+ex.sets.filter(isValidSet).length,0);
     return done >= getEffectiveMinSets(s);
   });
 }
