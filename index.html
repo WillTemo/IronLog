@@ -716,6 +716,208 @@ canvas { max-width: 100%; }
 }
 
 /* ========================
+   RIVAL PAGE
+   ======================== */
+.rival-header {
+  text-align:center;
+  padding: 8px 0 20px;
+}
+.rival-title {
+  font-family:'Bebas Neue',sans-serif;
+  font-size:52px;
+  letter-spacing:5px;
+  line-height:1;
+  background:linear-gradient(180deg,#fff 0%,#666 100%);
+  -webkit-background-clip:text;
+  -webkit-text-fill-color:transparent;
+  background-clip:text;
+}
+.rival-sub {
+  font-size:10px;
+  letter-spacing:4px;
+  color:var(--text3);
+  text-transform:uppercase;
+  margin-top:2px;
+}
+/* Gemini key setup */
+.gemini-setup {
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-left:3px solid var(--accent2);
+  border-radius:var(--r);
+  padding:14px;
+  margin-bottom:16px;
+}
+.gemini-setup.configured {
+  border-left-color:var(--green);
+}
+/* Ideal physique meter */
+.ideal-card {
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:var(--r);
+  padding:16px;
+  margin-bottom:16px;
+}
+.ideal-meter-wrap {
+  margin:12px 0 8px;
+}
+.ideal-meter-bar {
+  height:8px;
+  background:var(--surface3);
+  border-radius:4px;
+  overflow:hidden;
+  margin-top:6px;
+}
+.ideal-meter-fill {
+  height:100%;
+  border-radius:4px;
+  transition:width 0.6s ease;
+  background:linear-gradient(90deg,var(--red),var(--accent),var(--green));
+}
+.ideal-score-big {
+  font-family:'Bebas Neue',sans-serif;
+  font-size:48px;
+  line-height:1;
+  color:var(--accent);
+}
+/* Ranking */
+.ranking-entry {
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:var(--r);
+  padding:14px;
+  margin-bottom:8px;
+  display:grid;
+  grid-template-columns:36px 1fr auto;
+  gap:10px;
+  align-items:center;
+  cursor:pointer;
+  transition:border-color 0.2s;
+}
+.ranking-entry:hover { border-color:var(--accent); }
+.ranking-entry.is-peak { border-color:var(--accent); }
+.rank-pos {
+  font-family:'Bebas Neue',sans-serif;
+  font-size:28px;
+  color:var(--text3);
+  text-align:center;
+  line-height:1;
+}
+.rank-pos.gold { color:#FFD700; }
+.rank-pos.silver { color:#C0C0C0; }
+.rank-pos.bronze { color:#CD7F32; }
+.rank-date {
+  font-size:11px;
+  font-weight:700;
+  letter-spacing:1px;
+  text-transform:uppercase;
+  color:var(--text2);
+}
+.rank-score {
+  font-family:'JetBrains Mono',monospace;
+  font-size:22px;
+  font-weight:700;
+  color:var(--accent);
+  text-align:right;
+}
+.rank-delta {
+  font-size:10px;
+  text-align:right;
+  margin-top:2px;
+}
+/* Entry modal / form */
+.rival-photo-zone {
+  aspect-ratio:3/4;
+  background:var(--surface2);
+  border:2px dashed var(--border);
+  border-radius:var(--r);
+  overflow:hidden;
+  position:relative;
+  cursor:pointer;
+  transition:border-color 0.2s;
+}
+.rival-photo-zone:hover { border-color:var(--accent); }
+.rival-photo-zone.has-photo { border-style:solid; border-color:transparent; }
+.rival-photo-zone input { position:absolute;inset:0;opacity:0;cursor:pointer;z-index:2; }
+.rival-photo-zone img { width:100%;height:100%;object-fit:cover;display:none; }
+.rival-photo-zone.has-photo img { display:block; }
+.rival-photo-empty {
+  position:absolute;inset:0;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:8px;color:var(--text3);pointer-events:none;
+}
+.rival-photo-zone.has-photo .rival-photo-empty { display:none; }
+/* Report */
+.report-section {
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:var(--r);
+  overflow:hidden;
+  margin-bottom:12px;
+}
+.report-section-header {
+  padding:10px 14px;
+  background:var(--surface2);
+  border-bottom:1px solid var(--border);
+  font-size:11px;
+  font-weight:700;
+  letter-spacing:2px;
+  text-transform:uppercase;
+  color:var(--text2);
+}
+.report-body {
+  padding:14px;
+  font-size:14px;
+  line-height:1.7;
+  color:var(--text2);
+  white-space:pre-wrap;
+}
+.report-tag-good {
+  display:inline-block;
+  background:rgba(46,213,115,0.12);
+  color:var(--green);
+  border:1px solid rgba(46,213,115,0.3);
+  border-radius:4px;
+  font-size:10px;
+  font-weight:700;
+  letter-spacing:1px;
+  padding:1px 7px;
+  margin:2px;
+  text-transform:uppercase;
+}
+.report-tag-bad {
+  display:inline-block;
+  background:rgba(255,71,87,0.1);
+  color:var(--red);
+  border:1px solid rgba(255,71,87,0.3);
+  border-radius:4px;
+  font-size:10px;
+  font-weight:700;
+  letter-spacing:1px;
+  padding:1px 7px;
+  margin:2px;
+  text-transform:uppercase;
+}
+.rival-loading {
+  display:none;
+  flex-direction:column;
+  align-items:center;
+  gap:12px;
+  padding:32px;
+  text-align:center;
+}
+.rival-loading.visible { display:flex; }
+.rival-spinner {
+  width:36px;height:36px;
+  border:3px solid var(--border);
+  border-top-color:var(--accent);
+  border-radius:50%;
+  animation:rivalSpin 0.8s linear infinite;
+}
+@keyframes rivalSpin { to { transform:rotate(360deg); } }
+
+/* ========================
    IRONPOINTS / REWARDS
    ======================== */
 .comp-toggle-wrap { display:flex;align-items:center;gap:8px;cursor:pointer;user-select:none }
@@ -1186,66 +1388,163 @@ canvas { max-width: 100%; }
 <div class="toast" id="toast"></div>
 
 
-<!-- PAGE: RECOMPENSAS -->
+<!-- PAGE: RIVAL -->
 <div class="page" id="page-recompensas">
-  <div class="section-title" style="display:flex;align-items:center;justify-content:space-between">
-    <span>⭐ IronPoints</span>
-    <label class="comp-toggle-wrap" title="Modo Competição">
-      <span style="font-size:11px;color:var(--muted)">MODO COMP.</span>
-      <div class="comp-toggle-track" onclick="toggleCompMode()">
-        <div class="comp-toggle-knob" id="comp-knob"></div>
-      </div>
-    </label>
+
+  <div class="rival-header">
+    <div class="rival-title">RIVAL</div>
+    <div class="rival-sub">você vs você</div>
   </div>
 
-  <!-- POINTS HERO -->
-  <div id="pts-hero" style="background:linear-gradient(135deg,#1a1a1a,#111);border:1px solid #2a2a2a;border-radius:16px;padding:20px;margin-bottom:12px;text-align:center">
-    <div style="font-size:11px;letter-spacing:2px;color:var(--muted);margin-bottom:4px">SEUS PONTOS</div>
-    <div id="pts-display" style="font-family:'JetBrains Mono',monospace;font-size:56px;font-weight:900;line-height:1;color:var(--accent)">0</div>
-    <div id="pts-status-msg" style="font-size:12px;color:var(--muted);margin-top:6px"></div>
-  </div>
-
-  <!-- STREAK + META -->
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">
-    <div style="background:#1a1a1a;border-radius:12px;padding:14px;text-align:center">
-      <div style="font-size:10px;color:var(--muted);letter-spacing:1px">SEMANA ATUAL</div>
-      <div id="pts-week-count" style="font-size:28px;font-weight:900;font-family:'JetBrains Mono',monospace;color:var(--accent2)">0</div>
-      <div id="pts-week-target" style="font-size:10px;color:var(--muted)">treinos / meta</div>
+  <!-- GEMINI API KEY SETUP -->
+  <div class="gemini-setup" id="gemini-setup-card">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+      <div style="font-size:12px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--accent2)">🔑 Gemini API</div>
+      <div id="gemini-status-dot" style="width:8px;height:8px;border-radius:50%;background:var(--text3)"></div>
     </div>
-    <div style="background:#1a1a1a;border-radius:12px;padding:14px;text-align:center">
-      <div style="font-size:10px;color:var(--muted);letter-spacing:1px">META SEMANAL</div>
-      <div id="pts-goal-val" style="font-size:28px;font-weight:900;font-family:'JetBrains Mono',monospace;color:var(--accent)">—</div>
-      <div style="font-size:10px;color:var(--muted)">fichas distintas</div>
+    <div style="font-size:12px;color:var(--text3);margin-bottom:10px;line-height:1.5" id="gemini-status-text">
+      Configure sua chave gratuita do Gemini para análise de fotos com IA.
+      <a href="https://aistudio.google.com/app/apikey" target="_blank" style="color:var(--accent2);text-decoration:none"> Obter chave →</a>
+    </div>
+    <div style="display:flex;gap:8px" id="gemini-key-row">
+      <input type="password" class="input" id="gemini-key-input" placeholder="AIza..." style="flex:1;font-family:'JetBrains Mono',monospace;font-size:12px">
+      <button class="btn btn-secondary btn-sm" onclick="saveGeminiKey()" style="white-space:nowrap">Salvar</button>
+    </div>
+    <div style="font-size:10px;color:var(--text3);margin-top:6px">
+      Salva só neste dispositivo (localStorage). Nunca sai do seu navegador.
     </div>
   </div>
 
-  <!-- JUSTIFICATIVA -->
-  <div id="justif-section" style="margin-bottom:12px">
-    <div class="section-title" style="font-size:12px;margin-bottom:6px">🛡️ Modo Proteção</div>
-    <div id="justif-active-banner" style="display:none;background:#1a2a1a;border:1px solid #2a4a2a;border-radius:10px;padding:12px;margin-bottom:8px">
-      <div id="justif-active-txt" style="font-size:13px;font-weight:700;color:#4aff4a"></div>
-      <div id="justif-active-sub" style="font-size:11px;color:var(--muted);margin-top:2px"></div>
-      <div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap">
-        <button onclick="openDeclararMelhora()" style="background:#1a3a2a;color:#4aff4a;border:1px solid #4aff4a44;border-radius:6px;padding:6px 12px;font-size:11px;font-weight:700;cursor:pointer">✅ Declarar melhora</button>
-        <button onclick="cancelJustif()" style="background:#2a1a1a;color:#ff6b6b;border:1px solid #ff6b6b33;border-radius:6px;padding:6px 10px;font-size:11px;cursor:pointer">✕ Cancelar proteção</button>
+  <!-- TABS -->
+  <div class="tabs" style="margin-bottom:16px">
+    <button class="tab-btn active" onclick="switchRivalTab('ranking')">Ranking</button>
+    <button class="tab-btn" onclick="switchRivalTab('ideal')">Físico Ideal</button>
+    <button class="tab-btn" onclick="switchRivalTab('novo')">+ Nova Entrada</button>
+  </div>
+
+  <!-- TAB: RANKING -->
+  <div id="rival-tab-ranking">
+    <div id="rival-ranking-list">
+      <div class="empty-state" style="padding:40px 0">
+        <div class="empty-state-icon">🏆</div>
+        <div class="empty-state-text">Nenhuma entrada ainda.<br>Registre sua primeira semana.</div>
       </div>
     </div>
-    <div id="justif-btn-row" style="display:flex;gap:6px;flex-wrap:wrap">
-      <button class="btn btn-sm" onclick="openJustifModal('lesao')" style="flex:1;min-width:80px;font-size:11px">🩹 Lesão</button>
-      <button class="btn btn-sm" onclick="openJustifModal('infortunio')" style="flex:1;min-width:80px;font-size:11px">❤️ Infortúnio</button>
-      <button class="btn btn-sm" onclick="openJustifModal('prova')" style="flex:1;min-width:80px;font-size:11px">📚 Prova</button>
+  </div>
+
+  <!-- TAB: FÍSICO IDEAL -->
+  <div id="rival-tab-ideal" style="display:none">
+    <div class="ideal-card">
+      <div style="font-size:13px;font-weight:700;margin-bottom:12px">Configurar Físico Ideal</div>
+      <div class="grid2">
+        <div class="input-group" style="margin-bottom:0">
+          <label class="input-label">Altura (cm)</label>
+          <input type="number" class="input" id="ideal-altura" placeholder="175" oninput="recalcIdeal()">
+        </div>
+        <div class="input-group" style="margin-bottom:0">
+          <label class="input-label">Sexo</label>
+          <select class="input" id="ideal-sexo" onchange="recalcIdeal()">
+            <option value="M">Masculino</option>
+            <option value="F">Feminino</option>
+          </select>
+        </div>
+      </div>
+      <div style="font-size:10px;color:var(--text3);margin-top:10px;padding:8px;background:var(--surface2);border-radius:6px;line-height:1.6">
+        Calculado com base em índices científicos: <strong style="color:var(--accent)">FFMI ideal</strong> (Martin Berkhan) e <strong style="color:var(--accent)">% gordura atlético</strong> (ACSM). Seu ranking sobe conforme você se aproxima do seu teto genético natural.
+      </div>
+    </div>
+
+    <div class="ideal-card" id="ideal-result-card" style="display:none">
+      <div style="font-size:11px;letter-spacing:2px;color:var(--text3);text-transform:uppercase;margin-bottom:8px">Seu Teto Natural</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
+        <div>
+          <div style="font-size:10px;color:var(--text3);letter-spacing:1px;text-transform:uppercase">Massa Magra Ideal</div>
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:36px;color:var(--accent)" id="ideal-massa-val">—</div>
+          <div style="font-size:10px;color:var(--text3)" id="ideal-massa-sub"></div>
+        </div>
+        <div>
+          <div style="font-size:10px;color:var(--text3);letter-spacing:1px;text-transform:uppercase">% Gordura Alvo</div>
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:36px;color:var(--accent2)" id="ideal-gordura-val">—</div>
+          <div style="font-size:10px;color:var(--text3)" id="ideal-gordura-sub"></div>
+        </div>
+      </div>
+      <div style="font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--text3);margin-bottom:6px">Proximidade atual</div>
+      <div id="ideal-proximity-list"></div>
     </div>
   </div>
 
-  <!-- REWARDS LIST -->
-  <div class="section-title" style="font-size:12px;margin-bottom:8px">🍔 Resgatar Recompensa</div>
-  <div id="rewards-list" style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px">
-    <!-- rendered by JS -->
+  <!-- TAB: NOVA ENTRADA -->
+  <div id="rival-tab-novo" style="display:none">
+    <div class="card" style="margin-bottom:12px">
+      <div style="font-size:12px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--text2);margin-bottom:12px">📅 Período</div>
+      <div class="grid2">
+        <div class="input-group" style="margin-bottom:0">
+          <label class="input-label">Semana de</label>
+          <input type="date" class="input" id="entry-date-start">
+        </div>
+        <div class="input-group" style="margin-bottom:0">
+          <label class="input-label">Semana até</label>
+          <input type="date" class="input" id="entry-date-end">
+        </div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-bottom:12px">
+      <div style="font-size:12px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--text2);margin-bottom:12px">📸 Foto da Semana</div>
+      <div class="rival-photo-zone" id="entry-photo-zone">
+        <input type="file" accept="image/*" onchange="loadEntryPhoto(this)">
+        <img id="entry-photo-img" src="" alt="">
+        <div class="rival-photo-empty">
+          <div style="font-size:32px">📷</div>
+          <div style="font-size:11px;letter-spacing:1px;text-transform:uppercase">toque para adicionar</div>
+        </div>
+      </div>
+      <button id="entry-photo-remove" style="display:none;margin-top:8px;width:100%;background:none;border:1px solid var(--border);border-radius:6px;padding:7px;color:var(--text3);font-size:11px;cursor:pointer" onclick="removeEntryPhoto()">✕ Remover foto</button>
+    </div>
+
+    <div class="card" style="margin-bottom:12px">
+      <div style="font-size:12px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--text2);margin-bottom:12px">⚖️ Corpo</div>
+      <div class="grid2">
+        <div class="input-group" style="margin-bottom:0">
+          <label class="input-label">Peso (kg)</label>
+          <input type="number" class="input" id="entry-peso" placeholder="75.0" step="0.1">
+        </div>
+        <div class="input-group" style="margin-bottom:0">
+          <label class="input-label">Massa Magra (kg)</label>
+          <input type="number" class="input" id="entry-massa" placeholder="60.0" step="0.1">
+        </div>
+        <div class="input-group" style="margin-bottom:8px;grid-column:1/-1">
+          <label class="input-label">Gordura Corporal (%)</label>
+          <input type="number" class="input" id="entry-gordura-pct" placeholder="18.0" step="0.1">
+        </div>
+      </div>
+      <button class="btn btn-secondary btn-sm" onclick="autoFillBodyData()" style="width:100%;justify-content:center;font-size:11px">
+        ↙ Preencher com último registro de Bioimpedância
+      </button>
+    </div>
+
+    <div class="card" style="margin-bottom:16px">
+      <div style="font-size:12px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--text2);margin-bottom:4px">📊 Dados de Treino</div>
+      <div style="font-size:11px;color:var(--text3);margin-bottom:10px">Preenchido automaticamente com seus treinos do período.</div>
+      <div id="entry-training-preview" style="font-size:12px;color:var(--text3)">Selecione o período para ver os dados.</div>
+    </div>
+
+    <button class="btn btn-primary" onclick="saveRivalEntry()" style="width:100%;justify-content:center;margin-bottom:12px">
+      💾 Salvar Entrada
+    </button>
   </div>
 
-  <!-- HISTORY -->
-  <div class="section-title" style="font-size:12px;margin-bottom:8px">📋 Histórico</div>
-  <div id="pts-history" style="display:flex;flex-direction:column;gap:4px;font-size:12px"></div>
+</div>
+
+<!-- MODAL: RIVAL ENTRY DETAIL / REPORT -->
+<div class="modal-overlay" id="modal-rival-detail">
+  <div class="modal" style="border-radius:16px;margin:16px;max-height:95vh;overflow-y:auto">
+    <div class="modal-title">
+      <span id="rival-detail-title">Semana</span>
+      <button class="modal-close" onclick="closeModal('modal-rival-detail')">✕</button>
+    </div>
+    <div id="rival-detail-body"></div>
+  </div>
 </div>
 
 <!-- MODAL: DECLARAR MELHORA -->
@@ -1411,7 +1710,7 @@ canvas { max-width: 100%; }
   </button>
   <button class="nav-btn" onclick="goPage('recompensas', this)" id="nav-recompensas" style="position:relative">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-    Rewards
+    Rival
     <span id="nav-pts-badge" style="display:none;position:absolute;top:6px;right:6px;background:var(--accent);color:#000;font-size:8px;font-weight:900;border-radius:10px;padding:1px 5px;font-family:'JetBrains Mono',monospace;line-height:1.4"></span>
   </button>
   <button class="nav-btn" onclick="goPage('backup', this)">
@@ -1618,20 +1917,6 @@ let weights = [];
 let bios = [];
 let segs = []; // segmental body composition records
 
-// ========================
-// IRONPOINTS DATA
-// ========================
-let ironPointsData = {
-  enabled: false,          // competition mode on/off
-  points: 0,               // current balance
-  toggleCount: 0,          // how many times toggled (for penalty scaling)
-  freeToggleUsed: false,   // first toggle is free
-  history: [],             // [{type, desc, delta, date, balance}]
-  justif: null,            // active justification {type, until, label}
-  lastInertiaCheck: null,  // ISO date string of last inertia check
-  weeklyGoalMet: {}        // {YYYY-WW: true/false}
-};
-
 let currentSession = null; // { fichaId, exercises: [{id, name, muscle, sets:[{reps,weight,done}]}] }
 
 // Série válida = marcada como feita E com reps > 0
@@ -1659,7 +1944,7 @@ function goPage(page, btn) {
     renderBioCharts();
   }
   if(page === 'backup') { renderBackupStats(); updateCloudStatus(); }
-  if(page === 'recompensas') { renderRecompensasPage(); }
+  if(page === 'recompensas') { renderRivalPage(); }
 }
 
 // ========================
@@ -4145,501 +4430,602 @@ window.addEventListener('load', async () => {
 });
 
 // ======================================================
-// IRONPOINTS ENGINE
+// RIVAL ENGINE
 // ======================================================
 
-const REWARDS = [
-  { id: 'small',  cost: 5,  icon: '🍦', title: 'Refeição Livre Pequena', sub: 'Açaí, sorvete, bolo, balinhas…', color: '#47c8ff' },
-  { id: 'medium', cost: 7,  icon: '🍔', title: 'Refeição Livre',         sub: 'Hambúrguer, comida congelada, miojo…', color: '#ffaa47' },
-  { id: 'large',  cost: 10, icon: '🍕', title: 'Refeição Livre Grande',  sub: 'Pizza, rodízio, prato à vontade…', color: '#ff6b47' }
-];
+// ---- State ----
+let rivalEntries = []; // [{id, dateStart, dateEnd, photoDataUrl, peso, massa, gorduraPct, trainingData, score, aiReport}]
+let idealConfig = { altura: null, sexo: 'M' };
+let entryPhotoDataUrl = null;
 
-function saveIronPoints() {
-  DB.set('ironpoints', ironPointsData);
-  if(window.CloudDB && window.CloudDB._uid) {
-    window.CloudDB.set('ironpoints', ironPointsData).catch(()=>{});
-  }
+// ---- Gemini Key ----
+function getGeminiKey() { return localStorage.getItem('ironlog_gemini_key') || ''; }
+function saveGeminiKey() {
+  const val = document.getElementById('gemini-key-input').value.trim();
+  if (!val) { toast('⚠️ Cole sua chave Gemini', 'var(--red)'); return; }
+  localStorage.setItem('ironlog_gemini_key', val);
+  renderGeminiStatus();
+  toast('🔑 Chave Gemini salva!', 'var(--green)');
 }
-
-function addPoints(delta, desc, type, skipSave) {
-  ironPointsData.points += delta;
-  const entry = {
-    type: type || 'manual',
-    desc,
-    delta,
-    date: new Date().toISOString(),
-    balance: ironPointsData.points
-  };
-  ironPointsData.history.unshift(entry);
-  if(ironPointsData.history.length > 200) ironPointsData.history = ironPointsData.history.slice(0,200);
-  if(!skipSave) saveIronPoints();
-  updateNavBadge();
-}
-
-function updateNavBadge() {
-  const badge = document.getElementById('nav-pts-badge');
-  if(!badge) return;
-  if(ironPointsData.enabled && ironPointsData.points !== 0) {
-    badge.style.display = 'block';
-    badge.textContent = ironPointsData.points > 0 ? '+'+ironPointsData.points : ironPointsData.points;
+function renderGeminiStatus() {
+  const key = getGeminiKey();
+  const card = document.getElementById('gemini-setup-card');
+  const dot  = document.getElementById('gemini-status-dot');
+  const txt  = document.getElementById('gemini-status-text');
+  const row  = document.getElementById('gemini-key-row');
+  if (key) {
+    card.classList.add('configured');
+    dot.style.background = 'var(--green)';
+    txt.innerHTML = '✅ Chave configurada. <button onclick="localStorage.removeItem(\'ironlog_gemini_key\');renderGeminiStatus();" style="background:none;border:none;color:var(--red);font-size:11px;cursor:pointer;padding:0">Remover</button>';
+    row.style.display = 'none';
   } else {
-    badge.style.display = 'none';
+    card.classList.remove('configured');
+    dot.style.background = 'var(--text3)';
+    txt.innerHTML = 'Configure sua chave gratuita do Gemini para análise de fotos com IA. <a href="https://aistudio.google.com/app/apikey" target="_blank" style="color:var(--accent2);text-decoration:none">Obter chave →</a>';
+    row.style.display = 'flex';
   }
 }
 
-// ---- WEEK HELPERS ----
-function getWeekKey(date) {
-  const d = new Date(date || Date.now());
-  // ISO week: Monday-based
-  const day = d.getDay() === 0 ? 7 : d.getDay();
-  d.setDate(d.getDate() - day + 1);
-  return d.getFullYear() + '-W' + String(getISOWeek(d)).padStart(2,'0');
+// ---- Ideal Physique (Martin Berkhan FFMI model) ----
+function calcIdeal(altura, sexo) {
+  const h = parseFloat(altura) / 100; // cm → m
+  if (!h || h < 1.4 || h > 2.2) return null;
+  // Max FFMI natural: ~25 for men, ~22 for women (Kouri et al.)
+  const maxFFMI = sexo === 'M' ? 25.0 : 22.0;
+  // Ideal lean mass = FFMI * h²  — targeting ~90-95% of genetic ceiling
+  const targetFFMI = sexo === 'M' ? 22.5 : 19.5;
+  const idealMassa = +(targetFFMI * h * h).toFixed(1);
+  // Ideal body fat: athletic range (ACSM)
+  const idealFatPct = sexo === 'M' ? 10 : 18;
+  const idealFatPctHigh = sexo === 'M' ? 14 : 22;
+  return { idealMassa, idealFatPct, idealFatPctHigh, maxFFMI, h };
 }
 
-function getISOWeek(d) {
-  const date = new Date(d);
-  date.setHours(0,0,0,0);
-  date.setDate(date.getDate() + 3 - (date.getDay()+6)%7);
-  const week1 = new Date(date.getFullYear(),0,4);
-  return 1 + Math.round(((date.getTime()-week1.getTime())/86400000 - 3 + (week1.getDay()+6)%7)/7);
+function recalcIdeal() {
+  const altura = document.getElementById('ideal-altura').value;
+  const sexo   = document.getElementById('ideal-sexo').value;
+  idealConfig = { altura, sexo };
+  DB.set('rival_ideal', idealConfig);
+  const result = calcIdeal(altura, sexo);
+  const card = document.getElementById('ideal-result-card');
+  if (!result) { card.style.display = 'none'; return; }
+  card.style.display = 'block';
+  document.getElementById('ideal-massa-val').textContent = result.idealMassa + ' kg';
+  document.getElementById('ideal-massa-sub').textContent = `FFMI alvo ~22.5 · máx natural ~${result.maxFFMI}`;
+  document.getElementById('ideal-gordura-val').textContent = result.idealFatPct + '–' + result.idealFatPctHigh + '%';
+  document.getElementById('ideal-gordura-sub').textContent = 'Faixa atlética (ACSM)';
+  renderIdealProximity(result);
 }
 
-function getCalendarWeekStart(date) {
-  // Returns Monday of the current calendar week
-  const d = new Date(date || Date.now());
-  d.setHours(0,0,0,0);
-  const day = d.getDay() === 0 ? 7 : d.getDay();
-  d.setDate(d.getDate() - day + 1);
-  return d;
-}
-
-// ---- WEEKLY GOAL ----
-function getWeeklyGoal() {
-  // Goal = number of distinct fichas (workout plans); min 1
-  return Math.max(1, fichas.length);
-}
-
-function getEffectiveMinSets(session) {
-  // Returns the minimum valid sets needed for a workout to count as a point
-  const j = ironPointsData.justif;
-  if(!j || j.grave || !j.injuredMuscle || new Date(j.until) <= new Date()) return 16;
-  const usesInjured = session.exercises.some(ex => ex.muscle === j.injuredMuscle || ex.muscle2 === j.injuredMuscle);
-  return usesInjured ? 12 : 16;
-}
-
-function getSessionsThisWeek() {
-  const weekStart = getCalendarWeekStart();
-  return sessions.filter(s => {
-    if(new Date(s.date) < weekStart) return false;
-    const done = s.exercises.reduce((a,ex)=>a+ex.sets.filter(isValidSet).length,0);
-    return done >= getEffectiveMinSets(s);
-  });
-}
-
-function checkWeeklyGoal() {
-  if(!ironPointsData.enabled) return;
-  const wk = getWeekKey();
-  if(ironPointsData.weeklyGoalMet[wk]) return; // already awarded this week
-
-  const goal = getWeeklyGoal();
-  const weekSessions = getSessionsThisWeek();
-
-  // Check: must have done each unique ficha at least once
-  const fichaIdsDone = new Set(weekSessions.map(s => s.fichaId));
-  const allFichasDone = fichas.every(f => fichaIdsDone.has(f.id));
-  const countMet = weekSessions.length >= goal;
-
-  if(countMet && allFichasDone) {
-    ironPointsData.weeklyGoalMet[wk] = true;
-    addPoints(2, '🏆 Meta semanal concluída! (+2)', 'goal_bonus');
-    toast('🏆 Meta semanal concluída! +2 pontos!', 'var(--accent)');
+function renderIdealProximity(result) {
+  const el = document.getElementById('ideal-proximity-list');
+  if (!rivalEntries.length) {
+    el.innerHTML = '<div style="font-size:12px;color:var(--text3)">Adicione entradas para ver a proximidade.</div>';
+    return;
   }
+  const latest = [...rivalEntries].sort((a,b) => new Date(b.dateStart) - new Date(a.dateStart))[0];
+  const massa = parseFloat(latest.massa);
+  const fat   = parseFloat(latest.gorduraPct);
+  let html = '';
+  if (!isNaN(massa)) {
+    const massaDelta = result.idealMassa - massa;
+    const massaScore = Math.max(0, Math.min(100, 100 - (Math.abs(massaDelta) / result.idealMassa * 100 * 3)));
+    html += renderProximityBar('Massa Magra', massa + ' kg', result.idealMassa + ' kg', massaScore, massaDelta < 0 ? 'acima' : 'faltam ' + massaDelta.toFixed(1) + ' kg');
+  }
+  if (!isNaN(fat)) {
+    const idealMid = (result.idealFatPct + result.idealFatPctHigh) / 2;
+    const fatDelta = fat - idealMid;
+    const fatScore = Math.max(0, Math.min(100, 100 - (Math.abs(fatDelta) / idealMid * 100 * 2)));
+    html += renderProximityBar('Gordura Corporal', fat + '%', result.idealFatPct + '–' + result.idealFatPctHigh + '%', fatScore, Math.abs(fatDelta) < 1 ? 'na faixa ideal' : fatDelta > 0 ? 'acima por ' + fatDelta.toFixed(1) + '%' : 'abaixo por ' + Math.abs(fatDelta).toFixed(1) + '%');
+  }
+  el.innerHTML = html || '<div style="font-size:12px;color:var(--text3)">Preencha massa e gordura nas entradas.</div>';
 }
 
-// ---- INERTIA CHECK ----
-function checkInertia() {
-  if(!ironPointsData.enabled) return;
-
-  // Don't check if under any active protection
-  if(ironPointsData.justif) return;
-
-  const today = new Date();
-  today.setHours(0,0,0,0);
-  const weekStart = getCalendarWeekStart();
-
-  // Count business days since week started with no workout
-  const sessionsDaysThisWeek = new Set(
-    sessions
-      .filter(s => new Date(s.date) >= weekStart)
-      .map(s => new Date(s.date).toISOString().split('T')[0])
-  );
-
-  // Count business days elapsed since week start
-  let bizDays = 0;
-  const d = new Date(weekStart);
-  while(d < today) {
-    const dow = d.getDay();
-    if(dow !== 0 && dow !== 6) bizDays++;
-    d.setDate(d.getDate() + 1);
-  }
-
-  const lastCheck = ironPointsData.lastInertiaCheck ? new Date(ironPointsData.lastInertiaCheck) : null;
-  const alreadyCheckedToday = lastCheck && lastCheck.toISOString().split('T')[0] === today.toISOString().split('T')[0];
-  if(alreadyCheckedToday) return;
-
-  if(sessionsDaysThisWeek.size === 0 && bizDays >= 3) {
-    const weeksInactive = Math.floor(bizDays / 5);
-    const penalty = weeksInactive >= 1 ? 2 : 1;
-    ironPointsData.lastInertiaCheck = today.toISOString();
-    addPoints(-penalty, `😴 Inércia: ${bizDays} dias úteis sem treinar (-${penalty})`, 'inertia');
-    toast(`⚠️ -${penalty} ponto(s) por inércia`, '#ff6b47');
-  }
+function renderProximityBar(label, current, target, score, hint) {
+  const color = score >= 80 ? 'var(--green)' : score >= 50 ? 'var(--accent)' : 'var(--red)';
+  return `<div style="margin-bottom:12px">
+    <div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:4px">
+      <span style="font-weight:700;text-transform:uppercase;letter-spacing:0.5px">${label}</span>
+      <span style="color:var(--text3)">${current} → <strong style="color:${color}">${target}</strong></span>
+    </div>
+    <div style="height:6px;background:var(--surface3);border-radius:3px;overflow:hidden">
+      <div style="height:100%;width:${score}%;background:${color};border-radius:3px;transition:width 0.5s ease"></div>
+    </div>
+    <div style="font-size:10px;color:var(--text3);margin-top:3px">${hint}</div>
+  </div>`;
 }
 
-// ---- TOGGLE COMP MODE ----
-function toggleCompMode() {
-  const enabling = !ironPointsData.enabled;
-
-  if(!enabling) {
-    // Turning OFF: apply penalty
-    const isFirstFree = !ironPointsData.freeToggleUsed;
-    if(isFirstFree) {
-      ironPointsData.freeToggleUsed = true;
-      ironPointsData.enabled = false;
-      ironPointsData.toggleCount++;
-      saveIronPoints();
-      toast('Modo Competição desativado (1ª vez gratuita)');
-    } else {
-      ironPointsData.toggleCount++;
-      const penalty = 3 + (ironPointsData.toggleCount - 2) * 2; // 3, 5, 7, 9…
-      ironPointsData.enabled = false;
-      addPoints(-penalty, `🔴 Modo Competição desativado (-${penalty})`, 'toggle_off');
-      toast(`Modo desativado. -${penalty} pontos de multa.`, '#ff6b47');
+// ---- Score calculation ----
+function calcEntryScore(entry) {
+  let score = 50; // base
+  const ideal = calcIdeal(idealConfig.altura, idealConfig.sexo);
+  if (ideal) {
+    const massa = parseFloat(entry.massa);
+    const fat   = parseFloat(entry.gorduraPct);
+    if (!isNaN(massa)) {
+      const massaDelta = Math.abs(ideal.idealMassa - massa);
+      const massaScore = Math.max(0, 25 - (massaDelta / ideal.idealMassa * 100));
+      score += massaScore;
     }
-  } else {
-    // Turning ON
-    ironPointsData.enabled = true;
-    ironPointsData.lastInertiaCheck = null; // reset inertia on re-enable
-    saveIronPoints();
-    toast('🟢 Modo Competição ativado! Cada treino conta.', 'var(--accent)');
+    if (!isNaN(fat)) {
+      const idealMid = (ideal.idealFatPct + ideal.idealFatPctHigh) / 2;
+      const fatDelta = Math.abs(fat - idealMid);
+      const fatScore = Math.max(0, 25 - (fatDelta * 3));
+      score += fatScore;
+    }
   }
-
-  renderRecompensasPage();
+  // Training bonus
+  const td = entry.trainingData || {};
+  if (td.totalSessions >= 3) score += 10;
+  else if (td.totalSessions >= 1) score += 5;
+  if (td.avgVolume > 5000) score += 5;
+  // Photo — if present, a small bonus (AI score will override)
+  if (entry.photoDataUrl) score += 5;
+  if (entry.aiPhotoScore) score = score * 0.4 + entry.aiPhotoScore * 0.6;
+  return Math.round(Math.min(100, Math.max(0, score)));
 }
 
-// ---- REDEEM ----
-function openRedeemModal(rewardId) {
-  const reward = REWARDS.find(r => r.id === rewardId);
-  if(!reward) return;
-  const canAfford = ironPointsData.points >= reward.cost;
-  const body = document.getElementById('redeem-body');
-  body.innerHTML = `
-    <div style="text-align:center;padding:8px 0 16px">
-      <div style="font-size:48px;margin-bottom:8px">${reward.icon}</div>
-      <div style="font-size:18px;font-weight:700;margin-bottom:4px">${reward.title}</div>
-      <div style="font-size:12px;color:var(--muted);margin-bottom:16px">${reward.sub}</div>
-      <div style="font-size:13px;margin-bottom:4px">Custo: <strong style="color:${canAfford?'var(--accent)':'#ff6b6b'}">${reward.cost} pts</strong></div>
-      <div style="font-size:13px;margin-bottom:20px">Saldo atual: <strong>${ironPointsData.points} pts</strong></div>
-      ${canAfford
-        ? `<button onclick="confirmRedeem('${reward.id}')" style="background:var(--accent);color:#000;border:none;border-radius:10px;padding:12px 28px;font-weight:900;font-size:14px;cursor:pointer;width:100%">✅ Confirmar Resgate</button>`
-        : `<div style="color:#ff6b6b;font-weight:700;font-size:13px">⚠️ Pontos insuficientes</div>`
+// ---- Training data from sessions ----
+function getTrainingDataForPeriod(startDate, endDate) {
+  const start = new Date(startDate);
+  const end   = new Date(endDate);
+  end.setHours(23,59,59);
+  const periodSessions = sessions.filter(s => {
+    const d = new Date(s.date);
+    return d >= start && d <= end;
+  });
+  const totalSessions = periodSessions.length;
+  const totalSeries = periodSessions.reduce((a,s) => a + s.exercises.reduce((b,ex) => b + ex.sets.filter(isValidSet).length, 0), 0);
+  const totalVolume = periodSessions.reduce((a,s) => a + s.exercises.reduce((b,ex) => b + ex.sets.filter(isValidSet).reduce((c,st) => c + (parseFloat(st.reps)||0)*(parseFloat(st.weight)||0), 0), 0), 0);
+  const avgVolume = totalSessions ? Math.round(totalVolume / totalSessions) : 0;
+  const muscleMap = {};
+  periodSessions.forEach(s => s.exercises.forEach(ex => {
+    if (ex.muscle) muscleMap[ex.muscle] = (muscleMap[ex.muscle]||0) + ex.sets.filter(isValidSet).length;
+  }));
+  const topMuscles = Object.entries(muscleMap).sort((a,b)=>b[1]-a[1]).slice(0,3).map(([m])=>m);
+  return { totalSessions, totalSeries, totalVolume: Math.round(totalVolume), avgVolume, topMuscles };
+}
+
+// ---- Entry photo ----
+function loadEntryPhoto(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    entryPhotoDataUrl = e.target.result;
+    const zone = document.getElementById('entry-photo-zone');
+    const img  = document.getElementById('entry-photo-img');
+    img.src = e.target.result;
+    zone.classList.add('has-photo');
+    document.getElementById('entry-photo-remove').style.display = 'block';
+  };
+  reader.readAsDataURL(file);
+}
+function removeEntryPhoto() {
+  entryPhotoDataUrl = null;
+  document.getElementById('entry-photo-img').src = '';
+  document.getElementById('entry-photo-zone').classList.remove('has-photo');
+  document.getElementById('entry-photo-remove').style.display = 'none';
+  document.querySelector('#entry-photo-zone input').value = '';
+}
+
+// Auto-fill body data from last bio record
+function autoFillBodyData() {
+  if (!bios.length) { toast('Nenhum registro de bioimpedância encontrado', 'var(--red)'); return; }
+  const sorted = [...bios].sort((a,b) => new Date(b.date||b.id) - new Date(a.date||a.id));
+  const last = sorted[0];
+  if (last.peso)   document.getElementById('entry-peso').value   = last.peso;
+  if (last.massa)  document.getElementById('entry-massa').value  = last.massa;
+  if (last.gordura && last.peso) {
+    const pct = ((parseFloat(last.gordura) / parseFloat(last.peso)) * 100).toFixed(1);
+    document.getElementById('entry-gordura-pct').value = pct;
+  }
+  toast('✅ Dados preenchidos do último registro', 'var(--green)');
+}
+
+// Preview training data when dates are changed
+function updateTrainingPreview() {
+  const start = document.getElementById('entry-date-start').value;
+  const end   = document.getElementById('entry-date-end').value;
+  const el    = document.getElementById('entry-training-preview');
+  if (!start || !end) { el.textContent = 'Selecione o período para ver os dados.'; return; }
+  const td = getTrainingDataForPeriod(start, end);
+  el.innerHTML = `<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+    <div style="background:var(--surface2);border-radius:6px;padding:10px;text-align:center">
+      <div style="font-size:10px;color:var(--text3);letter-spacing:1px;text-transform:uppercase">Treinos</div>
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:28px;color:var(--accent)">${td.totalSessions}</div>
+    </div>
+    <div style="background:var(--surface2);border-radius:6px;padding:10px;text-align:center">
+      <div style="font-size:10px;color:var(--text3);letter-spacing:1px;text-transform:uppercase">Séries</div>
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:28px;color:var(--accent2)">${td.totalSeries}</div>
+    </div>
+    <div style="background:var(--surface2);border-radius:6px;padding:10px;text-align:center">
+      <div style="font-size:10px;color:var(--text3);letter-spacing:1px;text-transform:uppercase">Volume Total</div>
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--accent)">${td.totalVolume > 0 ? td.totalVolume.toLocaleString('pt-BR') + ' kg' : '—'}</div>
+    </div>
+    <div style="background:var(--surface2);border-radius:6px;padding:10px;text-align:center">
+      <div style="font-size:10px;color:var(--text3);letter-spacing:1px;text-transform:uppercase">Top Músculo</div>
+      <div style="font-size:13px;font-weight:700;color:var(--accent3);margin-top:4px">${td.topMuscles[0] || '—'}</div>
+    </div>
+  </div>`;
+}
+
+// Hook date inputs to preview
+document.addEventListener('DOMContentLoaded', () => {
+  const ds = document.getElementById('entry-date-start');
+  const de = document.getElementById('entry-date-end');
+  if (ds) ds.addEventListener('change', updateTrainingPreview);
+  if (de) de.addEventListener('change', updateTrainingPreview);
+});
+
+// ---- Save entry ----
+async function saveRivalEntry() {
+  const dateStart = document.getElementById('entry-date-start').value;
+  const dateEnd   = document.getElementById('entry-date-end').value;
+  if (!dateStart || !dateEnd) { toast('⚠️ Selecione o período', 'var(--red)'); return; }
+  const trainingData = getTrainingDataForPeriod(dateStart, dateEnd);
+  const entry = {
+    id: crypto.randomUUID(),
+    dateStart,
+    dateEnd,
+    photoDataUrl: entryPhotoDataUrl,
+    peso:        document.getElementById('entry-peso').value        || null,
+    massa:       document.getElementById('entry-massa').value       || null,
+    gorduraPct:  document.getElementById('entry-gordura-pct').value || null,
+    trainingData,
+    aiReport: null,
+    aiPhotoScore: null,
+    createdAt: new Date().toISOString()
+  };
+  entry.score = calcEntryScore(entry);
+  rivalEntries.push(entry);
+  rivalEntries.sort((a,b) => new Date(b.dateStart) - new Date(a.dateStart));
+  await DB.set('rival_entries', rivalEntries.map(e => ({...e, photoDataUrl: null}))); // don't persist photo in DB
+  // store photos separately in localStorage (base64 can be large)
+  if (entry.photoDataUrl) {
+    try { localStorage.setItem('rival_photo_' + entry.id, entry.photoDataUrl); } catch(e) { /* storage full */ }
+  }
+  toast('✅ Entrada salva!', 'var(--green)');
+  // Reset form
+  document.getElementById('entry-date-start').value = '';
+  document.getElementById('entry-date-end').value = '';
+  document.getElementById('entry-peso').value = '';
+  document.getElementById('entry-massa').value = '';
+  document.getElementById('entry-gordura-pct').value = '';
+  removeEntryPhoto();
+  document.getElementById('entry-training-preview').textContent = 'Selecione o período para ver os dados.';
+  switchRivalTab('ranking');
+  renderRivalRanking();
+}
+
+// ---- Load entries ----
+async function loadRivalEntries() {
+  const saved = await DB.get('rival_entries');
+  if (saved) {
+    rivalEntries = saved.map(e => {
+      // Restore photo from localStorage
+      const photo = localStorage.getItem('rival_photo_' + e.id);
+      return { ...e, photoDataUrl: photo || null };
+    });
+  }
+  const savedIdeal = await DB.get('rival_ideal');
+  if (savedIdeal) {
+    idealConfig = savedIdeal;
+    const alturaEl = document.getElementById('ideal-altura');
+    const sexoEl   = document.getElementById('ideal-sexo');
+    if (alturaEl) alturaEl.value = idealConfig.altura || '';
+    if (sexoEl)   sexoEl.value   = idealConfig.sexo   || 'M';
+    if (idealConfig.altura) recalcIdeal();
+  }
+}
+
+// ---- Render ranking ----
+function renderRivalRanking() {
+  const el = document.getElementById('rival-ranking-list');
+  if (!rivalEntries.length) {
+    el.innerHTML = `<div class="empty-state" style="padding:40px 0"><div class="empty-state-icon">🏆</div><div class="empty-state-text">Nenhuma entrada ainda.<br>Registre sua primeira semana.</div></div>`;
+    return;
+  }
+  const sorted = [...rivalEntries].sort((a,b) => b.score - a.score);
+  const peakScore = sorted[0].score;
+  const fmtDate = (d) => {
+    if (!d) return '';
+    const [y,m,dd] = d.split('-');
+    return `${dd}/${m}`;
+  };
+  el.innerHTML = sorted.map((entry, i) => {
+    const posClass = i === 0 ? 'gold' : i === 1 ? 'silver' : i === 2 ? 'bronze' : '';
+    const isPeak = entry.score === peakScore;
+    // find chronological prev to this entry
+    const byDate = [...rivalEntries].sort((a,b) => new Date(a.dateStart)-new Date(b.dateStart));
+    const thisIdx = byDate.findIndex(e => e.id === entry.id);
+    const prev = byDate[thisIdx-1];
+    const delta = prev ? entry.score - prev.score : null;
+    const deltaHtml = delta !== null ? `<div class="rank-delta" style="color:${delta>0?'var(--green)':delta<0?'var(--red)':'var(--text3)'">${delta>0?'▲+':delta<0?'▼':''}${delta !== 0 ? Math.abs(delta) : '='}</div>` : '';
+    return `<div class="ranking-entry ${isPeak?'is-peak':''}" onclick="openRivalDetail('${entry.id}')">
+      <div class="rank-pos ${posClass}">${i+1}</div>
+      <div>
+        <div class="rank-date">${fmtDate(entry.dateStart)} – ${fmtDate(entry.dateEnd)}</div>
+        <div style="font-size:11px;color:var(--text3);margin-top:2px">${entry.trainingData?.totalSessions||0} treinos · ${entry.trainingData?.totalSeries||0} séries${entry.photoDataUrl?' · 📸':''}</div>
+        ${isPeak ? '<div style="font-size:9px;letter-spacing:2px;color:var(--accent);font-weight:700;margin-top:2px;text-transform:uppercase">🏆 Pico Histórico</div>' : ''}
+      </div>
+      <div>
+        <div class="rank-score">${entry.score}</div>
+        ${deltaHtml}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ---- Entry detail modal ----
+function openRivalDetail(entryId) {
+  const entry = rivalEntries.find(e => e.id === entryId);
+  if (!entry) return;
+  const fmtDate = (d) => { if (!d) return ''; const [y,m,dd]=d.split('-'); return `${dd}/${m}/${y}`; };
+  const td = entry.trainingData || {};
+  const key = getGeminiKey();
+
+  let reportHtml = '';
+  if (entry.aiReport) {
+    reportHtml = renderAIReport(entry.aiReport);
+  } else {
+    reportHtml = `<div style="margin-top:16px">
+      ${key
+        ? `<button class="btn btn-primary" onclick="generateReport('${entryId}')" style="width:100%;justify-content:center" id="btn-gen-report-${entryId}">
+            ⚡ Gerar Relatório IA
+           </button>`
+        : `<div style="background:var(--surface2);border-radius:8px;padding:12px;font-size:12px;color:var(--text3)">Configure sua chave Gemini para gerar relatórios.</div>`
       }
     </div>`;
-  openModal('modal-redeem');
-}
-
-function confirmRedeem(rewardId) {
-  const reward = REWARDS.find(r => r.id === rewardId);
-  if(!reward) return;
-  if(ironPointsData.points < reward.cost) {
-    toast('Pontos insuficientes!', 'var(--red)'); return;
   }
-  addPoints(-reward.cost, `${reward.icon} Resgate: ${reward.title}`, 'redeem');
-  closeModal('modal-redeem');
-  toast(`${reward.icon} Bom proveito! ${reward.title} resgatada.`, 'var(--accent2)');
-  renderRecompensasPage();
-}
 
-// ---- JUSTIFICATIVA ----
-function openJustifModal(type) {
-  const titles = { lesao:'🩹 Justificativa: Lesão', infortunio:'❤️ Justificativa: Infortúnio', prova:'📚 Justificativa: Prova' };
-  document.getElementById('justif-modal-title').textContent = titles[type];
-  const body = document.getElementById('justif-modal-body');
-
-  const tomorrow = new Date(); tomorrow.setDate(tomorrow.getDate()+1);
-  const fmt = d => d.toISOString().split('T')[0];
-
-  if(type === 'lesao') {
-    const muscleOpts = MUSCLES.map(m => `<option value="${m}">${m}</option>`).join('');
-    body.innerHTML = `
-      <p style="font-size:13px;color:var(--muted);margin-bottom:12px">Inércia suspensa enquanto a lesão estiver ativa. Declare melhora quando estiver recuperado. Para lesão muscular: fichas com aquele músculo precisam de apenas 12 séries válidas para valer 1 pt.</p>
-
-      <label style="font-size:12px;color:var(--muted)">Tipo de lesão</label>
-      <select id="justif-lesao-tipo" class="input" style="margin-bottom:8px" onchange="toggleLesaoTipo()">
-        <option value="muscular">Lesão muscular (músculo específico)</option>
-        <option value="grave">Lesão grave (impossibilitado de treinar)</option>
-      </select>
-
-      <div id="justif-muscle-row" style="margin-bottom:8px">
-        <label style="font-size:12px;color:var(--muted)">Músculo lesionado</label>
-        <select id="justif-muscle" class="input">
-          <option value="">— selecione —</option>
-          ${muscleOpts}
+  // Compare selector
+  const otherEntries = rivalEntries.filter(e => e.id !== entryId);
+  const compareSelect = otherEntries.length
+    ? `<div class="input-group" style="margin-top:12px">
+        <label class="input-label">Comparar com</label>
+        <select class="input" id="compare-select-${entryId}" onchange="generateReport('${entryId}')">
+          <option value="">— semana anterior automático —</option>
+          ${otherEntries.map(e => `<option value="${e.id}">${fmtDate(e.dateStart)} – ${fmtDate(e.dateEnd)} (score ${e.score})</option>`).join('')}
         </select>
-        <p style="font-size:11px;color:var(--muted);margin-top:4px">
-          Treinos que usam esse músculo terão mínimo de 12 séries (em vez de 16) para ganhar 1 pt.<br>
-          A proteção de inércia dura 1 semana, depois volta a contar normalmente (mas mínimo reduzido permanece até o retorno previsto).
-        </p>
-      </div>
-
-      <button onclick="saveJustif('lesao')" class="btn btn-primary" style="width:100%;justify-content:center;margin-top:8px">Confirmar</button>`;
-  } else if(type === 'infortunio') {
-    const weekOut = new Date(); weekOut.setDate(weekOut.getDate()+7);
-    body.innerHTML = `
-      <p style="font-size:13px;color:var(--muted);margin-bottom:12px">1 semana de proteção, prorrogável por mais 1. Nenhuma penalidade por inércia nesse período.</p>
-      <label style="display:flex;align-items:center;gap:8px;font-size:12px;cursor:pointer;margin-bottom:16px">
-        <input type="checkbox" id="justif-prorrogar">
-        Prorrogar por mais 1 semana (total: 2 semanas)
-      </label>
-      <button onclick="saveJustif('infortunio')" class="btn btn-primary" style="width:100%;justify-content:center">Confirmar</button>`;
-  } else if(type === 'prova') {
-    body.innerHTML = `
-      <p style="font-size:13px;color:var(--muted);margin-bottom:12px">Defina o período de provas. Nenhuma penalidade por inércia durante esse período.</p>
-      <label style="font-size:12px;color:var(--muted)">Início</label>
-      <input type="date" id="justif-start" class="input" value="${fmt(new Date())}" style="margin-bottom:8px">
-      <label style="font-size:12px;color:var(--muted)">Fim</label>
-      <input type="date" id="justif-end" class="input" min="${fmt(tomorrow)}" style="margin-bottom:16px">
-      <button onclick="saveJustif('prova')" class="btn btn-primary" style="width:100%;justify-content:center">Confirmar</button>`;
-  }
-
-  openModal('modal-justif');
-}
-
-function saveJustif(type) {
-  let until, label, grave = false;
-
-  if(type === 'lesao') {
-    until = '9999-12-31T23:59:59'; // active until user declares melhora
-    const tipoEl = document.getElementById('justif-lesao-tipo');
-    grave = tipoEl && tipoEl.value === 'grave';
-    const muscleEl = document.getElementById('justif-muscle');
-    const injuredMuscle = (!grave && muscleEl) ? muscleEl.value : '';
-    if(!grave && !injuredMuscle) { toast('Selecione o músculo lesionado', 'var(--red)'); return; }
-    label = grave ? '🩹 Lesão grave' : `🩹 Lesão: ${injuredMuscle}`;
-    ironPointsData.justif = { type, until, label, grave, injuredMuscle };
-    ironPointsData.history.unshift({
-      type: 'justif', desc: `${label} ativada`, delta: 0, date: new Date().toISOString(), balance: ironPointsData.points
-    });
-    saveIronPoints();
-    closeModal('modal-justif');
-    toast(`${label} ativada — declare melhora quando estiver recuperado`, 'var(--accent2)');
-    renderRecompensasPage();
-    return;
-  } else if(type === 'infortunio') {
-    const weeks = document.getElementById('justif-prorrogar').checked ? 14 : 7;
-    const d = new Date(); d.setDate(d.getDate() + weeks);
-    until = d.toISOString();
-    label = '❤️ Infortúnio familiar';
-  } else if(type === 'prova') {
-    const endVal = document.getElementById('justif-end').value;
-    if(!endVal) { toast('Selecione a data de fim', 'var(--red)'); return; }
-    until = endVal + 'T23:59:59';
-    label = '📚 Semana de provas';
-  }
-
-  ironPointsData.justif = { type, until, label, grave };
-  ironPointsData.history.unshift({
-    type: 'justif', desc: `${label} ativada`, delta: 0, date: new Date().toISOString(), balance: ironPointsData.points
-  });
-  saveIronPoints();
-  closeModal('modal-justif');
-  toast(`${label} ativada até ${new Date(until).toLocaleDateString('pt-BR')}`, 'var(--accent2)');
-  renderRecompensasPage();
-}
-
-function cancelJustif() {
-  ironPointsData.justif = null;
-  saveIronPoints();
-  renderRecompensasPage();
-}
-
-// ── Declarar Melhora ──
-function openDeclararMelhora() {
-  const j = ironPointsData.justif;
-  if(!j) return;
-  const title = j.grave ? '✅ Melhora: Lesão Grave' : `✅ Melhora: ${j.injuredMuscle}`;
-  document.getElementById('melhora-modal-title').textContent = title;
-  const desc = j.grave
-    ? 'Ao declarar melhora, a proteção de inércia é encerrada e você volta ao regime normal de 16 séries.'
-    : `Ao declarar melhora, o mínimo de séries para fichas com <strong>${j.injuredMuscle}</strong> volta a 16 e a proteção de inércia é encerrada.`;
-  document.getElementById('melhora-modal-body').innerHTML = `
-    <p style="font-size:13px;color:var(--muted);margin-bottom:20px">${desc}</p>
-    <button onclick="confirmarMelhora()" class="btn btn-primary" style="width:100%;justify-content:center">
-      ✅ Confirmar — estou recuperado
-    </button>`;
-  openModal('modal-melhora');
-}
-
-function confirmarMelhora() {
-  const j = ironPointsData.justif;
-  const label = j ? j.label : 'Lesão';
-  ironPointsData.justif = null;
-  ironPointsData.history.unshift({
-    type: 'justif', desc: `✅ Melhora declarada: ${label}`, delta: 0,
-    date: new Date().toISOString(), balance: ironPointsData.points
-  });
-  saveIronPoints();
-  closeModal('modal-melhora');
-  toast('✅ Melhora declarada! Voltando ao regime normal.', 'var(--accent)');
-  renderRecompensasPage();
-}
-
-// ---- TOGGLE LESAO TYPE UI ----
-function toggleLesaoTipo() {
-  const tipo = document.getElementById('justif-lesao-tipo');
-  const muscleRow = document.getElementById('justif-muscle-row');
-  if(!tipo || !muscleRow) return;
-  muscleRow.style.display = tipo.value === 'grave' ? 'none' : 'block';
-}
-
-// ---- BIO FAT CHECK (called from saveBio) ----
-function checkBioFatGain(newBio) {
-  if(!ironPointsData.enabled) return;
-
-  // Find the previous first-of-month bio (before this one)
-  const sortedBios = [...bios].sort((a,b) => a.date.localeCompare(b.date));
-  const thisIdx = sortedBios.findIndex(b => b.id === newBio.id);
-
-  // We want the immediately preceding bio entry
-  if(thisIdx <= 0) return; // no previous bio to compare
-  const prevBio = sortedBios[thisIdx - 1];
-
-  // Only penalise if this is the first bio of its month
-  const thisMonth = newBio.date.substring(0, 7); // YYYY-MM
-  const biosThisMonth = sortedBios.filter(b => b.date.substring(0,7) === thisMonth);
-  const isFirstOfMonth = biosThisMonth[0].id === newBio.id;
-  if(!isFirstOfMonth) return;
-
-  // Check already penalised this month
-  const alreadyPenalised = ironPointsData.history.some(h =>
-    h.type === 'bio_fat' && h.date.substring(0,7) === new Date().toISOString().substring(0,7)
-  );
-  if(alreadyPenalised) return;
-
-  const fatDiff = (newBio.gordura - prevBio.gordura) * 10; // kg (gordura stored in %)
-  // Convert % to kg: fatDiff in % points, need kg
-  // gordura field = kg of fat (based on saveBio reading bio-gordura as kg)
-  const fatDiffKg = newBio.gordura - prevBio.gordura; // both in kg
-
-  if(fatDiffKg > 0.5) {
-    addPoints(-3, `📈 Ganho de gordura: +${fatDiffKg.toFixed(1)}kg vs mês anterior (-3)`, 'bio_fat');
-    toast(`⚠️ Ganho de gordura detectado (+${fatDiffKg.toFixed(1)}kg). -3 pontos.`, '#ff6b47');
-  }
-}
-
-// ---- RENDER PAGE ----
-function renderRecompensasPage() {
-  if(!document.getElementById('page-recompensas')) return;
-
-  // Run inertia check on page open
-  if(ironPointsData.enabled) checkInertia();
-
-  // Toggle knob
-  const track = document.querySelector('.comp-toggle-track');
-  if(track) {
-    if(ironPointsData.enabled) track.classList.add('on');
-    else track.classList.remove('on');
-  }
-
-  // Points display
-  const pts = ironPointsData.points;
-  document.getElementById('pts-display').textContent = pts;
-  document.getElementById('pts-display').style.color = pts < 0 ? '#ff6b6b' : 'var(--accent)';
-
-  // Status message
-  const statusMsg = document.getElementById('pts-status-msg');
-  if(!ironPointsData.enabled) {
-    statusMsg.textContent = '⏸ Modo Competição desativado';
-    statusMsg.style.color = 'var(--muted)';
-  } else if(ironPointsData.justif) {
-    statusMsg.textContent = `🛡️ Modo Proteção ativo: ${ironPointsData.justif.label}`;
-    statusMsg.style.color = '#4aff4a';
-  } else {
-    statusMsg.textContent = '🟢 Modo Competição ativo';
-    statusMsg.style.color = 'var(--accent)';
-  }
-
-  // Week stats
-  const weekSessions = getSessionsThisWeek();
-  const goal = getWeeklyGoal();
-  document.getElementById('pts-week-count').textContent = weekSessions.length;
-  document.getElementById('pts-week-target').textContent = `treinos / meta: ${goal}`;
-  document.getElementById('pts-goal-val').textContent = goal;
-
-  // Justificativa active banner
-  const hasJustif = !!ironPointsData.justif;
-  document.getElementById('justif-active-banner').style.display = hasJustif ? 'block' : 'none';
-  if(hasJustif) {
-    const jj = ironPointsData.justif;
-    document.getElementById('justif-active-txt').textContent = jj.label;
-    let subTxt = '';
-    if(jj.injuredMuscle) {
-      subTxt = `Músculo: ${jj.injuredMuscle} · Treinos com esse músculo: mín. 12 séries`;
-    } else if(jj.grave) {
-      subTxt = 'Lesão grave · Inércia suspensa · Declare melhora para retomar o regime normal';
-    } else {
-      subTxt = 'Proteção de inércia ativa';
-    }
-    document.getElementById('justif-active-sub').textContent = subTxt;
-  }
-
-  // Rewards
-  const rewardsList = document.getElementById('rewards-list');
-  rewardsList.innerHTML = REWARDS.map(r => {
-    const canAfford = ironPointsData.points >= r.cost;
-    const isEnabled = ironPointsData.enabled;
-    return `
-      <div class="reward-card ${!canAfford ? 'locked' : ''}">
-        <div class="reward-cost" style="color:${r.color}">
-          ${r.cost}
-          <span class="pts-label">PTS</span>
-        </div>
-        <div style="font-size:28px;margin:0 4px">${r.icon}</div>
-        <div class="reward-info">
-          <div class="reward-title">${r.title}</div>
-          <div class="reward-sub">${r.sub}</div>
-        </div>
-        <button class="reward-btn"
-          onclick="openRedeemModal('${r.id}')"
-          ${(!canAfford || !isEnabled) ? 'disabled' : ''}>
-          ${!isEnabled ? '⏸' : canAfford ? 'Resgatar' : `Faltam ${r.cost - ironPointsData.points}`}
-        </button>
+      </div>`
+    : `<div style="margin-top:10px;padding:8px 12px;background:var(--surface2);border-radius:6px;font-size:11px;color:var(--text3)">
+        📍 Primeira entrada — o relatório será uma análise do estado atual, sem comparação.
       </div>`;
-  }).join('');
 
-  // History
-  const hist = document.getElementById('pts-history');
-  if(ironPointsData.history.length === 0) {
-    hist.innerHTML = '<div style="color:var(--muted);font-size:12px;text-align:center;padding:16px">Nenhum registro ainda</div>';
+  document.getElementById('rival-detail-title').textContent = `${fmtDate(entry.dateStart)} – ${fmtDate(entry.dateEnd)}`;
+  document.getElementById('rival-detail-body').innerHTML = `
+    <div style="display:grid;grid-template-columns:${entry.photoDataUrl?'1fr 1fr':'1fr'};gap:12px;margin-bottom:16px">
+      ${entry.photoDataUrl ? `<div style="border-radius:8px;overflow:hidden;aspect-ratio:3/4"><img src="${entry.photoDataUrl}" style="width:100%;height:100%;object-fit:cover"></div>` : ''}
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <div style="background:var(--surface2);border-radius:8px;padding:12px;text-align:center">
+          <div style="font-size:9px;color:var(--text3);letter-spacing:2px;text-transform:uppercase">Score</div>
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:42px;color:var(--accent);line-height:1">${entry.score}</div>
+        </div>
+        <div style="background:var(--surface2);border-radius:8px;padding:10px">
+          <div style="font-size:9px;color:var(--text3);letter-spacing:1px;margin-bottom:6px;text-transform:uppercase">Corpo</div>
+          ${entry.peso ? `<div style="font-size:12px;margin-bottom:2px">Peso: <strong>${entry.peso} kg</strong></div>` : ''}
+          ${entry.massa ? `<div style="font-size:12px;margin-bottom:2px">Massa: <strong>${entry.massa} kg</strong></div>` : ''}
+          ${entry.gorduraPct ? `<div style="font-size:12px">Gordura: <strong>${entry.gorduraPct}%</strong></div>` : ''}
+        </div>
+        <div style="background:var(--surface2);border-radius:8px;padding:10px">
+          <div style="font-size:9px;color:var(--text3);letter-spacing:1px;margin-bottom:6px;text-transform:uppercase">Treinos</div>
+          <div style="font-size:12px;margin-bottom:2px">Sessões: <strong>${td.totalSessions||0}</strong></div>
+          <div style="font-size:12px;margin-bottom:2px">Séries: <strong>${td.totalSeries||0}</strong></div>
+          ${td.totalVolume ? `<div style="font-size:12px">Volume: <strong>${td.totalVolume.toLocaleString('pt-BR')} kg</strong></div>` : ''}
+          ${td.topMuscles?.length ? `<div style="font-size:11px;color:var(--text3);margin-top:4px">Top: ${td.topMuscles.slice(0,2).join(', ')}</div>` : ''}
+        </div>
+      </div>
+    </div>
+    ${compareSelect}
+    <div id="report-loading-${entryId}" class="rival-loading">
+      <div class="rival-spinner"></div>
+      <div style="font-size:12px;color:var(--text3);letter-spacing:1px">ANALISANDO COM IA…</div>
+    </div>
+    <div id="report-container-${entryId}">${reportHtml}</div>
+    <button class="btn btn-danger btn-sm" onclick="deleteRivalEntry('${entryId}')" style="width:100%;justify-content:center;margin-top:12px">🗑 Deletar Entrada</button>
+  `;
+  openModal('modal-rival-detail');
+}
+
+function renderAIReport(report) {
+  if (!report) return '';
+  return `
+    <div style="margin-top:12px">
+      <div class="report-section">
+        <div class="report-section-header">⚡ VEREDITO GERAL</div>
+        <div class="report-body" style="font-size:15px;font-weight:600;color:var(--text)">${report.veredito || ''}</div>
+      </div>
+      <div class="report-section">
+        <div class="report-section-header">📈 EVOLUÇÃO — o que melhorou</div>
+        <div class="report-body">${report.evolucao || '—'}</div>
+      </div>
+      <div class="report-section">
+        <div class="report-section-header">📉 REGRESSÃO — o que piorou</div>
+        <div class="report-body">${report.regressao || '—'}</div>
+      </div>
+      <div class="report-section">
+        <div class="report-section-header">👁 ANÁLISE VISUAL DA FOTO</div>
+        <div class="report-body">${report.visual || '—'}</div>
+      </div>
+      <div class="report-section">
+        <div class="report-section-header">🎯 PRÓXIMOS PASSOS</div>
+        <div class="report-body">${report.proximos || '—'}</div>
+      </div>
+    </div>`;
+}
+
+// ---- Generate AI Report with Gemini ----
+async function generateReport(entryId) {
+  const key = getGeminiKey();
+  if (!key) { toast('Configure a chave Gemini primeiro', 'var(--red)'); return; }
+
+  const entry = rivalEntries.find(e => e.id === entryId);
+  if (!entry) return;
+
+  // Get compare entry
+  const selectEl = document.getElementById('compare-select-' + entryId);
+  let compareEntry = null;
+  if (selectEl && selectEl.value) {
+    compareEntry = rivalEntries.find(e => e.id === selectEl.value);
   } else {
-    const icons = { workout:'🏋', goal_bonus:'🏆', redeem:'🍔', inertia:'😴', toggle_off:'🔴', justif:'🛡️', bio_fat:'📈', manual:'⭐' };
-    hist.innerHTML = ironPointsData.history.slice(0,30).map(h => {
-      const d = new Date(h.date);
-      const dateStr = d.toLocaleDateString('pt-BR', {day:'2-digit',month:'2-digit'}) + ' ' + d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
-      return `
-        <div class="pts-hist-row">
-          <div class="pts-hist-icon">${icons[h.type] || '⭐'}</div>
-          <div style="flex:1">
-            <div class="pts-hist-desc">${h.desc}</div>
-            <div class="pts-hist-date">${dateStr} · saldo: ${h.balance} pts</div>
-          </div>
-          <div class="pts-hist-val ${h.delta > 0 ? 'pos' : h.delta < 0 ? 'neg' : ''}">${h.delta > 0 ? '+'+h.delta : h.delta === 0 ? '—' : h.delta}</div>
-        </div>`;
-    }).join('');
+    // Auto: find chronologically previous entry
+    const byDate = [...rivalEntries].sort((a,b) => new Date(a.dateStart)-new Date(b.dateStart));
+    const idx = byDate.findIndex(e => e.id === entryId);
+    if (idx > 0) compareEntry = byDate[idx-1];
   }
 
-  updateNavBadge();
+  // Show loading
+  const loadEl = document.getElementById('report-loading-' + entryId);
+  const contEl = document.getElementById('report-container-' + entryId);
+  if (loadEl) loadEl.classList.add('visible');
+  if (contEl) contEl.style.display = 'none';
+
+  const fmtDate = (d) => { if(!d) return ''; const [y,m,dd]=d.split('-'); return `${dd}/${m}/${y}`; };
+  const td = entry.trainingData || {};
+  const ctd = compareEntry?.trainingData || {};
+
+  const entryDataText = `
+PERÍODO ANALISADO: ${fmtDate(entry.dateStart)} a ${fmtDate(entry.dateEnd)}
+Peso: ${entry.peso||'não informado'} kg | Massa Magra: ${entry.massa||'não informado'} kg | Gordura: ${entry.gorduraPct||'não informado'}%
+Treinos realizados: ${td.totalSessions||0} | Séries totais: ${td.totalSeries||0} | Volume total: ${td.totalVolume||0} kg | Volume médio/sessão: ${td.avgVolume||0} kg
+Músculos mais trabalhados: ${td.topMuscles?.join(', ')||'não informado'}`.trim();
+
+  const compareDataText = compareEntry
+    ? `\nCOMPARANDO COM: ${fmtDate(compareEntry.dateStart)} a ${fmtDate(compareEntry.dateEnd)}
+Peso: ${compareEntry.peso||'não informado'} kg | Massa Magra: ${compareEntry.massa||'não informado'} kg | Gordura: ${compareEntry.gorduraPct||'não informado'}%
+Treinos: ${ctd.totalSessions||0} | Séries: ${ctd.totalSeries||0} | Volume: ${ctd.totalVolume||0} kg
+Músculos: ${ctd.topMuscles?.join(', ')||'não informado'}`
+    : `\nPRIMEIRA ENTRADA — não há semana anterior para comparar. Faça uma análise completa do estado atual do atleta: avalie os dados corporais, os treinos desta semana e a foto. Nos campos de "evolucao" e "regressao", foque em pontos fortes e pontos de atenção do físico atual em vez de comparação temporal. No "veredito", apresente um diagnóstico inicial honesto.`;
+
+  const hasPhoto = !!entry.photoDataUrl;
+
+  const isFirstEntry = !compareEntry;
+
+  const systemPrompt = `Você é um coach de fisiculturismo técnico, direto e sem filtro. Sua análise deve ser científica mas acessível, apontar tanto pontos fortes quanto pontos de atenção com honestidade, e focar tanto em dados quanto em análise visual quando a foto for fornecida. Retorne APENAS JSON sem markdown.`;
+
+  const userPrompt = `Analise este atleta e gere um relatório técnico semanal completo.
+
+${entryDataText}
+${compareDataText}
+
+${hasPhoto
+  ? (isFirstEntry
+      ? 'Uma foto do atleta está sendo enviada. Como esta é a primeira entrada, faça uma análise visual completa do estado atual: definição muscular, simetria entre grupos musculares, postura, pontos fortes visíveis e áreas que precisam de desenvolvimento.'
+      : 'Uma foto do atleta está sendo enviada. Analise visualmente: definição muscular, simetria, postura, o que mudou visivelmente em relação ao período anterior, e pontos que precisam de atenção.')
+  : 'Sem foto disponível esta semana. Base a análise visual nos dados corporais fornecidos.'}
+
+${isFirstEntry
+  ? 'ATENÇÃO: Esta é a primeira entrada do atleta. Nos campos "evolucao" e "regressao", substitua a análise de progresso temporal por: "evolucao" = pontos fortes e qualidades positivas do físico e treino atual; "regressao" = pontos de atenção e áreas a melhorar. No "veredito", dê um diagnóstico inicial honesto do estado atual.'
+  : ''}
+
+Retorne APENAS este JSON (sem markdown, sem texto fora):
+{
+  "veredito": "<1-2 frases de impacto: diagnóstico do estado atual ou resultado da semana>",
+  "evolucao": "<pontos fortes / o que melhorou — dados, métricas, visual se disponível>",
+  "regressao": "<pontos de atenção / o que piorou ou precisa melhorar — seja direto>",
+  "visual": "<análise detalhada da foto: definição, simetria, postura. Se sem foto: análise baseada em dados corporais>",
+  "proximos": "<3-4 ações técnicas concretas para a próxima semana>",
+  "photoScore": <número de 0 a 100 representando o nível físico estimado pela foto, ou null se sem foto>
+}`;
+
+  try {
+    const contents = [];
+    if (hasPhoto) {
+      const base64 = entry.photoDataUrl.split(',')[1];
+      const mimeType = entry.photoDataUrl.match(/^data:(image\/[^;]+)/)?.[1] || 'image/jpeg';
+      contents.push({ inlineData: { mimeType, data: base64 } });
+    }
+    contents.push({ text: userPrompt });
+
+    const resp = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${key}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          systemInstruction: { parts: [{ text: systemPrompt }] },
+          contents: [{ role: 'user', parts: contents }],
+          generationConfig: { temperature: 0.7, maxOutputTokens: 1500 }
+        })
+      }
+    );
+
+    if (!resp.ok) {
+      const err = await resp.json().catch(() => ({}));
+      throw new Error(err.error?.message || 'Erro Gemini: ' + resp.status);
+    }
+
+    const data = await resp.json();
+    const raw = data.candidates?.[0]?.content?.parts?.map(p => p.text||'').join('') || '';
+    const clean = raw.replace(/```json|```/g, '').trim();
+    const report = JSON.parse(clean);
+
+    // Save to entry
+    entry.aiReport = report;
+    if (report.photoScore !== null && report.photoScore !== undefined) {
+      entry.aiPhotoScore = report.photoScore;
+      entry.score = calcEntryScore(entry);
+    }
+    await DB.set('rival_entries', rivalEntries.map(e => ({ ...e, photoDataUrl: null })));
+
+    if (loadEl) loadEl.classList.remove('visible');
+    if (contEl) { contEl.style.display = 'block'; contEl.innerHTML = renderAIReport(report); }
+    renderRivalRanking();
+
+  } catch (err) {
+    if (loadEl) loadEl.classList.remove('visible');
+    if (contEl) { contEl.style.display = 'block'; contEl.innerHTML = `<div style="color:var(--red);padding:12px;font-size:13px">❌ ${err.message}</div>`; }
+  }
 }
+
+// ---- Delete entry ----
+async function deleteRivalEntry(entryId) {
+  if (!confirm('Deletar esta entrada? Esta ação não pode ser desfeita.')) return;
+  localStorage.removeItem('rival_photo_' + entryId);
+  rivalEntries = rivalEntries.filter(e => e.id !== entryId);
+  await DB.set('rival_entries', rivalEntries.map(e => ({ ...e, photoDataUrl: null })));
+  closeModal('modal-rival-detail');
+  renderRivalRanking();
+  toast('Entrada deletada', 'var(--text3)');
+}
+
+// ---- Tab switching ----
+function switchRivalTab(tab) {
+  ['ranking','ideal','novo'].forEach(t => {
+    document.getElementById('rival-tab-' + t).style.display = t === tab ? 'block' : 'none';
+  });
+  document.querySelectorAll('#page-recompensas .tab-btn').forEach((btn, i) => {
+    btn.classList.toggle('active', ['ranking','ideal','novo'][i] === tab);
+  });
+  if (tab === 'ranking') renderRivalRanking();
+  if (tab === 'ideal' && idealConfig.altura) recalcIdeal();
+}
+
+// ---- Main render ----
+function renderRivalPage() {
+  renderGeminiStatus();
+  renderRivalRanking();
+  if (idealConfig.altura) recalcIdeal();
+}
+
+// Init on load
+window.addEventListener('auth-state-changed', async () => {
+  await loadRivalEntries();
+});
+
+// ---- Keep IronPoints minimal (used by session save) ----
+let ironPointsData = { enabled: false, points: 0, history: [], justif: null, lastInertiaCheck: null, weeklyGoalMet: {}, toggleCount: 0, freeToggleUsed: false };
+function saveIronPoints() { DB.set('ironpoints', ironPointsData); }
+function addPoints(delta, desc, type) {
+  ironPointsData.points += delta;
+  ironPointsData.history.unshift({ type, desc, delta, date: new Date().toISOString(), balance: ironPointsData.points });
+  saveIronPoints();
+}
+function updateNavBadge() {} // disabled — no badge on RIVAL tab
+function checkWeeklyGoal() {} // disabled
+function checkInertia() {} // disabled
+function renderRecompensasPage() { renderRivalPage(); } // alias
 
 
 </script>
