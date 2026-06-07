@@ -4216,9 +4216,9 @@ async function saveGeminiKey() {
   const msgEl = document.getElementById('ia-key-msg');
   const dot   = document.getElementById('ia-key-status-dot');
   const val   = keyEl.value.trim();
-  if(!val || !val.startsWith('AIza')) {
+  if(!val || (!val.startsWith('AIza') && !val.startsWith('AQ.'))) {
     msgEl.style.color = '#ff4757';
-    msgEl.textContent = '⚠️ Chave inválida. Deve começar com "AIza"';
+    msgEl.textContent = '⚠️ Chave inválida. Deve começar com "AIza" ou "AQ."';
     return;
   }
   const encoded = xorEncode(val);
@@ -4503,8 +4503,18 @@ Seja analítico, preciso e baseado nos dados. Use emojis e formatação para fac
 }
 
 // ---- GEMINI API CALLS ----
+function buildGeminiUrl(apiKey, model) {
+  const base = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
+  return apiKey.startsWith('AQ.') ? base : `${base}?key=${apiKey}`;
+}
+function buildGeminiHeaders(apiKey) {
+  const h = { 'Content-Type': 'application/json' };
+  if(apiKey.startsWith('AQ.')) h['x-goog-api-key'] = apiKey;
+  return h;
+}
+
 async function callGeminiVision(apiKey, prompt, imageParts) {
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+  const url = buildGeminiUrl(apiKey, 'gemini-1.5-flash');
   const body = {
     contents: [{
       parts: [
@@ -4523,7 +4533,7 @@ async function callGeminiVision(apiKey, prompt, imageParts) {
   };
   const res = await fetch(url, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: buildGeminiHeaders(apiKey),
     body: JSON.stringify(body)
   });
   if(!res.ok) {
@@ -4535,14 +4545,14 @@ async function callGeminiVision(apiKey, prompt, imageParts) {
 }
 
 async function callGeminiText(apiKey, prompt) {
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+  const url = buildGeminiUrl(apiKey, 'gemini-1.5-flash');
   const body = {
     contents: [{ parts: [{ text: prompt }] }],
     generationConfig: { temperature: 0.7, maxOutputTokens: 2048 }
   };
   const res = await fetch(url, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: buildGeminiHeaders(apiKey),
     body: JSON.stringify(body)
   });
   if(!res.ok) {
