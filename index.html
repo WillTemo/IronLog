@@ -4503,22 +4503,30 @@ Seja analítico, preciso e baseado nos dados. Use emojis e formatação para fac
 }
 
 // ---- GEMINI API CALLS ----
-function buildGeminiUrl(apiKey, model) {
-  const base = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
-  return apiKey.startsWith('AQ.') ? base : `${base}?key=${apiKey}`;
+function buildGeminiUrl(model) {
+  return `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
 }
 function buildGeminiHeaders(apiKey) {
-  const h = { 'Content-Type': 'application/json' };
-  if(apiKey.startsWith('AQ.')) h['x-goog-api-key'] = apiKey;
-  return h;
+  return {
+    'Content-Type': 'application/json',
+    'x-goog-api-key': apiKey,
+    'Authorization': 'Bearer '
+  };
 }
 
 async function callGeminiVision(apiKey, prompt, imageParts) {
-  const url = buildGeminiUrl(apiKey, 'gemini-1.5-flash');
+  const url = buildGeminiUrl('gemini-1.5-flash');
+  // Garante que o base64 não tem o prefixo data:...
+  const cleanParts = imageParts.map(p => {
+    if(p.inlineData && p.inlineData.data && p.inlineData.data.includes(',')) {
+      return { inlineData: { mimeType: p.inlineData.mimeType, data: p.inlineData.data.split(',')[1] } };
+    }
+    return p;
+  });
   const body = {
     contents: [{
       parts: [
-        ...imageParts,
+        ...cleanParts,
         { text: prompt }
       ]
     }],
@@ -4545,7 +4553,7 @@ async function callGeminiVision(apiKey, prompt, imageParts) {
 }
 
 async function callGeminiText(apiKey, prompt) {
-  const url = buildGeminiUrl(apiKey, 'gemini-1.5-flash');
+  const url = buildGeminiUrl('gemini-1.5-flash');
   const body = {
     contents: [{ parts: [{ text: prompt }] }],
     generationConfig: { temperature: 0.7, maxOutputTokens: 2048 }
