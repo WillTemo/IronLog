@@ -4549,7 +4549,7 @@ function buildGeminiHeaders(apiKey) {
 }
 
 async function callGeminiVision(apiKey, prompt, imageParts) {
-  const url = buildGeminiUrl('gemini-2.5-flash-preview-05-20');
+  const url = buildGeminiUrl('gemini-2.5-flash');
   const body = {
     contents: [{
       parts: [ ...imageParts, { text: prompt } ]
@@ -4564,7 +4564,7 @@ async function callGeminiVision(apiKey, prompt, imageParts) {
 }
 
 async function callGeminiText(apiKey, prompt) {
-  const url = buildGeminiUrl('gemini-2.5-flash-preview-05-20');
+  const url = buildGeminiUrl('gemini-2.5-flash');
   const body = {
     contents: [{ parts: [{ text: prompt }] }],
     generationConfig: { temperature: 0.7, maxOutputTokens: 2048 }
