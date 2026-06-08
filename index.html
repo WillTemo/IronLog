@@ -4515,7 +4515,7 @@ function buildGeminiHeaders(apiKey) {
 }
 
 async function callGeminiVision(apiKey, prompt, imageParts) {
-  const url = buildGeminiUrl('gemini-1.5-flash');
+  const url = buildGeminiUrl('gemini-2.0-flash');
   // Garante que o base64 não tem o prefixo data:...
   const cleanParts = imageParts.map(p => {
     if(p.inlineData && p.inlineData.data && p.inlineData.data.includes(',')) {
@@ -4553,7 +4553,7 @@ async function callGeminiVision(apiKey, prompt, imageParts) {
 }
 
 async function callGeminiText(apiKey, prompt) {
-  const url = buildGeminiUrl('gemini-1.5-flash');
+  const url = buildGeminiUrl('gemini-2.0-flash');
   const body = {
     contents: [{ parts: [{ text: prompt }] }],
     generationConfig: { temperature: 0.7, maxOutputTokens: 2048 }
