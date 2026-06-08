@@ -4475,24 +4475,44 @@ async function generateIAPhotoReport() {
     let prompt = '';
 
     if(reportType === 'isolated') {
-      prompt = `Você é um coach de fitness especialista em análise de composição corporal e postura. Analise as fotos enviadas e crie um RELATÓRIO DETALHADO em português brasileiro.
-
-IMPORTANTE: Escreva diretamente, sem placeholders ou campos em branco. Base-se apenas no que é visível nas fotos e nos dados do perfil.
+      prompt = `Você é um coach de fisiculturismo e personal trainer especialista em análise de composição corporal. Analise DETALHADAMENTE as fotos enviadas e produza um relatório COMPLETO e EXTENSO em português brasileiro.
 
 PERFIL DO ATLETA:
 ${profileContext}
 
-SEÇÕES OBRIGATÓRIAS:
-1. 💪 ANÁLISE VISUAL GERAL — composição corporal visível, postura e simetria
-2. ✅ PONTOS POSITIVOS — grupos musculares bem desenvolvidos, pontos fortes visíveis
-3. 🎯 ÁREAS DE MELHORIA — grupos musculares que precisam de mais atenção
-4. 📋 RECOMENDAÇÕES TÉCNICAS — exercícios específicos e ajustes sugeridos considerando o objetivo de ${iaProfile.goal || 'hipertrofia'}
-5. 🏁 CONCLUSÃO — resumo motivador com foco nos próximos passos
+REGRAS OBRIGATÓRIAS:
+- Escreva o relatório completo do início ao fim, sem cortar
+- Seja MUITO específico sobre o que vê: cite grupos musculares pelo nome (peitoral maior, deltoide lateral, vasto lateral, etc.)
+- Compare com referências reais para o perfil (20 anos, 187cm, recomposição)
+- Não use placeholders. Escreva tudo diretamente
+
+SEÇÕES (escreva cada uma com pelo menos 3-5 parágrafos):
+
+💪 1. ANÁLISE VISUAL GERAL
+Descreva detalhadamente a composição corporal visível: distribuição de gordura, massa muscular aparente, postura, simetria entre lado esquerdo e direito, inserções musculares visíveis.
+
+✅ 2. PONTOS FORTES
+Liste e explique cada grupo muscular bem desenvolvido. Cite o que está acima da média para o perfil.
+
+🎯 3. PONTOS DE MELHORIA
+Liste cada grupo muscular deficiente ou desproporcional. Seja honesto e específico.
+
+📊 4. AVALIAÇÃO GERAL DO FÍSICO
+Com base no perfil (${profileContext}), classifique o estágio atual: iniciante / intermediário / avançado. Explique se o físico está adequado para a idade e objetivo.
+
+📋 5. PLANO DE AÇÃO — EXERCÍCIOS
+Para cada ponto fraco identificado, sugira 2-3 exercícios específicos com séries, repetições e técnica.
+
+🍽️ 6. CONSIDERAÇÕES NUTRICIONAIS
+Com base no físico visível e objetivo de recomposição, sugira ajustes nutricionais gerais (déficit/superávit, proteína, etc.).
+
+🏁 7. CONCLUSÃO
+Resumo motivador com os 3 principais focos para os próximos 3 meses.
 
 Contexto de treino:
 ${systemContext}
 
-Leve em conta a idade, altura e objetivo ao avaliar se o físico está adequado para o perfil. Seja específico, técnico e encorajador.`;
+IMPORTANTE: Escreva o relatório COMPLETO. Não pare no meio. Cada seção deve ser detalhada e útil.`;
     } else {
       // Comparativo com fotos salvas
       const previousPhotos = iaPhotos.slice(-3); // até 3 fotos anteriores
@@ -4660,7 +4680,7 @@ async function callGeminiVision(apiKey, prompt, imageParts) {
     contents: [{
       parts: [ ...imageParts, { text: prompt } ]
     }],
-    generationConfig: { temperature: 0.7, maxOutputTokens: 2048 },
+    generationConfig: { temperature: 0.7, maxOutputTokens: 8192 },
     safetySettings: [
       { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_ONLY_HIGH' },
       { category: 'HARM_CATEGORY_HATE_SPEECH', threshold: 'BLOCK_ONLY_HIGH' }
@@ -4673,7 +4693,7 @@ async function callGeminiText(apiKey, prompt) {
   const url = buildGeminiUrl('gemini-2.5-flash');
   const body = {
     contents: [{ parts: [{ text: prompt }] }],
-    generationConfig: { temperature: 0.7, maxOutputTokens: 2048 }
+    generationConfig: { temperature: 0.7, maxOutputTokens: 8192 }
   };
   return await geminiWithRetry(url, body, apiKey);
 }
