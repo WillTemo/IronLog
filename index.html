@@ -4391,26 +4391,33 @@ Fotos anteriores são de: ${previousPhotos.map(p => p.label + ' (' + new Date(p.
 Seja específico e motivador. Use formatação com emojis.`;
     }
 
-    // Build image parts for Gemini
-    const imageParts = iaSelectedPhotos.map(p => ({
-      inlineData: {
-        mimeType: p.file.type || 'image/jpeg',
-        data: p.base64.split(',')[1]
-      }
-    }));
+    // Build image parts for Gemini — extrai apenas o base64 puro
+    function toBase64Pure(dataUrl) {
+      if(!dataUrl) return null;
+      return dataUrl.includes(',') ? dataUrl.split(',')[1] : dataUrl;
+    }
+
+    const imageParts = iaSelectedPhotos
+      .map(p => {
+        const data = toBase64Pure(p.base64);
+        if(!data) return null;
+        return { inlineData: { mimeType: p.file?.type || 'image/jpeg', data } };
+      })
+      .filter(Boolean);
+
+    if(imageParts.length === 0) {
+      hideIALoading();
+      toast('❌ Erro ao processar as fotos. Tente novamente.', '#ff4757');
+      return;
+    }
 
     // Add previous photos for comparison
     if(reportType === 'compare') {
       const prevPhotos = iaPhotos.slice(-2);
       prevPhotos.forEach(pp => {
-        if(pp.base64) {
-          imageParts.push({
-            inlineData: {
-              mimeType: 'image/jpeg',
-              data: pp.base64.split(',')[1]
-            }
-          });
-        }
+        const src = pp.photos?.[0] || pp.base64 || pp.thumb;
+        const data = toBase64Pure(src);
+        if(data) imageParts.push({ inlineData: { mimeType: 'image/jpeg', data } });
       });
     }
 
@@ -4516,17 +4523,10 @@ function buildGeminiHeaders(apiKey) {
 
 async function callGeminiVision(apiKey, prompt, imageParts) {
   const url = buildGeminiUrl('gemini-2.0-flash');
-  // Garante que o base64 não tem o prefixo data:...
-  const cleanParts = imageParts.map(p => {
-    if(p.inlineData && p.inlineData.data && p.inlineData.data.includes(',')) {
-      return { inlineData: { mimeType: p.inlineData.mimeType, data: p.inlineData.data.split(',')[1] } };
-    }
-    return p;
-  });
   const body = {
     contents: [{
       parts: [
-        ...cleanParts,
+        ...imageParts,
         { text: prompt }
       ]
     }],
