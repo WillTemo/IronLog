@@ -1223,8 +1223,9 @@ canvas { max-width: 100%; }
       Sua chave API fica salva <strong>apenas no seu dispositivo</strong> (IndexedDB local). Nunca é enviada para nenhum servidor nosso — vai direto para a API do Google.
     </div>
     <div style="display:flex;gap:8px;align-items:center">
-      <input type="password" id="ia-gemini-key" class="input" placeholder="AIzaSy..." style="flex:1;font-family:'JetBrains Mono',monospace;font-size:12px">
+      <input type="password" id="ia-gemini-key" class="input" placeholder="AIzaSy... ou AQ.Ab8..." style="flex:1;font-family:'JetBrains Mono',monospace;font-size:12px">
       <button class="btn btn-primary btn-sm" onclick="saveGeminiKey()">Salvar</button>
+      <button class="btn btn-secondary btn-sm" onclick="deleteGeminiKey()" title="Apagar chave salva">🗑️</button>
     </div>
     <div id="ia-key-msg" style="font-size:11px;margin-top:6px;color:var(--text3)"></div>
     <div style="font-size:10px;color:var(--text3);margin-top:8px">
@@ -4221,13 +4222,39 @@ async function saveGeminiKey() {
     msgEl.textContent = '⚠️ Chave inválida. Deve começar com "AIza" ou "AQ."';
     return;
   }
+  // Verifica se já tem chave salva — evita acúmulo
+  const existing = await getGeminiKey();
+  if(existing && existing === val) {
+    msgEl.style.color = '#ffaa47';
+    msgEl.textContent = '⚠️ Essa chave já está salva.';
+    keyEl.value = '';
+    return;
+  }
+  if(existing) {
+    // Substitui a antiga sem aviso extra — apenas uma chave ativa
+    await DB.set('gemini_key_enc', null);
+  }
   const encoded = xorEncode(val);
   await DB.set('gemini_key_enc', encoded);
+  // Reseta o rate limit local ao trocar de chave
+  IA_RATE.calls = 0;
+  IA_RATE.window = 0;
   keyEl.value = '';
   msgEl.style.color = '#2ed573';
-  msgEl.textContent = '✅ Chave salva com segurança no dispositivo';
+  msgEl.textContent = existing ? '🔄 Chave substituída com sucesso!' : '✅ Chave salva com segurança no dispositivo';
   dot.style.background = '#2ed573';
   toast('🔑 Chave Gemini configurada!', 'var(--green)');
+}
+
+async function deleteGeminiKey() {
+  await DB.set('gemini_key_enc', null);
+  IA_RATE.calls = 0;
+  IA_RATE.window = 0;
+  const dot = document.getElementById('ia-key-status-dot');
+  if(dot) dot.style.background = '#ff4757';
+  const msg = document.getElementById('ia-key-msg');
+  if(msg) { msg.style.color = '#ffaa47'; msg.textContent = '🗑️ Chave removida.'; }
+  toast('🗑️ Chave Gemini removida', '#ffaa47');
 }
 
 async function getGeminiKey() {
@@ -4522,53 +4549,57 @@ function buildGeminiHeaders(apiKey) {
 }
 
 async function callGeminiVision(apiKey, prompt, imageParts) {
-  const url = buildGeminiUrl('gemini-2.0-flash');
+  const url = buildGeminiUrl('gemini-2.5-flash-preview-05-20');
   const body = {
     contents: [{
-      parts: [
-        ...imageParts,
-        { text: prompt }
-      ]
+      parts: [ ...imageParts, { text: prompt } ]
     }],
-    generationConfig: {
-      temperature: 0.7,
-      maxOutputTokens: 2048
-    },
+    generationConfig: { temperature: 0.7, maxOutputTokens: 2048 },
     safetySettings: [
       { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_ONLY_HIGH' },
       { category: 'HARM_CATEGORY_HATE_SPEECH', threshold: 'BLOCK_ONLY_HIGH' }
     ]
   };
-  const res = await fetch(url, {
-    method: 'POST',
-    headers: buildGeminiHeaders(apiKey),
-    body: JSON.stringify(body)
-  });
-  if(!res.ok) {
-    const err = await res.json().catch(()=>({}));
-    throw new Error(err.error?.message || `HTTP ${res.status}`);
-  }
-  const data = await res.json();
-  return data.candidates?.[0]?.content?.parts?.[0]?.text || null;
+  return await geminiWithRetry(url, body, apiKey);
 }
 
 async function callGeminiText(apiKey, prompt) {
-  const url = buildGeminiUrl('gemini-2.0-flash');
+  const url = buildGeminiUrl('gemini-2.5-flash-preview-05-20');
   const body = {
     contents: [{ parts: [{ text: prompt }] }],
     generationConfig: { temperature: 0.7, maxOutputTokens: 2048 }
   };
-  const res = await fetch(url, {
-    method: 'POST',
-    headers: buildGeminiHeaders(apiKey),
-    body: JSON.stringify(body)
-  });
-  if(!res.ok) {
+  return await geminiWithRetry(url, body, apiKey);
+}
+
+async function geminiWithRetry(url, body, apiKey, maxRetries = 4) {
+  const waits = [30, 60, 90, 120]; // segundos de espera entre tentativas
+  for(let attempt = 0; attempt <= maxRetries; attempt++) {
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: buildGeminiHeaders(apiKey),
+      body: JSON.stringify(body)
+    });
+    if(res.ok) {
+      const data = await res.json();
+      return data.candidates?.[0]?.content?.parts?.[0]?.text || null;
+    }
     const err = await res.json().catch(()=>({}));
-    throw new Error(err.error?.message || `HTTP ${res.status}`);
+    const msg = err.error?.message || '';
+    const isQuota = res.status === 429 || msg.toLowerCase().includes('quota');
+
+    if(isQuota && attempt < maxRetries) {
+      // Tenta extrair o tempo de espera sugerido pelo Google
+      const retryMatch = msg.match(/retry in ([\d.]+)s/i);
+      const waitSec = retryMatch ? Math.ceil(parseFloat(retryMatch[1])) + 5 : waits[attempt];
+      document.getElementById('ia-loading-msg').textContent =
+        `⏳ Cota atingida — aguardando ${waitSec}s e tentando novamente (${attempt+1}/${maxRetries})…`;
+      await new Promise(r => setTimeout(r, waitSec * 1000));
+      continue;
+    }
+    throw new Error(msg || `HTTP ${res.status}`);
   }
-  const data = await res.json();
-  return data.candidates?.[0]?.content?.parts?.[0]?.text || null;
+  throw new Error('Cota excedida após várias tentativas. Aguarde alguns minutos.');
 }
 
 // ---- DATA CONTEXT BUILDERS ----
