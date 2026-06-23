@@ -1283,7 +1283,7 @@ canvas { max-width: 100%; }
       <div style="font-weight:700;font-size:14px;margin-bottom:4px">📸 Adicionar Fotos para Análise</div>
       <div style="font-size:12px;color:var(--text2);margin-bottom:12px">Adicione fotos do seu corpo para a IA analisar sua evolução visual.</div>
 
-      <label style="display:block;background:var(--surface2);border:2px dashed var(--border);border-radius:10px;padding:20px;text-align:center;cursor:pointer;transition:border-color 0.2s" id="ia-drop-area" onclick="document.getElementById('ia-photo-input').click()">
+      <label style="display:block;background:var(--surface2);border:2px dashed var(--border);border-radius:10px;padding:20px;text-align:center;cursor:pointer;transition:border-color 0.2s" id="ia-drop-area">
         <input type="file" id="ia-photo-input" accept="image/*" multiple style="display:none" onchange="handleIAPhotoUpload(this)">
         <div style="font-size:28px;margin-bottom:6px">📷</div>
         <div style="font-size:13px;color:var(--text2)">Toque para selecionar fotos</div>
@@ -1316,6 +1316,13 @@ canvas { max-width: 100%; }
           </div>
         </label>
       </div>
+    </div>
+
+    <!-- SELEÇÃO DE FOTOS PARA COMPARAR (aparece só no modo comparativo) -->
+    <div class="card" style="margin-bottom:14px;display:none" id="ia-compare-select-card">
+      <div style="font-weight:700;font-size:14px;margin-bottom:4px">🆚 Comparar com quais fotos salvas?</div>
+      <div style="font-size:12px;color:var(--text2);margin-bottom:10px">Selecione um ou mais registros salvos. A IA vai comparar as fotos novas (enviadas acima) com os selecionados.</div>
+      <div id="ia-compare-list" style="display:flex;flex-direction:column;gap:8px"></div>
     </div>
 
     <!-- DATA DO REGISTRO -->
@@ -4449,8 +4456,49 @@ function showIAPhotoPreviewModal(src, name) {
   openModal('modal-ia-photo');
 }
 
+// Fotos salvas selecionadas para comparação (array de IDs)
+let iaCompareSelection = [];
+
 function updateIAReportType() {
-  // visual only — radio handles the value
+  const checked = document.querySelector('input[name="ia-report-type"]:checked');
+  const isCompare = checked && checked.value === 'compare';
+  const card = document.getElementById('ia-compare-select-card');
+  if(card) card.style.display = isCompare ? 'block' : 'none';
+  if(isCompare) renderIACompareSelector();
+}
+
+function renderIACompareSelector() {
+  const list = document.getElementById('ia-compare-list');
+  if(!list) return;
+  if(!iaPhotos.length) {
+    list.innerHTML = '<div style="font-size:12px;color:var(--text3);text-align:center;padding:12px">Nenhuma foto salva ainda. Gere um relatório isolado primeiro para salvar fotos.</div>';
+    return;
+  }
+  // Remove da seleção IDs que não existem mais
+  iaCompareSelection = iaCompareSelection.filter(id => iaPhotos.some(p => p.id === id));
+  list.innerHTML = iaPhotos.map(p => {
+    const selected = iaCompareSelection.includes(p.id);
+    const photoCount = (p.photos || (p.base64 ? [p.base64] : [])).length;
+    const hasReport = !!p.reportText;
+    return `
+    <label class="ia-saved-entry" style="cursor:pointer;border-color:${selected ? 'var(--accent)' : 'var(--border)'}">
+      <input type="checkbox" ${selected ? 'checked' : ''} onchange="toggleComparePhoto('${p.id}')" style="width:18px;height:18px;accent-color:var(--accent);flex-shrink:0">
+      <img src="${p.thumb || p.base64}" class="ia-saved-entry-img" alt="${p.label}" style="width:44px;height:44px">
+      <div style="flex:1;min-width:0">
+        <div style="font-weight:700;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${p.label}</div>
+        <div style="font-size:11px;color:var(--text3);margin-top:2px">${new Date(p.date).toLocaleDateString('pt-BR')}${photoCount > 1 ? ' · ' + photoCount + ' 📷' : ''}${hasReport ? ' · 📄 com relatório' : ''}</div>
+      </div>
+    </label>`;
+  }).join('');
+}
+
+function toggleComparePhoto(id) {
+  if(iaCompareSelection.includes(id)) {
+    iaCompareSelection = iaCompareSelection.filter(x => x !== id);
+  } else {
+    iaCompareSelection.push(id);
+  }
+  renderIACompareSelector();
 }
 
 // ---- GERAR RELATÓRIO DE FOTOS ----
@@ -4512,15 +4560,21 @@ Resumo motivador com os 3 principais focos para os próximos 3 meses.
 Contexto de treino:
 ${systemContext}
 
+OBS sobre os dados: "massa magra" / "massa muscular esquelética" nos números acima significa MASSA DE MÚSCULO ESQUELÉTICO, não massa magra total do corpo.
+
 IMPORTANTE: Escreva o relatório COMPLETO. Não pare no meio. Cada seção deve ser detalhada e útil.`;
     } else {
-      // Comparativo com fotos salvas
-      const previousPhotos = iaPhotos.slice(-3); // até 3 fotos anteriores
-      if(previousPhotos.length === 0) {
+      // Comparativo com fotos salvas SELECIONADAS pelo usuário
+      let comparePhotos = iaPhotos.filter(p => iaCompareSelection.includes(p.id));
+      // Se nada foi selecionado, usa as 3 mais recentes como fallback
+      if(comparePhotos.length === 0) comparePhotos = iaPhotos.slice(0, 3);
+      if(comparePhotos.length === 0) {
         hideIALoading();
-        toast('📸 Sem fotos anteriores para comparar. Salve fotos primeiro.', '#ffaa47');
+        toast('📸 Selecione ao menos uma foto salva para comparar.', '#ffaa47');
         return;
       }
+      // Guarda a seleção para o bloco de imagens mais abaixo
+      window._iaComparePhotos = comparePhotos;
       prompt = `Você é um coach de fitness especialista. Compare as fotos NOVAS (enviadas agora) com as fotos ANTERIORES salvas e crie um RELATÓRIO COMPARATIVO detalhado em português brasileiro com as seções:
 
 1. **EVOLUÇÃO DETECTADA** — O que mudou visivelmente entre as fotos
@@ -4533,7 +4587,8 @@ IMPORTANTE: Escreva o relatório COMPLETO. Não pare no meio. Cada seção deve 
 Contexto do atleta:
 ${systemContext}
 
-Fotos anteriores são de: ${previousPhotos.map(p => p.label + ' (' + new Date(p.date).toLocaleDateString('pt-BR') + ')').join(', ')}
+OBS sobre os dados: "massa magra" / "massa muscular esquelética" significa MASSA DE MÚSCULO ESQUELÉTICO, não massa magra total do corpo.
+Fotos ANTERIORES (compare as novas contra estas) são de: ${comparePhotos.map(p => p.label + ' (' + new Date(p.date).toLocaleDateString('pt-BR') + ')').join(', ')}
 
 Seja específico e motivador. Use formatação com emojis.`;
     }
@@ -4558,13 +4613,18 @@ Seja específico e motivador. Use formatação com emojis.`;
       return;
     }
 
-    // Add previous photos for comparison
+    // Adiciona as fotos anteriores SELECIONADAS para comparação
     if(reportType === 'compare') {
-      const prevPhotos = iaPhotos.slice(-2);
+      const prevPhotos = window._iaComparePhotos || iaPhotos.slice(0, 3);
+      let added = 0;
       prevPhotos.forEach(pp => {
-        const src = pp.photos?.[0] || pp.base64 || pp.thumb;
-        const data = toBase64Pure(src);
-        if(data) imageParts.push({ inlineData: { mimeType: 'image/jpeg', data } });
+        // inclui todas as imagens de cada registro (até um teto para não estourar)
+        const srcs = pp.photos && pp.photos.length ? pp.photos : [pp.base64 || pp.thumb];
+        srcs.forEach(src => {
+          if(added >= 6) return; // teto de segurança de imagens anteriores
+          const data = toBase64Pure(src);
+          if(data) { imageParts.push({ inlineData: { mimeType: 'image/jpeg', data } }); added++; }
+        });
       });
     }
 
@@ -4619,7 +4679,7 @@ async function generateIADataReport() {
     } else if(focus === 'forca') {
       focusPrompt = `FOCO: Analise especificamente a evolução de FORÇA E PERFORMANCE — analise progressão de carga, reps, volume por exercício.`;
     } else if(focus === 'composicao') {
-      focusPrompt = `FOCO: Analise COMPOSIÇÃO CORPORAL — evolução de peso, massa magra, gordura, bioimpedância.`;
+      focusPrompt = `FOCO: Analise COMPOSIÇÃO CORPORAL — evolução de peso, massa muscular esquelética (músculo), gordura, bioimpedância. Lembre-se: "massa magra" aqui significa músculo esquelético, não massa magra total do corpo.`;
     } else if(focus === 'volume') {
       focusPrompt = `FOCO: Analise VOLUME DE TREINO — frequência semanal, séries por músculo, consistência.`;
     } else {
@@ -4630,12 +4690,14 @@ async function generateIADataReport() {
 
 IMPORTANTE: NÃO use placeholders como "[Nome do Atleta]" ou "[Seu Nome]". Escreva o relatório diretamente com base nos dados fornecidos, sem campos em branco.
 
+DEFINIÇÃO OBRIGATÓRIA: Nos dados deste app, o termo "massa magra" / "massa muscular esquelética" refere-se EXCLUSIVAMENTE à MASSA MUSCULAR ESQUELÉTICA (o músculo), e NÃO à massa magra/livre de gordura total do corpo (que incluiria água, ossos e órgãos). Trate sempre esse número como massa de músculo esquelético ao avaliar ganho de músculo.
+
 ${focusPrompt}
 
 ESTRUTURA DO RELATÓRIO (use exatamente esses títulos):
 1. RESUMO DO PERÍODO — Panorama geral dos últimos ${period} dias com números reais dos dados
 2. ANÁLISE DE PERFORMANCE — Evolução de força, volume e consistência com dados específicos
-3. COMPOSIÇÃO CORPORAL — Tendências de peso, massa magra e gordura (se disponível nos dados)
+3. COMPOSIÇÃO CORPORAL — Tendências de peso, massa muscular esquelética (músculo) e gordura (se disponível nos dados)
 4. DETECÇÃO DE PLATÔS — Identifique estagnações com exercícios e métricas específicas
 5. RECOMENDAÇÕES — Mudanças concretas e práticas para continuar evoluindo
 6. PRÓXIMAS 4 SEMANAS — Plano de foco para o próximo ciclo
@@ -4663,19 +4725,22 @@ Seja direto, analítico e baseado APENAS nos dados fornecidos. Leve em conta o p
 }
 
 // ---- GEMINI API CALLS ----
+// Modelos em ordem de preferência. Se o primeiro estiver sobrecarregado
+// ("demanda alta"), tentamos automaticamente o próximo.
+const GEMINI_MODELS = ['gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-flash-latest'];
+
 function buildGeminiUrl(model) {
   return `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
 }
 function buildGeminiHeaders(apiKey) {
+  // Apenas a chave da API — header Authorization vazio causava falhas.
   return {
     'Content-Type': 'application/json',
-    'x-goog-api-key': apiKey,
-    'Authorization': 'Bearer '
+    'x-goog-api-key': apiKey
   };
 }
 
 async function callGeminiVision(apiKey, prompt, imageParts) {
-  const url = buildGeminiUrl('gemini-2.5-flash');
   const body = {
     contents: [{
       parts: [ ...imageParts, { text: prompt } ]
@@ -4686,46 +4751,88 @@ async function callGeminiVision(apiKey, prompt, imageParts) {
       { category: 'HARM_CATEGORY_HATE_SPEECH', threshold: 'BLOCK_ONLY_HIGH' }
     ]
   };
-  return await geminiWithRetry(url, body, apiKey);
+  return await geminiWithRetry(body, apiKey);
 }
 
 async function callGeminiText(apiKey, prompt) {
-  const url = buildGeminiUrl('gemini-2.5-flash');
   const body = {
     contents: [{ parts: [{ text: prompt }] }],
     generationConfig: { temperature: 0.7, maxOutputTokens: 8192 }
   };
-  return await geminiWithRetry(url, body, apiKey);
+  return await geminiWithRetry(body, apiKey);
 }
 
-async function geminiWithRetry(url, body, apiKey, maxRetries = 4) {
-  const waits = [30, 60, 90, 120]; // segundos de espera entre tentativas
+function setIALoadingMsg(text) {
+  const el = document.getElementById('ia-loading-msg');
+  if(el) el.textContent = text;
+}
+
+async function geminiWithRetry(body, apiKey, maxRetries = 4) {
+  const quotaWaits     = [30, 60, 90, 120]; // espera longa: cota/limite
+  const overloadWaits  = [4, 8, 14, 22];    // espera curta: servidor sobrecarregado
+  let modelIdx = 0;
+
   for(let attempt = 0; attempt <= maxRetries; attempt++) {
-    const res = await fetch(url, {
-      method: 'POST',
-      headers: buildGeminiHeaders(apiKey),
-      body: JSON.stringify(body)
-    });
+    const model = GEMINI_MODELS[Math.min(modelIdx, GEMINI_MODELS.length - 1)];
+    let res;
+    try {
+      res = await fetch(buildGeminiUrl(model), {
+        method: 'POST',
+        headers: buildGeminiHeaders(apiKey),
+        body: JSON.stringify(body)
+      });
+    } catch(netErr) {
+      // Falha de rede — tenta de novo se ainda houver tentativas
+      if(attempt < maxRetries) {
+        setIALoadingMsg(`📡 Sem resposta da rede — tentando novamente (${attempt+1}/${maxRetries})…`);
+        await new Promise(r => setTimeout(r, 4000));
+        continue;
+      }
+      throw new Error('Falha de conexão. Verifique sua internet e tente de novo.');
+    }
+
     if(res.ok) {
       const data = await res.json();
-      return data.candidates?.[0]?.content?.parts?.[0]?.text || null;
+      const text = data.candidates?.[0]?.content?.parts?.[0]?.text || null;
+      if(text) return text;
+      // Resposta vazia (ex: bloqueada por segurança) — trata como erro recuperável
+      if(attempt < maxRetries) { modelIdx++; continue; }
+      throw new Error('A IA não retornou texto. Tente reenviar com outra foto ou descrição.');
     }
-    const err = await res.json().catch(()=>({}));
-    const msg = err.error?.message || '';
-    const isQuota = res.status === 429 || msg.toLowerCase().includes('quota');
 
-    if(isQuota && attempt < maxRetries) {
-      // Tenta extrair o tempo de espera sugerido pelo Google
-      const retryMatch = msg.match(/retry in ([\d.]+)s/i);
-      const waitSec = retryMatch ? Math.ceil(parseFloat(retryMatch[1])) + 5 : waits[attempt];
-      document.getElementById('ia-loading-msg').textContent =
-        `⏳ Cota atingida — aguardando ${waitSec}s e tentando novamente (${attempt+1}/${maxRetries})…`;
-      await new Promise(r => setTimeout(r, waitSec * 1000));
+    const err = await res.json().catch(() => ({}));
+    const msg = (err.error?.message || '').toString();
+    const lower = msg.toLowerCase();
+
+    const isQuota = res.status === 429 || lower.includes('quota') || lower.includes('rate limit');
+    const isOverloaded = res.status === 503 || res.status === 500 ||
+                         lower.includes('overloaded') || lower.includes('unavailable') ||
+                         lower.includes('try again later') || lower.includes('demanda');
+
+    if((isQuota || isOverloaded) && attempt < maxRetries) {
+      if(isOverloaded) {
+        // Sobrecarga: primeiro troca de modelo (rápido), depois espera curta
+        modelIdx++;
+        const waitSec = overloadWaits[Math.min(attempt, overloadWaits.length - 1)];
+        setIALoadingMsg(`⚙️ Servidor com alta demanda — trocando de modelo e tentando de novo (${attempt+1}/${maxRetries})…`);
+        await new Promise(r => setTimeout(r, waitSec * 1000));
+      } else {
+        // Cota: respeita o tempo sugerido pelo Google
+        const retryMatch = msg.match(/retry in ([\d.]+)s/i);
+        const waitSec = retryMatch ? Math.ceil(parseFloat(retryMatch[1])) + 5 : quotaWaits[Math.min(attempt, quotaWaits.length - 1)];
+        setIALoadingMsg(`⏳ Cota atingida — aguardando ${waitSec}s e tentando novamente (${attempt+1}/${maxRetries})…`);
+        await new Promise(r => setTimeout(r, waitSec * 1000));
+      }
       continue;
     }
-    throw new Error(msg || `HTTP ${res.status}`);
+
+    // Erro não recuperável — mensagem amigável
+    if(res.status === 400 && lower.includes('api key')) throw new Error('Chave da API inválida. Confira sua chave Gemini.');
+    if(res.status === 403) throw new Error('Acesso negado pela API. Verifique se a chave tem permissão para o Gemini.');
+    throw new Error(msg || `Erro HTTP ${res.status}`);
   }
-  throw new Error('Cota excedida após várias tentativas. Aguarde alguns minutos.');
+
+  throw new Error('A IA está com alta demanda no momento. Aguarde 1–2 minutos e tente novamente.');
 }
 
 // ---- DATA CONTEXT BUILDERS ----
@@ -4739,7 +4846,7 @@ function buildTrainingDataSummary() {
   const lastBio = bios.length ? bios[bios.length-1] : null;
   let summary = `Total de treinos: ${totalSessions} | Treinos últimos 30 dias: ${last30.length}`;
   if(lastWeight) summary += ` | Peso atual: ${lastWeight.weight}kg (${lastWeight.date})`;
-  if(lastBio) summary += ` | Bioimpedância: Massa magra ${lastBio.massa}kg, Gordura ${lastBio.gordura}kg (${lastBio.date})`;
+  if(lastBio) summary += ` | Bioimpedância: Massa muscular esquelética ${lastBio.massa}kg, Gordura ${lastBio.gordura}kg (${lastBio.date})`;
   summary += ` | Fichas: ${fichas.map(f=>f.name).join(', ')}`;
   return summary;
 }
@@ -4803,8 +4910,8 @@ function buildDetailedDataContext(periodDays) {
 
   // Bio
   const bioTrend = recentBios.length >= 2
-    ? `Massa magra: ${recentBios[0].massa}→${recentBios[recentBios.length-1].massa}kg | Gordura: ${recentBios[0].gordura}→${recentBios[recentBios.length-1].gordura}kg`
-    : recentBios.length === 1 ? `Massa magra: ${recentBios[0].massa}kg | Gordura: ${recentBios[0].gordura}kg` : 'Sem registros';
+    ? `Massa muscular esquelética: ${recentBios[0].massa}→${recentBios[recentBios.length-1].massa}kg | Gordura: ${recentBios[0].gordura}→${recentBios[recentBios.length-1].gordura}kg`
+    : recentBios.length === 1 ? `Massa muscular esquelética: ${recentBios[0].massa}kg | Gordura: ${recentBios[0].gordura}kg` : 'Sem registros';
 
   return `=== PERÍODO: últimos ${periodDays} dias ===
 TREINOS: ${recentSessions.length} sessões | Média: ${avgPerWeek}/semana
@@ -4914,6 +5021,8 @@ function renderIASavedPhotos() {
         <button class="btn btn-sm btn-danger" onclick="deleteIAPhoto('${p.id}')" style="font-size:10px;padding:4px 8px">✕</button>
       </div>
     </div>`}).join('');
+  // mantém o seletor de comparação atualizado
+  if(typeof renderIACompareSelector === 'function') renderIACompareSelector();
 }
 
 function openIASavedPhoto(id) {
