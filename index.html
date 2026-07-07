@@ -1700,7 +1700,7 @@ async function loadAllData() {
   // If logged in, try cloud first
   if(window.CloudDB && window.CloudDB._uid) {
     try {
-      const [cf, cs, cw, cb, csg, ccar] = await Promise.all([
+      const [cf, cs, cw, cb, csg, ccar, cpts] = await Promise.all([
         window.CloudDB.get('fichas'),
         window.CloudDB.get('sessions'),
         window.CloudDB.get('weights'),
@@ -1719,7 +1719,7 @@ async function loadAllData() {
       bios     = mergeArrays(cb, lb) || [];
       segs     = mergeArrays(csg, lsg) || [];
       cardios  = mergeArrays(ccar, lcar) || [];
-      ironPointsData = (window.CloudDB && cpts) ? cpts : (lpts || ironPointsData);
+      ironPointsData = cpts ? cpts : (lpts || ironPointsData);
       // Save merged back to both
       await Promise.all([
         DB.set('fichas', fichas), DB.set('sessions', sessions),
@@ -4096,8 +4096,6 @@ ${weightsSorted.filter(w => new Date(w.date) >= startDate).length > 1 ? `
 </div>` : ''}` : ''}
 
 ${(() => {
-  const filteredBios = [...bios].sort((a,b) => a.date.localeCompare(b.date))
-    .filter(b => new Date(b.date + '-01') >= startDate);
   const allBiosSorted = [...bios].sort((a,b) => a.date.localeCompare(b.date));
   const latestBio = allBiosSorted[allBiosSorted.length - 1];
   if(!latestBio) return '';
@@ -4106,49 +4104,27 @@ ${(() => {
   const fatDiff  = prevBio ? (latestBio.gordura - prevBio.gordura).toFixed(1) : null;
   const gPct = ((latestBio.gordura / latestBio.peso) * 100).toFixed(1);
   const mPct = ((latestBio.massa / latestBio.peso) * 100).toFixed(1);
-  return \`
-<h2>🧬 Bioimpedância</h2>
-<div class="grid3">
-  <div class="kpi blue">
-    <div class="kpi-label">Peso Total</div>
-    <div class="kpi-val">\${latestBio.peso} kg</div>
-    <div class="kpi-sub">\${latestBio.date}</div>
-  </div>
-  <div class="kpi green">
-    <div class="kpi-label">Massa Magra</div>
-    <div class="kpi-val">\${latestBio.massa} kg</div>
-    <div class="kpi-sub">\${mPct}% do peso\${massDiff !== null ? ' · ' + (massDiff > 0 ? '+' : '') + massDiff + 'kg vs ant.' : ''}</div>
-  </div>
-  <div class="kpi orange">
-    <div class="kpi-label">Gordura</div>
-    <div class="kpi-val">\${latestBio.gordura} kg</div>
-    <div class="kpi-sub">\${gPct}% do peso\${fatDiff !== null ? ' · ' + (fatDiff > 0 ? '+' : '') + fatDiff + 'kg vs ant.' : ''}</div>
-  </div>
-</div>
-\${allBiosSorted.length > 1 ? \`
-<div class="card">
-  <table>
-    <thead><tr><th>Mês/Ano</th><th>Peso kg</th><th>Massa Magra</th><th>% Massa</th><th>Gordura</th><th>% Gord.</th></tr></thead>
-    <tbody>
-      \${allBiosSorted.slice(-6).map((b,i,arr) => {
-        const prev = arr[i-1];
-        const mD = prev ? (b.massa - prev.massa).toFixed(1) : null;
-        const gD = prev ? (b.gordura - prev.gordura).toFixed(1) : null;
-        const gP = ((b.gordura/b.peso)*100).toFixed(1);
-        const mP = ((b.massa/b.peso)*100).toFixed(1);
-        return \\`<tr>
-          <td>\\${b.date}</td>
-          <td style="font-family:'Courier New',monospace;font-weight:700">\\${b.peso} kg</td>
-          <td class="\\${mD===null?'prog-neu':parseFloat(mD)>0?'prog-pos':'prog-neg'}">\\${b.massa} kg\\${mD!==null?' ('+( parseFloat(mD)>0?'+':'')+mD+')':''}</td>
-          <td>\\${mP}%</td>
-          <td class="\\${gD===null?'prog-neu':parseFloat(gD)<0?'prog-pos':'prog-neg'}">\\${b.gordura} kg\\${gD!==null?' ('+(parseFloat(gD)>0?'+':'')+gD+')':''}</td>
-          <td>\\${gP}%</td>
-        </tr>\\`;
-      }).join('')}
-    </tbody>
-  </table>
-</div>\` : ''}
-  \`;
+  const bioRows = allBiosSorted.slice(-6).map((b,i,arr) => {
+    const prev = arr[i-1];
+    const mD = prev ? (b.massa - prev.massa).toFixed(1) : null;
+    const gD = prev ? (b.gordura - prev.gordura).toFixed(1) : null;
+    const gP = ((b.gordura/b.peso)*100).toFixed(1);
+    const mP = ((b.massa/b.peso)*100).toFixed(1);
+    return '<tr><td>'+b.date+'</td>'
+      +'<td style="font-family:Courier New,monospace;font-weight:700">'+b.peso+' kg</td>'
+      +'<td class="'+(mD===null?'prog-neu':parseFloat(mD)>0?'prog-pos':'prog-neg')+'">'+b.massa+' kg'+(mD!==null?' ('+(parseFloat(mD)>0?'+':'')+mD+')':'')+'</td>'
+      +'<td>'+mP+'%</td>'
+      +'<td class="'+(gD===null?'prog-neu':parseFloat(gD)<0?'prog-pos':'prog-neg')+'">'+b.gordura+' kg'+(gD!==null?' ('+(parseFloat(gD)>0?'+':'')+gD+')':'')+'</td>'
+      +'<td>'+gP+'%</td></tr>';
+  }).join('');
+  return '<h2>🧬 Bioimpedância</h2>'
+    +'<div class="grid3">'
+    +'<div class="kpi blue"><div class="kpi-label">Peso Total</div><div class="kpi-val">'+latestBio.peso+' kg</div><div class="kpi-sub">'+latestBio.date+'</div></div>'
+    +'<div class="kpi green"><div class="kpi-label">Massa Magra</div><div class="kpi-val">'+latestBio.massa+' kg</div><div class="kpi-sub">'+mPct+'% do peso'+(massDiff!==null?' · '+(parseFloat(massDiff)>0?'+':'')+massDiff+'kg vs ant.':'')+'</div></div>'
+    +'<div class="kpi orange"><div class="kpi-label">Gordura</div><div class="kpi-val">'+latestBio.gordura+' kg</div><div class="kpi-sub">'+gPct+'% do peso'+(fatDiff!==null?' · '+(parseFloat(fatDiff)>0?'+':'')+fatDiff+'kg vs ant.':'')+'</div></div>'
+    +'</div>'
+    +(allBiosSorted.length > 1 ? '<div class="card"><table><thead><tr><th>Mês/Ano</th><th>Peso kg</th><th>Massa Magra</th><th>% Massa</th><th>Gordura</th><th>% Gord.</th></tr></thead><tbody>'+bioRows+'</tbody></table></div>' : '');
+})()}
 })()}
 
 <h2>💪 Volume por Grupo Muscular</h2>
@@ -4212,49 +4188,32 @@ ${(() => {
     .sort((a,b) => a.date.localeCompare(b.date));
   if(!filteredCardios.length) return '';
   const totalMin = filteredCardios.reduce((a,c) => a + (c.duration || 0), 0);
-  const avgSpeed = filteredCardios.filter(c => c.speed > 0).length
-    ? (filteredCardios.filter(c => c.speed > 0).reduce((a,c) => a + c.speed, 0) / filteredCardios.filter(c => c.speed > 0).length).toFixed(1)
-    : null;
+  const withSpeed = filteredCardios.filter(c => c.speed > 0);
+  const avgSpeed = withSpeed.length ? (withSpeed.reduce((a,c) => a + c.speed, 0) / withSpeed.length).toFixed(1) : null;
   const byType = {};
   filteredCardios.forEach(c => { byType[c.type] = (byType[c.type] || 0) + 1; });
-  return \`
-<h2>🏃 Cardio</h2>
-<div class="grid3">
-  <div class="kpi blue">
-    <div class="kpi-label">Sessões</div>
-    <div class="kpi-val">\${filteredCardios.length}</div>
-    <div class="kpi-sub">\${Object.entries(byType).map(([t,n])=>n+'× '+t).join(', ')}</div>
-  </div>
-  <div class="kpi green">
-    <div class="kpi-label">Tempo Total</div>
-    <div class="kpi-val">\${totalMin >= 60 ? Math.floor(totalMin/60)+'h'+(totalMin%60?String(totalMin%60).padStart(2,'0')+'min':'') : totalMin+'min'}</div>
-    <div class="kpi-sub">média \${(totalMin/filteredCardios.length).toFixed(0)} min/sessão</div>
-  </div>
-  \${avgSpeed !== null ? \`
-  <div class="kpi orange">
-    <div class="kpi-label">Vel. Média</div>
-    <div class="kpi-val">\${avgSpeed}</div>
-    <div class="kpi-sub">km/h</div>
-  </div>\` : '<div class="kpi"><div class="kpi-label">Vel. Média</div><div class="kpi-val" style="color:#aaa">—</div><div class="kpi-sub">não registrada</div></div>'}
-</div>
-<div class="card">
-  <table>
-    <thead><tr><th>Data</th><th>Tipo</th><th>Duração</th><th>Vel. Média</th><th>Inclinação</th><th>Obs.</th></tr></thead>
-    <tbody>
-      \${filteredCardios.slice().reverse().map(c => \`<tr>
-        <td>\${fmt(c.date)}</td>
-        <td><strong>\${c.type}</strong></td>
-        <td style="font-family:'Courier New',monospace">\${c.duration} min</td>
-        <td style="font-family:'Courier New',monospace">\${c.speed ? c.speed + ' km/h' : '—'}</td>
-        <td style="font-family:'Courier New',monospace">\${c.incline ? c.incline + '%' : '—'}</td>
-        <td style="font-size:11px;color:#888">\${c.notes || '—'}</td>
-      </tr>\`).join('')}
-    </tbody>
-  </table>
-</div>
-  \`;
+  const typeStr = Object.entries(byType).map(([t,n]) => n+'× '+t).join(', ');
+  const totalStr = totalMin >= 60 ? Math.floor(totalMin/60)+'h'+(totalMin%60?String(totalMin%60).padStart(2,'0')+'min':'') : totalMin+'min';
+  const avgStr = (totalMin/filteredCardios.length).toFixed(0)+' min/sessão';
+  const rows = filteredCardios.slice().reverse().map(c =>
+    '<tr><td>'+fmt(c.date)+'</td><td><strong>'+c.type+'</strong></td>'
+    +'<td style="font-family:Courier New,monospace">'+c.duration+' min</td>'
+    +'<td style="font-family:Courier New,monospace">'+(c.speed ? c.speed+' km/h' : '—')+'</td>'
+    +'<td style="font-family:Courier New,monospace">'+(c.incline ? c.incline+'%' : '—')+'</td>'
+    +'<td style="font-size:11px;color:#888">'+(c.notes||'—')+'</td></tr>'
+  ).join('');
+  return '<h2>🏃 Cardio</h2>'
+    +'<div class="grid3">'
+    +'<div class="kpi blue"><div class="kpi-label">Sessões</div><div class="kpi-val">'+filteredCardios.length+'</div><div class="kpi-sub">'+typeStr+'</div></div>'
+    +'<div class="kpi green"><div class="kpi-label">Tempo Total</div><div class="kpi-val">'+totalStr+'</div><div class="kpi-sub">média '+avgStr+'</div></div>'
+    +(avgSpeed !== null
+      ? '<div class="kpi orange"><div class="kpi-label">Vel. Média</div><div class="kpi-val">'+avgSpeed+'</div><div class="kpi-sub">km/h</div></div>'
+      : '<div class="kpi"><div class="kpi-label">Vel. Média</div><div class="kpi-val" style="color:#aaa">—</div><div class="kpi-sub">não registrada</div></div>')
+    +'</div>'
+    +'<div class="card"><table>'
+    +'<thead><tr><th>Data</th><th>Tipo</th><th>Duração</th><th>Vel. Média</th><th>Inclinação</th><th>Obs.</th></tr></thead>'
+    +'<tbody>'+rows+'</tbody></table></div>';
 })()}
-
 <h2>📋 Histórico Detalhado de Treinos</h2>
 ${sessionsByDate.map(s => {
   const fichaObj = fichas.find(f => f.id === s.fichaId);
@@ -5119,19 +5078,19 @@ function buildDetailedDataContext(periodDays) {
     ? `${recentCardios.length} sessões (${cardioTotalMin}min total) | Tipos: ${Object.entries(cardioByType).map(([t,n])=>n+'× '+t).join(', ')}${recentCardios.some(c=>c.speed) ? ' | Vel. média: ' + (recentCardios.filter(c=>c.speed>0).reduce((a,c)=>a+c.speed,0)/recentCardios.filter(c=>c.speed>0).length).toFixed(1) + 'km/h' : ''}`
     : 'Sem registros';
 
-  return \`=== PERÍODO: últimos \${periodDays} dias ===
-TREINOS DE FORÇA: \${recentSessions.length} sessões | Média: \${avgPerWeek}/semana
-FICHAS ATIVAS: \${fichas.map(f=>f.name).join(', ')}
+  return `=== PERÍODO: últimos ${periodDays} dias ===
+TREINOS DE FORÇA: ${recentSessions.length} sessões | Média: ${avgPerWeek}/semana
+FICHAS ATIVAS: ${fichas.map(f=>f.name).join(', ')}
 
 VOLUME POR MÚSCULO (séries):
-\${Object.entries(muscleVol).sort((a,b)=>b[1]-a[1]).map(([m,v]) => \`• \${m}: \${v} séries\`).join('\n')}
+${Object.entries(muscleVol).sort((a,b)=>b[1]-a[1]).map(([m,v]) => `• ${m}: ${v} séries`).join('\n')}
 
 EVOLUÇÃO DE FORÇA (top exercícios):
-\${topExercises || 'Sem dados suficientes'}
+${topExercises || 'Sem dados suficientes'}
 
-PESO CORPORAL: \${weightTrend}
-BIOIMPEDÂNCIA: \${bioTrend}
-CARDIO: \${cardioSummary}\`;
+PESO CORPORAL: ${weightTrend}
+BIOIMPEDÂNCIA: ${bioTrend}
+CARDIO: ${cardioSummary}`;
 }
 
 // ---- UI HELPERS ----
