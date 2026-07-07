@@ -848,6 +848,19 @@ canvas { max-width: 100%; }
   <div style="height:16px"></div>
   <div class="section-title">Iniciar Treino</div>
 
+  <!-- CARDIO QUICK REGISTER -->
+  <div class="card" style="margin-bottom:14px;border-color:rgba(71,200,255,0.4);background:linear-gradient(135deg,var(--surface),rgba(71,200,255,0.04))">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+      <div style="font-weight:700;font-size:14px;display:flex;align-items:center;gap:8px">
+        <span>🏃</span> Cardio
+      </div>
+      <button class="btn btn-sm" onclick="openCardioModal()" style="background:var(--accent2);color:#000;font-weight:700;font-size:12px;padding:6px 14px">
+        + Registrar
+      </button>
+    </div>
+    <div id="cardio-recent" style="font-size:12px;color:var(--text3)">Carregando…</div>
+  </div>
+
   <div id="treinar-content">
     <div class="empty-state">
       <div class="empty-state-icon">💪</div>
@@ -1199,13 +1212,6 @@ canvas { max-width: 100%; }
 <!-- TOAST -->
 <div class="toast" id="toast"></div>
 
-<!-- OVERLAY GLOBAL DE PROCESSAMENTO DA IA (usado fora da página IA Coach) -->
-<div id="ia-global-loading" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(10,10,15,0.88);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);align-items:center;justify-content:center;flex-direction:column;text-align:center;padding:28px">
-  <div style="font-size:42px;display:inline-block;animation:spin 1s linear infinite">⚙️</div>
-  <div id="ia-global-loading-msg" style="margin-top:18px;font-size:14px;color:var(--text);max-width:340px;line-height:1.5">Analisando com IA…</div>
-  <div style="margin-top:8px;font-size:11px;color:var(--text3)">Isso pode levar alguns segundos</div>
-</div>
-
 
 <!-- PAGE: IA COACH (substituiu Recompensas) -->
 <div class="page" id="page-recompensas">
@@ -1290,7 +1296,7 @@ canvas { max-width: 100%; }
       <div style="font-weight:700;font-size:14px;margin-bottom:4px">📸 Adicionar Fotos para Análise</div>
       <div style="font-size:12px;color:var(--text2);margin-bottom:12px">Adicione fotos do seu corpo para a IA analisar sua evolução visual.</div>
 
-      <label style="display:block;background:var(--surface2);border:2px dashed var(--border);border-radius:10px;padding:20px;text-align:center;cursor:pointer;transition:border-color 0.2s" id="ia-drop-area">
+      <label style="display:block;background:var(--surface2);border:2px dashed var(--border);border-radius:10px;padding:20px;text-align:center;cursor:pointer;transition:border-color 0.2s" id="ia-drop-area" onclick="document.getElementById('ia-photo-input').click()">
         <input type="file" id="ia-photo-input" accept="image/*" multiple style="display:none" onchange="handleIAPhotoUpload(this)">
         <div style="font-size:28px;margin-bottom:6px">📷</div>
         <div style="font-size:13px;color:var(--text2)">Toque para selecionar fotos</div>
@@ -1323,13 +1329,6 @@ canvas { max-width: 100%; }
           </div>
         </label>
       </div>
-    </div>
-
-    <!-- SELEÇÃO DE FOTOS PARA COMPARAR (aparece só no modo comparativo) -->
-    <div class="card" style="margin-bottom:14px;display:none" id="ia-compare-select-card">
-      <div style="font-weight:700;font-size:14px;margin-bottom:4px">🆚 Comparar com quais fotos salvas?</div>
-      <div style="font-size:12px;color:var(--text2);margin-bottom:10px">Selecione um ou mais registros salvos. A IA vai comparar as fotos novas (enviadas acima) com os selecionados.</div>
-      <div id="ia-compare-list" style="display:flex;flex-direction:column;gap:8px"></div>
     </div>
 
     <!-- DATA DO REGISTRO -->
@@ -1421,6 +1420,63 @@ canvas { max-width: 100%; }
   </div>
 </div>
 
+
+<!-- MODAL: REGISTRAR CARDIO -->
+<div class="modal-overlay" id="modal-cardio">
+  <div class="modal">
+    <div class="modal-title">
+      <span id="cardio-modal-title">🏃 Registrar Cardio</span>
+      <button class="modal-close" onclick="closeModal('modal-cardio')">✕</button>
+    </div>
+    <input type="hidden" id="editing-cardio-id">
+
+    <div class="input-group">
+      <label class="input-label">Data</label>
+      <input type="date" class="input" id="cardio-date">
+    </div>
+
+    <div class="grid2">
+      <div class="input-group" style="margin-bottom:0">
+        <label class="input-label">Tipo de Cardio</label>
+        <select class="input" id="cardio-type">
+          <option value="Corrida">🏃 Corrida</option>
+          <option value="Caminhada">🚶 Caminhada</option>
+          <option value="Pedalada">🚴 Pedalada</option>
+          <option value="Elliptical">⚙️ Elíptico</option>
+          <option value="Escada">🪜 Escada / Step</option>
+          <option value="Natação">🏊 Natação</option>
+          <option value="Outro">💨 Outro</option>
+        </select>
+      </div>
+      <div class="input-group" style="margin-bottom:0">
+        <label class="input-label">Duração (min)</label>
+        <input type="number" class="input" id="cardio-duration" placeholder="30" min="1" max="300" step="1">
+      </div>
+    </div>
+
+    <div class="grid2" style="margin-top:12px">
+      <div class="input-group" style="margin-bottom:0">
+        <label class="input-label">Vel. Média (km/h)</label>
+        <input type="number" class="input" id="cardio-speed" placeholder="8.5" min="0" max="50" step="0.1">
+      </div>
+      <div class="input-group" style="margin-bottom:0">
+        <label class="input-label">Inclinação Média (%)</label>
+        <input type="number" class="input" id="cardio-incline" placeholder="0" min="0" max="30" step="0.5">
+      </div>
+    </div>
+
+    <div class="input-group" style="margin-top:12px;margin-bottom:0">
+      <label class="input-label">Observações (opcional)</label>
+      <input type="text" class="input" id="cardio-notes" placeholder="ex: Zona 2, treino leve…">
+    </div>
+
+    <div style="display:flex;gap:10px;margin-top:16px">
+      <button class="btn btn-secondary" onclick="closeModal('modal-cardio')" style="flex:1;justify-content:center">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveCardio()" style="flex:1;justify-content:center">Salvar Cardio</button>
+    </div>
+  </div>
+</div>
+
 <!-- PAGE: BACKUP -->
 <div class="page" id="page-backup">
   <div style="height:16px"></div>
@@ -1455,13 +1511,6 @@ canvas { max-width: 100%; }
         </select>
       </div>
     </div>
-    <label style="display:flex;align-items:center;gap:10px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;margin-bottom:10px;cursor:pointer">
-      <input type="checkbox" id="report-include-ia" style="width:18px;height:18px;accent-color:var(--accent4);flex-shrink:0">
-      <div>
-        <div style="font-weight:700;font-size:13px">🤖 Incluir interpretação da IA</div>
-        <div style="font-size:11px;color:var(--text2)">Adiciona uma análise do Gemini ao final do relatório (requer chave configurada na aba IA Coach)</div>
-      </div>
-    </label>
     <button class="btn" onclick="exportPersonalReport()" style="width:100%;justify-content:center;background:var(--accent2);color:#000;font-weight:700">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" style="width:18px;height:18px"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
       Gerar Relatório
@@ -1651,32 +1700,34 @@ async function loadAllData() {
   // If logged in, try cloud first
   if(window.CloudDB && window.CloudDB._uid) {
     try {
-      const [cf, cs, cw, cb, csg] = await Promise.all([
+      const [cf, cs, cw, cb, csg, ccar] = await Promise.all([
         window.CloudDB.get('fichas'),
         window.CloudDB.get('sessions'),
         window.CloudDB.get('weights'),
         window.CloudDB.get('bios'),
         window.CloudDB.get('segs'),
+        window.CloudDB.get('cardios'),
         window.CloudDB.get('ironpoints')
       ]);
       // Get local as fallback
-      const [lf, ls, lw, lb, lsg, lpts] = await Promise.all([
-        DB.get('fichas'), DB.get('sessions'), DB.get('weights'), DB.get('bios'), DB.get('segs'), DB.get('ironpoints')
+      const [lf, ls, lw, lb, lsg, lcar, lpts] = await Promise.all([
+        DB.get('fichas'), DB.get('sessions'), DB.get('weights'), DB.get('bios'), DB.get('segs'), DB.get('cardios'), DB.get('ironpoints')
       ]);
       fichas   = mergeArrays(cf, lf) || [];
       sessions = mergeArrays(cs, ls) || [];
       weights  = mergeArrays(cw, lw) || [];
       bios     = mergeArrays(cb, lb) || [];
       segs     = mergeArrays(csg, lsg) || [];
+      cardios  = mergeArrays(ccar, lcar) || [];
       ironPointsData = (window.CloudDB && cpts) ? cpts : (lpts || ironPointsData);
       // Save merged back to both
       await Promise.all([
         DB.set('fichas', fichas), DB.set('sessions', sessions),
-        DB.set('weights', weights), DB.set('bios', bios), DB.set('segs', segs)
+        DB.set('weights', weights), DB.set('bios', bios), DB.set('segs', segs), DB.set('cardios', cardios)
       ]);
       await Promise.all([
         window.CloudDB.set('fichas', fichas), window.CloudDB.set('sessions', sessions),
-        window.CloudDB.set('weights', weights), window.CloudDB.set('bios', bios), window.CloudDB.set('segs', segs)
+        window.CloudDB.set('weights', weights), window.CloudDB.set('bios', bios), window.CloudDB.set('segs', segs), window.CloudDB.set('cardios', cardios)
       ]);
       return;
     } catch(e) {
@@ -1684,14 +1735,15 @@ async function loadAllData() {
     }
   }
   // Fallback to local only
-  const [f, s, w, b, sg, pts] = await Promise.all([
-    DB.get('fichas'), DB.get('sessions'), DB.get('weights'), DB.get('bios'), DB.get('segs'), DB.get('ironpoints')
+  const [f, s, w, b, sg, car, pts] = await Promise.all([
+    DB.get('fichas'), DB.get('sessions'), DB.get('weights'), DB.get('bios'), DB.get('segs'), DB.get('cardios'), DB.get('ironpoints')
   ]);
   fichas   = f || [];
   sessions = s || [];
   weights  = w || [];
   bios     = b || [];
   segs     = sg || [];
+  cardios  = car || [];
   if(pts) ironPointsData = pts;
 }
 
@@ -1761,6 +1813,7 @@ let sessions = [];
 let weights = [];
 let bios = [];
 let segs = []; // segmental body composition records
+let cardios = []; // cardio sessions [{id,date,type,duration,speed,incline,notes}]
 
 // ========================
 // IRONPOINTS DATA
@@ -1791,7 +1844,7 @@ function goPage(page, btn) {
   btn.classList.add('active');
 
   if(page === 'fichas') renderFichas();
-  if(page === 'treinar') renderTreinarPage();
+  if(page === 'treinar') { renderTreinarPage(); renderCardioRecent(); }
   if(page === 'evolucao') { renderEvoExercises(); renderEvolution(); }
   if(page === 'historico') renderHistorico();
   if(page === 'corpo') {
@@ -2015,10 +2068,16 @@ function addExerciseToForm(existing) {
       <input type="text" class="input" placeholder="ex: Rosca Direta" value="${existing?.conjugado||''}" data-field="conjugado">
       ${existing?.method==='Tri-Set'?`<input type="text" class="input" style="margin-top:6px" placeholder="ex: Rosca Martelo" value="${existing?.conjugado2||''}" data-field="conjugado2">`:''}
     </div>
-    <div style="margin-top:12px;margin-bottom:10px;display:flex;align-items:center;gap:10px;background:var(--surface3);border:1px solid var(--border);border-radius:8px;padding:10px 14px">
+    <div style="margin-top:12px;margin-bottom:8px;display:flex;align-items:center;gap:10px;background:var(--surface3);border:1px solid var(--border);border-radius:8px;padding:10px 14px">
       <input type="checkbox" id="bw-check-${id}" data-field="bodyweight" ${existing?.bodyweight?'checked':''} style="width:18px;height:18px;accent-color:var(--accent);cursor:pointer;flex-shrink:0">
       <label for="bw-check-${id}" style="font-size:13px;font-weight:600;color:var(--text2);cursor:pointer;user-select:none">
         Exercício sem peso <span style="font-size:11px;color:var(--text3)">(ex: abdominais, flexão)</span>
+      </label>
+    </div>
+    <div style="margin-bottom:10px;display:flex;align-items:center;gap:10px;background:var(--surface3);border:1px solid rgba(184,71,255,0.3);border-radius:8px;padding:10px 14px">
+      <input type="checkbox" id="iso-check-${id}" data-field="isometric" ${existing?.isometric?'checked':''} style="width:18px;height:18px;accent-color:var(--accent4);cursor:pointer;flex-shrink:0">
+      <label for="iso-check-${id}" style="font-size:13px;font-weight:600;color:var(--text2);cursor:pointer;user-select:none">
+        Modo Isometria <span style="font-size:11px;color:var(--accent4)">(séries em segundos — prancha, wall sit...)</span>
       </label>
     </div>
     <div class="input-group" style="margin-top:0;margin-bottom:0">
@@ -2088,6 +2147,7 @@ function getExercisesFromForm(existingExercises) {
       dropSets: parseInt(item.querySelector('[data-field="dropSets"]')?.value) || 2,
       conjugado: item.querySelector('[data-field="conjugado"]')?.value.trim() || '',
       bodyweight: item.querySelector('[data-field="bodyweight"]')?.checked || false,
+      isometric: item.querySelector('[data-field="isometric"]')?.checked || false,
     };
   }).filter(e => e.name);
 }
@@ -2186,6 +2246,7 @@ function startSession(fichaIdx) {
         conjugado: ex.conjugado || '',
         conjugado2: ex.conjugado2 || '',
         bodyweight: ex.bodyweight || false,
+        isometric: ex.isometric || false,
         skipped: false,
         lastSets: last ? last.sets : null,
         sets: Array.from({length: totalSets}, (_, si) => ({
@@ -2280,7 +2341,7 @@ function renderSessionExercises() {
       + (ex.conjugado ? '<div style="font-size:11px;color:var(--accent4);margin-top:2px">⟳ ' + ex.conjugado + (ex.conjugado2 ? ' + ' + ex.conjugado2 : '') + '</div>' : '')
       + '<div style="display:flex;gap:8px;margin-top:4px;flex-wrap:wrap"><span class="tag tag-muscle" style="font-size:10px">' + ex.muscle + '</span>'
       + (ex.muscle2 ? '<span class="tag tag-muscle" style="font-size:10px;opacity:0.7">' + ex.muscle2 + '</span>' : '')
-      + '<span class="tag tag-method" style="font-size:10px">' + ex.method + '</span>'
+      + '<span class="tag tag-method" style="font-size:10px">' + ex.method + '</span>'      + (ex.isometric ? '<span style="font-size:10px;background:rgba(184,71,255,0.15);color:var(--accent4);padding:2px 6px;border-radius:4px;font-weight:700">⏱ ISOMETRIA</span>' : '')
       + (ex.method === 'Drop Set' ? '<span style="font-size:10px;background:rgba(255,107,71,0.15);color:var(--accent3);padding:2px 6px;border-radius:4px;font-weight:700">↓ DROP</span>' : '')
       + '</div>'
       + lastSummary + '</div>'
@@ -3322,6 +3383,111 @@ function renderSegCharts() {
   }
 }
 
+
+// ========================
+// CARDIO
+// ========================
+const CARDIO_ICONS = {
+  'Corrida':'🏃','Caminhada':'🚶','Pedalada':'🚴',
+  'Elliptical':'⚙️','Escada':'🪜','Natação':'🏊','Outro':'💨'
+};
+
+function openCardioModal(cardioId) {
+  const today = new Date().toISOString().split('T')[0];
+  if(cardioId) {
+    // Edit mode
+    const c = cardios.find(x => x.id === cardioId);
+    if(!c) return;
+    document.getElementById('cardio-modal-title').textContent = '✏️ Editar Cardio';
+    document.getElementById('editing-cardio-id').value = cardioId;
+    document.getElementById('cardio-date').value = c.date;
+    document.getElementById('cardio-type').value = c.type;
+    document.getElementById('cardio-duration').value = c.duration;
+    document.getElementById('cardio-speed').value = c.speed || '';
+    document.getElementById('cardio-incline').value = c.incline || '';
+    document.getElementById('cardio-notes').value = c.notes || '';
+  } else {
+    // New mode
+    document.getElementById('cardio-modal-title').textContent = '🏃 Registrar Cardio';
+    document.getElementById('editing-cardio-id').value = '';
+    document.getElementById('cardio-date').value = today;
+    document.getElementById('cardio-type').value = 'Corrida';
+    document.getElementById('cardio-duration').value = '';
+    document.getElementById('cardio-speed').value = '';
+    document.getElementById('cardio-incline').value = '';
+    document.getElementById('cardio-notes').value = '';
+  }
+  openModal('modal-cardio');
+}
+
+async function saveCardio() {
+  const editId = document.getElementById('editing-cardio-id').value;
+  const date     = document.getElementById('cardio-date').value;
+  const type     = document.getElementById('cardio-type').value;
+  const duration = parseFloat(document.getElementById('cardio-duration').value);
+  const speed    = parseFloat(document.getElementById('cardio-speed').value) || 0;
+  const incline  = parseFloat(document.getElementById('cardio-incline').value) || 0;
+  const notes    = document.getElementById('cardio-notes').value.trim();
+
+  if(!date || !type || !duration || duration < 1) {
+    toast('Preencha data, tipo e duração', 'var(--red)'); return;
+  }
+
+  if(editId) {
+    const idx = cardios.findIndex(c => c.id === editId);
+    if(idx >= 0) cardios[idx] = { id: editId, date, type, duration, speed, incline, notes };
+  } else {
+    cardios.push({ id: crypto.randomUUID(), date, type, duration, speed, incline, notes });
+  }
+  cardios.sort((a,b) => a.date.localeCompare(b.date));
+  await DB.set('cardios', cardios);
+  closeModal('modal-cardio');
+  renderCardioRecent();
+  toast(editId ? '✅ Cardio atualizado!' : '✅ Cardio registrado! 🏃', 'var(--accent2)');
+}
+
+async function deleteCardio(cardioId) {
+  if(!confirm('Excluir este registro de cardio?')) return;
+  cardios = cardios.filter(c => c.id !== cardioId);
+  await DB.set('cardios', cardios);
+  renderCardioRecent();
+  toast('🗑️ Cardio removido', '#ffaa47');
+}
+
+function renderCardioRecent() {
+  const el = document.getElementById('cardio-recent');
+  if(!el) return;
+  const recent = [...cardios].sort((a,b) => b.date.localeCompare(a.date)).slice(0, 5);
+  if(!recent.length) {
+    el.innerHTML = '<span style="color:var(--text3)">Nenhum cardio registrado ainda</span>';
+    return;
+  }
+  el.innerHTML = recent.map(c => {
+    const icon = CARDIO_ICONS[c.type] || '💨';
+    const fmt = new Date(c.date + 'T12:00:00').toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'});
+    const details = [
+      c.duration + 'min',
+      c.speed ? c.speed + 'km/h' : null,
+      c.incline ? c.incline + '% incl.' : null
+    ].filter(Boolean).join(' · ');
+    return `<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border)">
+      <span style="font-size:18px;flex-shrink:0">${icon}</span>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:12px;font-weight:700;color:var(--accent2)">${c.type}</div>
+        <div style="font-size:11px;color:var(--text3)">${fmt} · ${details}${c.notes ? ' · ' + c.notes : ''}</div>
+      </div>
+      <div style="display:flex;gap:4px;flex-shrink:0">
+        <button class="btn-icon" onclick="openCardioModal('${c.id}')" style="padding:4px;color:var(--accent2);border-color:rgba(71,200,255,0.3)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" style="width:13px;height:13px"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        </button>
+        <button class="btn-icon" onclick="deleteCardio('${c.id}')" style="padding:4px;color:var(--red);border-color:rgba(255,71,87,0.3)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" style="width:13px;height:13px"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+        </button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
 // ========================
 // HISTÓRICO
 // ========================
@@ -3449,6 +3615,7 @@ function openSessionDetail(sessionIdx) {
     const totalExReps = doneSets.reduce((a,s)=>a+parseFloat(s.reps),0);
     const avgReps = doneSets.length ? (totalExReps/doneSets.length).toFixed(1) : 0;
     const isBodyweight = ex.bodyweight;
+    const isIsometricDetail = ex.isometric;
 
     html += `<div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;margin-bottom:12px;overflow:hidden">
       <div style="padding:12px;background:var(--surface3);display:flex;justify-content:space-between;align-items:center">
@@ -3460,25 +3627,27 @@ function openSessionDetail(sessionIdx) {
           </div>
         </div>
         <div style="text-align:right">
-          ${!isBodyweight ? `<div style="font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--accent);font-weight:700">${maxWeight}kg máx</div>` : ''}
-          <div style="font-size:11px;color:var(--text3)">${doneSets.length} séries · ${totalExReps} reps</div>
+          ${!isBodyweight && !ex.isometric ? `<div style="font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--accent);font-weight:700">${maxWeight}kg máx</div>` : ''}
+          ${ex.isometric ? `<span style="font-size:9px;background:rgba(184,71,255,0.15);color:var(--accent4);padding:2px 5px;border-radius:4px;font-weight:700">⏱ ISOMETRIA</span>` : ''}
+          <div style="font-size:11px;color:var(--text3)">${doneSets.length} séries · ${totalExReps} ${ex.isometric ? 'seg' : 'reps'}</div>
         </div>
       </div>
       <div style="padding:10px 12px">
-        <div style="display:grid;grid-template-columns:28px ${isBodyweight?'1fr':'1fr 1fr 1fr'};gap:6px;padding-bottom:6px;border-bottom:1px solid var(--border);margin-bottom:4px">
+        <div style="display:grid;grid-template-columns:28px ${(isBodyweight||ex.isometric)?'1fr':'1fr 1fr 1fr'};gap:6px;padding-bottom:6px;border-bottom:1px solid var(--border);margin-bottom:4px">
           <span style="font-size:9px;font-weight:700;text-transform:uppercase;color:var(--text3)">#</span>
-          <span style="font-size:9px;font-weight:700;text-transform:uppercase;color:var(--text3);text-align:center">REPS</span>
-          ${!isBodyweight ? '<span style="font-size:9px;font-weight:700;text-transform:uppercase;color:var(--text3);text-align:center">PESO</span><span style="font-size:9px;font-weight:700;text-transform:uppercase;color:var(--text3);text-align:center">VOL</span>' : ''}
+          <span style="font-size:9px;font-weight:700;text-transform:uppercase;color:${ex.isometric?'var(--accent4)':'var(--text3)'};text-align:center">${ex.isometric?'⏱ SEG':'REPS'}</span>
+          ${!isBodyweight && !ex.isometric ? '<span style="font-size:9px;font-weight:700;text-transform:uppercase;color:var(--text3);text-align:center">PESO</span><span style="font-size:9px;font-weight:700;text-transform:uppercase;color:var(--text3);text-align:center">VOL</span>' : ''}
         </div>`;
 
     ex.sets.forEach((s, si) => {
-      if(!isValidSet(s)) { if(s.done) { html += `<div style="display:grid;grid-template-columns:28px ${isBodyweight?'1fr':'1fr 1fr 1fr'};gap:6px;padding:5px 0;border-bottom:1px solid rgba(255,255,255,0.04);opacity:0.35"><span style="font-family:'Bebas Neue',sans-serif;font-size:16px;color:var(--text3)">${si+1}</span><span style="font-size:11px;color:var(--text3);align-self:center;text-align:center">pulada</span></div>`; } return; }
+      if(!isValidSet(s)) { if(s.done) { html += `<div style="display:grid;grid-template-columns:28px ${(isBodyweight||ex.isometric)?'1fr':'1fr 1fr 1fr'};gap:6px;padding:5px 0;border-bottom:1px solid rgba(255,255,255,0.04);opacity:0.35"><span style="font-family:'Bebas Neue',sans-serif;font-size:16px;color:var(--text3)">${si+1}</span><span style="font-size:11px;color:var(--text3);align-self:center;text-align:center">pulada</span></div>`; } return; }
       const setVol = (parseFloat(s.reps)||0) * (parseFloat(s.weight)||0);
       const isDropLabel = s.isDrop ? `<span style="font-size:8px;color:var(--accent3);font-weight:700">D${si-ex.targetSets+1}</span>` : (si+1);
-      html += `<div style="display:grid;grid-template-columns:28px ${isBodyweight?'1fr':'1fr 1fr 1fr'};gap:6px;padding:5px 0;border-bottom:1px solid rgba(255,255,255,0.04)">
+      const repsDisplay = ex.isometric ? (s.reps + 's') : (s.reps || '—');
+      html += `<div style="display:grid;grid-template-columns:28px ${(isBodyweight||ex.isometric)?'1fr':'1fr 1fr 1fr'};gap:6px;padding:5px 0;border-bottom:1px solid rgba(255,255,255,0.04)">
         <span style="font-family:'Bebas Neue',sans-serif;font-size:16px;color:${s.isDrop?'var(--accent3)':'var(--text3)'}">${isDropLabel}</span>
-        <span style="font-family:'JetBrains Mono',monospace;font-size:14px;font-weight:700;color:var(--text);text-align:center">${s.reps || '—'}</span>
-        ${!isBodyweight ? `<span style="font-family:'JetBrains Mono',monospace;font-size:14px;font-weight:700;color:var(--accent2);text-align:center">${s.weight ? s.weight+'kg' : '—'}</span>
+        <span style="font-family:'JetBrains Mono',monospace;font-size:14px;font-weight:700;color:${ex.isometric?'var(--accent4)':'var(--text)'};text-align:center">${repsDisplay}</span>
+        ${!isBodyweight && !ex.isometric ? `<span style="font-family:'JetBrains Mono',monospace;font-size:14px;font-weight:700;color:var(--accent2);text-align:center">${s.weight ? s.weight+'kg' : '—'}</span>
         <span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--text3);text-align:center">${setVol > 0 ? setVol+'kg' : '—'}</span>` : ''}
       </div>`;
     });
@@ -3495,14 +3664,9 @@ function openSessionDetail(sessionIdx) {
     html += `</div>`;
   });
 
-  // Botão de análise IA + resultado + ações
+  // Delete button
   html += `
-    <button onclick="analyzeSessionWithIA(${sessionIdx})" class="btn" style="width:100%;justify-content:center;margin-top:8px;background:var(--accent4);color:#fff;font-weight:700">
-      🤖 Analisar treino com IA
-    </button>
-    <div style="font-size:10px;color:var(--text3);text-align:center;margin-top:6px">Compara com os últimos treinos e os relatórios de foto salvos</div>
-    <div id="session-ia-result" style="display:none;background:var(--surface2);border:1px solid var(--accent4);border-radius:10px;padding:14px;margin-top:12px"></div>
-    <div style="display:flex;gap:10px;margin-top:12px">
+    <div style="display:flex;gap:10px;margin-top:8px">
       <button onclick="exportSessionPDF(${sessionIdx})" class="btn btn-primary" style="flex:1;justify-content:center">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" style="width:16px;height:16px"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
         Exportar PDF
@@ -3514,9 +3678,6 @@ function openSessionDetail(sessionIdx) {
 
   document.getElementById('detail-content').innerHTML = html;
   openModal('modal-session-detail');
-  // Reexibe análise IA já gerada para esta sessão, se houver
-  const cachedIA = sessionIACache[sess.id || sess.date];
-  if(cachedIA) renderSessionIAResult(cachedIA);
 }
 
 async function deleteSession(idx) {
@@ -3538,22 +3699,6 @@ function exportSessionPDF(sessionIdx) {
   const totalVol = sessionTotalVolume(sess);
   const totalSets = sess.exercises.reduce((a,ex) => a + ex.sets.filter(isValidSet).length, 0);
   const totalReps = sess.exercises.reduce((a,ex) => a + ex.sets.filter(isValidSet).reduce((b,s)=>b+parseFloat(s.reps),0), 0);
-
-  // Interpretação da IA (se já gerada para esta sessão)
-  const iaText = sessionIACache[sess.id || sess.date];
-  const iaSectionHtml = iaText ? `
-  <div style="margin-top:28px;break-inside:avoid">
-    <div style="font-size:15px;font-weight:800;text-transform:uppercase;letter-spacing:1.5px;color:#1a1a2e;margin-bottom:12px;padding-bottom:6px;border-bottom:2px solid #b847ff">🤖 Interpretação da IA</div>
-    <div style="background:#faf7ff;border:1px solid #e6d6ff;border-radius:8px;padding:16px;font-size:12.5px;line-height:1.7;color:#2a2a3a">
-      ${iaText
-        .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
-        .replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>')
-        .replace(/^#{1,3}\s+(.+)$/gm,'<div style="font-weight:800;color:#6a1bb0;margin:12px 0 4px">$1</div>')
-        .replace(/^[\-•]\s+(.+)$/gm,'<div style="padding-left:14px">• $1</div>')
-        .replace(/\n\n/g,'<br><br>').replace(/\n/g,'<br>')}
-    </div>
-    <div style="font-size:10px;color:#aaa;margin-top:8px;text-align:right">Interpretação gerada por IA (Gemini) — revise com seu julgamento profissional</div>
-  </div>` : '';
 
   let exercisesHtml = '';
   sess.exercises.forEach(ex => {
@@ -3659,7 +3804,6 @@ function exportSessionPDF(sessionIdx) {
 
   <!-- Exercises -->
   ${exercisesHtml}
-  ${iaSectionHtml}
 
   <!-- Footer -->
   <div style="margin-top:24px;padding-top:12px;border-top:1px solid #eee;font-size:10px;color:#aaa;text-align:center">
@@ -3744,7 +3888,8 @@ function renderBackupStats() {
     '⚖️ <strong>' + totalWeights + '</strong> registros de peso<br>' +
     '🧬 <strong>' + totalBios + '</strong> registros de bioimpedância<br>' +
     '📅 Primeiro treino: <strong>' + firstSession + '</strong><br>' +
-    '📅 Último treino: <strong>' + lastSession + '</strong>';
+    '📅 Último treino: <strong>' + lastSession + '</strong><br>' +
+    '🏃 <strong>' + cardios.length + '</strong> sessões de cardio';
 }
 
 // ========================
@@ -3771,13 +3916,6 @@ async function exportPersonalReport() {
   if (!filteredSessions.length) {
     toast('⚠️ Nenhum treino encontrado neste período', 'var(--accent)');
     return;
-  }
-
-  // Abre a janela de impressão AGORA (durante o toque do usuário) para não ser
-  // bloqueada como popup caso a IA demore. Mostra um carregando até o conteúdo ficar pronto.
-  const reportWin = window.open('', '_blank');
-  if(reportWin) {
-    reportWin.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><title>IronLog — Gerando relatório…</title></head><body style="font-family:Arial,sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;color:#1a1a2e;text-align:center"><div><div style="font-size:40px">⚙️</div><div style="margin-top:12px;font-size:14px;color:#888">Gerando relatório…</div></div></body></html>');
   }
 
   // ---- PESO ----
@@ -3835,129 +3973,6 @@ async function exportPersonalReport() {
   const fmt = d => new Date(d).toLocaleDateString('pt-BR', { day:'2-digit', month:'short', year:'numeric' });
   const fmtShort = d => new Date(d).toLocaleDateString('pt-BR', { day:'2-digit', month:'short' });
   const weekDay = d => ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'][new Date(d).getDay()];
-
-  // ---- INTERPRETAÇÃO DA IA (opcional) ----
-  let iaReportSection = '';
-  const wantIA = document.getElementById('report-include-ia')?.checked;
-  if(wantIA) {
-    const key = await getGeminiKey();
-    if(!key) {
-      toast('🔑 Configure a chave Gemini na aba IA Coach para incluir a interpretação.', '#ff6b47');
-    } else if(checkRateLimit()) {
-      showGlobalIALoading('🤖 Gerando interpretação da IA para o relatório…');
-      try {
-        // Garante fotos e perfil carregados (o usuário pode não ter aberto a aba IA Coach)
-        await loadIAPhotos();
-        await loadIAProfile();
-        // Contexto COMPLETO com todos os dados do relatório
-        const muscleTxt = muscleVolumeArr.map(([m,v]) => `${m}: ${v} séries`).join(' | ') || 'sem dados';
-        const freqTxt = weekKeys.map(wk => {
-          const end = new Date(wk); end.setDate(end.getDate()+6);
-          return `${fmtShort(wk)}–${fmtShort(end)}: ${weekMap[wk]} treino(s)`;
-        }).join(' | ');
-        const exTxt = Object.entries(exMap).map(([name, data]) => {
-          const entries = data.entries;
-          const first = entries[0], last = entries[entries.length-1];
-          const progW = entries.length > 1 ? (last.maxWeight - first.maxWeight) : null;
-          const totalSets = entries.reduce((a,e)=>a+e.sets.length,0);
-          const maxLoad = Math.max(...entries.map(e=>e.maxWeight));
-          const totalVol = entries.reduce((a,e)=>a+e.totalVolume,0);
-          return `${name} (${data.muscle}): ${totalSets} séries, carga máx ${maxLoad}kg, vol ${Math.round(totalVol)}kg, progressão ${progW===null?'1 treino':(progW>0?'+':'')+progW.toFixed(1)+'kg'}`;
-        }).join('\n');
-
-        // Detalhe completo das sessões (até 12 mais recentes em detalhe; resto resumido)
-        const detailSessions = sessionsByDate.slice(0, 12).map(s => buildSessionDetailText(s)).join('\n');
-        const extraCount = Math.max(0, sessionsByDate.length - 12);
-
-        const weightLine = lastWeight
-          ? `Último peso: ${lastWeight.val}kg (${fmt(lastWeight.date)})` +
-            (weightDiff !== null ? ` | variação no período: ${weightDiff>0?'+':''}${weightDiff.toFixed(1)}kg` : '') +
-            (totalWeightDiff !== null ? ` | variação total histórica: ${totalWeightDiff>0?'+':''}${totalWeightDiff.toFixed(1)}kg` : '')
-          : 'Sem registros de peso';
-
-        // ---- JANELA TEMPORAL: deixa claro que o período pode estar EM ANDAMENTO ----
-        const _msDay = 86400000;
-        const daysElapsed = Math.max(1, Math.ceil((now - startDate) / _msDay));
-        const lastSess = sessionsByDate[0];
-        const lastSessStr = lastSess
-          ? new Date(lastSess.date).toLocaleDateString('pt-BR', { weekday:'long', day:'2-digit', month:'short' })
-          : '—';
-        const daysSinceLast = lastSess ? Math.floor((now - new Date(lastSess.date)) / _msDay) : null;
-        const todayStr = now.toLocaleDateString('pt-BR', { weekday:'long', day:'2-digit', month:'short', year:'numeric' });
-        let timeWindowNote;
-        if(period === 'week') {
-          timeWindowNote = `⏳ JANELA TEMPORAL (LEIA PRIMEIRO): Este é o relatório da SEMANA ATUAL, que AINDA NÃO TERMINOU. A semana começou em ${fmt(startDate)} e hoje é ${todayStr} — apenas ${daysElapsed} de 7 dias se passaram. Os totais (volume, séries, nº de treinos) são PARCIAIS e ainda vão crescer até o fim da semana. NÃO classifique o volume/frequência como "baixo", "fraco" ou "insuficiente" por causa disso — avalie o RITMO diário e o que ainda falta na semana. Último treino: ${lastSessStr}${daysSinceLast!=null?` (há ${daysSinceLast} dia(s))`:''}.`;
-        } else {
-          timeWindowNote = `⏳ JANELA TEMPORAL: O relatório vai de ${fmt(startDate)} até HOJE (${todayStr}), cobrindo ${daysElapsed} dias. A última semana/mês do período pode estar INCOMPLETA, então a fração final tende a ter volume parcial — não trate isso como queda. Último treino: ${lastSessStr}${daysSinceLast!=null?` (há ${daysSinceLast} dia(s))`:''}.`;
-        }
-
-        const reportCtx = `RELATÓRIO: ${periodLabel}
-${timeWindowNote}
-
-Treinos no período: ${filteredSessions.length} | Média semanal: ${avgPerWeek}
-Séries totais: ${filteredSessions.reduce((a,s)=>a+s.exercises.reduce((b,ex)=>b+ex.sets.filter(isValidSet).length,0),0)} | Exercícios diferentes: ${Object.keys(exMap).length}
-
-VOLUME POR MÚSCULO: ${muscleTxt}
-
-FREQUÊNCIA SEMANAL: ${freqTxt}
-
-EVOLUÇÃO POR EXERCÍCIO:
-${exTxt || 'sem dados'}
-
-PESO: ${weightLine}
-
-${buildBodyContextForIA()}
-
-RELATÓRIOS DE FOTO SALVOS (use para conectar evolução visual):
-${buildPhotoReportsContext(now)}
-
-HISTÓRICO DETALHADO (${detailSessions ? 'sessões' : 'nenhuma'}):
-${detailSessions}${extraCount ? `\n… (+${extraCount} treino(s) mais antigos no período, resumidos acima nos totais)` : ''}`;
-
-        const iaPrompt = `Você é um treinador de elite escrevendo a INTERPRETAÇÃO PROFISSIONAL de um relatório de treino já montado. Responda em português brasileiro, baseando-se APENAS nos dados abaixo (não invente números).
-
-"massa magra"/"massa muscular esquelética" significa MÚSCULO ESQUELÉTICO, não massa magra total.
-Use os relatórios de foto para conectar a evolução visual com a evolução de carga, volume e composição corporal.
-RESPEITE A JANELA TEMPORAL acima: se o período ainda está EM ANDAMENTO (semana/mês corrente), NÃO trate o volume parcial como queda, fraqueza ou estagnação — contextualize que o período não terminou.
-
-${reportCtx}
-
-Escreva uma interpretação com estas seções (emojis nos títulos):
-📊 LEITURA GERAL — o que os números dizem sobre este período
-📈 PROGRESSÃO — onde houve evolução real de força/volume e onde estagnou
-⚖️ COMPOSIÇÃO & FOTOS — relação entre treino, peso, músculo esquelético e relatórios de foto
-⚠️ ALERTAS — desequilíbrios musculares, baixa frequência, sinais de platô
-✅ PLANO PARA O PRÓXIMO CICLO — ajustes concretos e priorizados
-
-Seja técnico, direto e prático.`;
-
-        const iaResp = await callGeminiText(key, iaPrompt);
-        hideGlobalIALoading();
-        if(iaResp) {
-          iaReportSection = `
-<h2>🤖 Interpretação da IA</h2>
-<div class="card" style="border-left:3px solid #b847ff;background:#faf7ff">
-  <div style="font-size:12.5px;line-height:1.75;color:#2a2a3a">
-    ${iaResp
-      .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
-      .replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>')
-      .replace(/^#{1,3}\s+(.+)$/gm,'<div style="font-weight:800;color:#6a1bb0;margin:14px 0 4px;font-size:13px">$1</div>')
-      .replace(/^[\-•]\s+(.+)$/gm,'<div style="padding-left:14px;margin-bottom:3px">• $1</div>')
-      .replace(/\n\n/g,'<br><br>').replace(/\n/g,'<br>')}
-  </div>
-  <div style="font-size:10px;color:#aaa;margin-top:10px;text-align:right">Interpretação gerada por IA (Gemini) — revise com seu julgamento profissional</div>
-</div>`;
-          toast('✅ Interpretação da IA adicionada ao relatório!', 'var(--green)');
-        } else {
-          toast('⚠️ A IA não retornou texto. Relatório gerado sem interpretação.', '#ffaa47');
-        }
-      } catch(err) {
-        hideGlobalIALoading();
-        toast('❌ IA indisponível: ' + (err.message || 'erro') + '. Gerando relatório sem ela.', '#ff4757');
-        console.error('[IA Relatório]', err);
-      }
-    }
-  }
 
   // ---- GERA HTML DO RELATÓRIO ----
   const html = `<!DOCTYPE html>
@@ -4080,6 +4095,62 @@ ${weightsSorted.filter(w => new Date(w.date) >= startDate).length > 1 ? `
   </table>
 </div>` : ''}` : ''}
 
+${(() => {
+  const filteredBios = [...bios].sort((a,b) => a.date.localeCompare(b.date))
+    .filter(b => new Date(b.date + '-01') >= startDate);
+  const allBiosSorted = [...bios].sort((a,b) => a.date.localeCompare(b.date));
+  const latestBio = allBiosSorted[allBiosSorted.length - 1];
+  if(!latestBio) return '';
+  const prevBio = allBiosSorted[allBiosSorted.length - 2];
+  const massDiff = prevBio ? (latestBio.massa - prevBio.massa).toFixed(1) : null;
+  const fatDiff  = prevBio ? (latestBio.gordura - prevBio.gordura).toFixed(1) : null;
+  const gPct = ((latestBio.gordura / latestBio.peso) * 100).toFixed(1);
+  const mPct = ((latestBio.massa / latestBio.peso) * 100).toFixed(1);
+  return \`
+<h2>🧬 Bioimpedância</h2>
+<div class="grid3">
+  <div class="kpi blue">
+    <div class="kpi-label">Peso Total</div>
+    <div class="kpi-val">\${latestBio.peso} kg</div>
+    <div class="kpi-sub">\${latestBio.date}</div>
+  </div>
+  <div class="kpi green">
+    <div class="kpi-label">Massa Magra</div>
+    <div class="kpi-val">\${latestBio.massa} kg</div>
+    <div class="kpi-sub">\${mPct}% do peso\${massDiff !== null ? ' · ' + (massDiff > 0 ? '+' : '') + massDiff + 'kg vs ant.' : ''}</div>
+  </div>
+  <div class="kpi orange">
+    <div class="kpi-label">Gordura</div>
+    <div class="kpi-val">\${latestBio.gordura} kg</div>
+    <div class="kpi-sub">\${gPct}% do peso\${fatDiff !== null ? ' · ' + (fatDiff > 0 ? '+' : '') + fatDiff + 'kg vs ant.' : ''}</div>
+  </div>
+</div>
+\${allBiosSorted.length > 1 ? \`
+<div class="card">
+  <table>
+    <thead><tr><th>Mês/Ano</th><th>Peso kg</th><th>Massa Magra</th><th>% Massa</th><th>Gordura</th><th>% Gord.</th></tr></thead>
+    <tbody>
+      \${allBiosSorted.slice(-6).map((b,i,arr) => {
+        const prev = arr[i-1];
+        const mD = prev ? (b.massa - prev.massa).toFixed(1) : null;
+        const gD = prev ? (b.gordura - prev.gordura).toFixed(1) : null;
+        const gP = ((b.gordura/b.peso)*100).toFixed(1);
+        const mP = ((b.massa/b.peso)*100).toFixed(1);
+        return \\`<tr>
+          <td>\\${b.date}</td>
+          <td style="font-family:'Courier New',monospace;font-weight:700">\\${b.peso} kg</td>
+          <td class="\\${mD===null?'prog-neu':parseFloat(mD)>0?'prog-pos':'prog-neg'}">\\${b.massa} kg\\${mD!==null?' ('+( parseFloat(mD)>0?'+':'')+mD+')':''}</td>
+          <td>\\${mP}%</td>
+          <td class="\\${gD===null?'prog-neu':parseFloat(gD)<0?'prog-pos':'prog-neg'}">\\${b.gordura} kg\\${gD!==null?' ('+(parseFloat(gD)>0?'+':'')+gD+')':''}</td>
+          <td>\\${gP}%</td>
+        </tr>\\`;
+      }).join('')}
+    </tbody>
+  </table>
+</div>\` : ''}
+  \`;
+})()}
+
 <h2>💪 Volume por Grupo Muscular</h2>
 <div class="card">
   ${muscleVolumeArr.map(([m, v]) => {
@@ -4136,6 +4207,54 @@ ${weightsSorted.filter(w => new Date(w.date) >= startDate).length > 1 ? `
   </table>
 </div>
 
+${(() => {
+  const filteredCardios = cardios.filter(c => new Date(c.date) >= startDate)
+    .sort((a,b) => a.date.localeCompare(b.date));
+  if(!filteredCardios.length) return '';
+  const totalMin = filteredCardios.reduce((a,c) => a + (c.duration || 0), 0);
+  const avgSpeed = filteredCardios.filter(c => c.speed > 0).length
+    ? (filteredCardios.filter(c => c.speed > 0).reduce((a,c) => a + c.speed, 0) / filteredCardios.filter(c => c.speed > 0).length).toFixed(1)
+    : null;
+  const byType = {};
+  filteredCardios.forEach(c => { byType[c.type] = (byType[c.type] || 0) + 1; });
+  return \`
+<h2>🏃 Cardio</h2>
+<div class="grid3">
+  <div class="kpi blue">
+    <div class="kpi-label">Sessões</div>
+    <div class="kpi-val">\${filteredCardios.length}</div>
+    <div class="kpi-sub">\${Object.entries(byType).map(([t,n])=>n+'× '+t).join(', ')}</div>
+  </div>
+  <div class="kpi green">
+    <div class="kpi-label">Tempo Total</div>
+    <div class="kpi-val">\${totalMin >= 60 ? Math.floor(totalMin/60)+'h'+(totalMin%60?String(totalMin%60).padStart(2,'0')+'min':'') : totalMin+'min'}</div>
+    <div class="kpi-sub">média \${(totalMin/filteredCardios.length).toFixed(0)} min/sessão</div>
+  </div>
+  \${avgSpeed !== null ? \`
+  <div class="kpi orange">
+    <div class="kpi-label">Vel. Média</div>
+    <div class="kpi-val">\${avgSpeed}</div>
+    <div class="kpi-sub">km/h</div>
+  </div>\` : '<div class="kpi"><div class="kpi-label">Vel. Média</div><div class="kpi-val" style="color:#aaa">—</div><div class="kpi-sub">não registrada</div></div>'}
+</div>
+<div class="card">
+  <table>
+    <thead><tr><th>Data</th><th>Tipo</th><th>Duração</th><th>Vel. Média</th><th>Inclinação</th><th>Obs.</th></tr></thead>
+    <tbody>
+      \${filteredCardios.slice().reverse().map(c => \`<tr>
+        <td>\${fmt(c.date)}</td>
+        <td><strong>\${c.type}</strong></td>
+        <td style="font-family:'Courier New',monospace">\${c.duration} min</td>
+        <td style="font-family:'Courier New',monospace">\${c.speed ? c.speed + ' km/h' : '—'}</td>
+        <td style="font-family:'Courier New',monospace">\${c.incline ? c.incline + '%' : '—'}</td>
+        <td style="font-size:11px;color:#888">\${c.notes || '—'}</td>
+      </tr>\`).join('')}
+    </tbody>
+  </table>
+</div>
+  \`;
+})()}
+
 <h2>📋 Histórico Detalhado de Treinos</h2>
 ${sessionsByDate.map(s => {
   const fichaObj = fichas.find(f => f.id === s.fichaId);
@@ -4164,9 +4283,10 @@ ${sessionsByDate.map(s => {
           const skippedSets = ex.sets.filter(st=>st.done&&!isValidSet(st));
           const totalExVol = doneSets.reduce((a,st)=>a+(parseFloat(st.reps)*(parseFloat(st.weight)||0)),0);
           const setsDetail = doneSets.map((st,i) => {
-            const w = st.weight ? st.weight + 'kg' : (ex.bodyweight ? 'PC' : '—');
+            const w = st.weight ? st.weight + 'kg' : (ex.bodyweight || ex.isometric ? (ex.isometric ? '—' : 'PC') : '—');
             const label = st.isDrop ? ('D'+(i+1)) : (i+1);
-            return `<span style="display:inline-block;margin-right:8px;font-family:'Courier New',monospace;font-size:11px">${label}: ${st.reps}r × ${w}</span>`;
+            const repsLabel = ex.isometric ? st.reps + 's' : st.reps + 'r';
+            return `<span style="display:inline-block;margin-right:8px;font-family:'Courier New',monospace;font-size:11px">${label}: ${repsLabel} × ${w}</span>`;
           }).join('') + (skippedSets.length ? `<span style="font-size:10px;color:#aaa;font-style:italic"> · ${skippedSets.length} pulada(s)</span>` : '');
           return `<tr>
             <td class="ex-name">${ex.name}${ex.skipped ? ' <span style="color:#aaa">(pulado)</span>' : ''}</td>
@@ -4180,8 +4300,6 @@ ${sessionsByDate.map(s => {
   </div>`;
 }).join('')}
 
-${iaReportSection}
-
 <div class="footer">
   <div style="font-size:20px;font-weight:900;letter-spacing:2px;color:#1a1a2e;margin-bottom:4px">IRON<span style="color:#b8a000">LOG</span></div>
   Relatório gerado automaticamente em ${now.toLocaleString('pt-BR')} · ironlog-657e8.firebaseapp.com
@@ -4190,14 +4308,11 @@ ${iaReportSection}
 </body>
 </html>`;
 
-  const win = reportWin || window.open('', '_blank');
-  if(win) {
-    win.document.open();
-    win.document.write(html);
-    win.document.close();
-    win.focus();
-    setTimeout(() => { try { win.print(); } catch(e){} }, 800);
-  }
+  const win = window.open('', '_blank');
+  win.document.write(html);
+  win.document.close();
+  win.focus();
+  setTimeout(() => { win.print(); }, 800);
   toast('📊 Relatório pronto para exportar como PDF!', 'var(--accent2)');
 }
 
@@ -4207,7 +4322,7 @@ async function exportData() {
     version: '1.0',
     exportDate: new Date().toISOString(),
     appName: 'IronLog',
-    data: { fichas, sessions, weights, bios }
+    data: { fichas, sessions, weights, bios, cardios }
   };
   const json = JSON.stringify(backup, null, 2);
   const blob = new Blob([json], { type: 'application/json' });
@@ -4238,7 +4353,7 @@ async function importData(input) {
         return;
       }
 
-      const { fichas: f, sessions: s, weights: w, bios: b } = parsed.data;
+      const { fichas: f, sessions: s, weights: w, bios: b, cardios: car } = parsed.data;
 
       if(!confirm(
         'Importar backup de ' + new Date(parsed.exportDate).toLocaleDateString('pt-BR') + '?\n\n' +
@@ -4256,12 +4371,14 @@ async function importData(input) {
       sessions = s || [];
       weights  = w || [];
       bios     = b || [];
+      cardios  = car || [];
 
       await Promise.all([
         DB.set('fichas', fichas),
         DB.set('sessions', sessions),
         DB.set('weights', weights),
-        DB.set('bios', bios)
+        DB.set('bios', bios),
+        DB.set('cardios', cardios)
       ]);
 
       renderBackupStats();
@@ -4315,6 +4432,7 @@ window.addEventListener('auth-state-changed', async (e) => {
       await DB.set('weights', weights);
     }
     renderFichas();
+    renderCardioRecent();
     await checkForDraft();
     showSyncStatus('synced');
     const today = new Date().toISOString().split('T')[0];
@@ -4561,7 +4679,7 @@ function buildProfileContext() {
     parts.push(`Objetivo: ${goals[iaProfile.goal] || iaProfile.goal}`);
   }
   // Calcula IMC se tiver peso e altura
-  const lastWeight = weights.length ? parseFloat(weights[weights.length-1].val) : null;
+  const lastWeight = weights.length ? parseFloat(weights[weights.length-1].weight) : null;
   if(lastWeight && iaProfile.height) {
     const h = parseFloat(iaProfile.height) / 100;
     const imc = (lastWeight / (h * h)).toFixed(1);
@@ -4617,11 +4735,14 @@ function handleIAPhotoUpload(input) {
       loaded++;
       if(loaded === files.length) {
         document.getElementById('ia-photo-preview').style.display = 'block';
+        // Clear input only after all reads done so Google Photos doesn't reopen
+        try { input.value = ''; } catch(e) {}
       }
     };
     reader.readAsDataURL(file);
   });
-  input.value = '';
+  // input.value is cleared inside onload when all files finish
+  // (moving it here caused Google Photos to reopen on first selection)
 }
 
 function showIAPhotoPreviewModal(src, name) {
@@ -4630,49 +4751,8 @@ function showIAPhotoPreviewModal(src, name) {
   openModal('modal-ia-photo');
 }
 
-// Fotos salvas selecionadas para comparação (array de IDs)
-let iaCompareSelection = [];
-
 function updateIAReportType() {
-  const checked = document.querySelector('input[name="ia-report-type"]:checked');
-  const isCompare = checked && checked.value === 'compare';
-  const card = document.getElementById('ia-compare-select-card');
-  if(card) card.style.display = isCompare ? 'block' : 'none';
-  if(isCompare) renderIACompareSelector();
-}
-
-function renderIACompareSelector() {
-  const list = document.getElementById('ia-compare-list');
-  if(!list) return;
-  if(!iaPhotos.length) {
-    list.innerHTML = '<div style="font-size:12px;color:var(--text3);text-align:center;padding:12px">Nenhuma foto salva ainda. Gere um relatório isolado primeiro para salvar fotos.</div>';
-    return;
-  }
-  // Remove da seleção IDs que não existem mais
-  iaCompareSelection = iaCompareSelection.filter(id => iaPhotos.some(p => p.id === id));
-  list.innerHTML = iaPhotos.map(p => {
-    const selected = iaCompareSelection.includes(p.id);
-    const photoCount = (p.photos || (p.base64 ? [p.base64] : [])).length;
-    const hasReport = !!p.reportText;
-    return `
-    <label class="ia-saved-entry" style="cursor:pointer;border-color:${selected ? 'var(--accent)' : 'var(--border)'}">
-      <input type="checkbox" ${selected ? 'checked' : ''} onchange="toggleComparePhoto('${p.id}')" style="width:18px;height:18px;accent-color:var(--accent);flex-shrink:0">
-      <img src="${p.thumb || p.base64}" class="ia-saved-entry-img" alt="${p.label}" style="width:44px;height:44px">
-      <div style="flex:1;min-width:0">
-        <div style="font-weight:700;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${p.label}</div>
-        <div style="font-size:11px;color:var(--text3);margin-top:2px">${new Date(p.date).toLocaleDateString('pt-BR')}${photoCount > 1 ? ' · ' + photoCount + ' 📷' : ''}${hasReport ? ' · 📄 com relatório' : ''}</div>
-      </div>
-    </label>`;
-  }).join('');
-}
-
-function toggleComparePhoto(id) {
-  if(iaCompareSelection.includes(id)) {
-    iaCompareSelection = iaCompareSelection.filter(x => x !== id);
-  } else {
-    iaCompareSelection.push(id);
-  }
-  renderIACompareSelector();
+  // visual only — radio handles the value
 }
 
 // ---- GERAR RELATÓRIO DE FOTOS ----
@@ -4734,21 +4814,15 @@ Resumo motivador com os 3 principais focos para os próximos 3 meses.
 Contexto de treino:
 ${systemContext}
 
-OBS sobre os dados: "massa magra" / "massa muscular esquelética" nos números acima significa MASSA DE MÚSCULO ESQUELÉTICO, não massa magra total do corpo.
-
 IMPORTANTE: Escreva o relatório COMPLETO. Não pare no meio. Cada seção deve ser detalhada e útil.`;
     } else {
-      // Comparativo com fotos salvas SELECIONADAS pelo usuário
-      let comparePhotos = iaPhotos.filter(p => iaCompareSelection.includes(p.id));
-      // Se nada foi selecionado, usa as 3 mais recentes como fallback
-      if(comparePhotos.length === 0) comparePhotos = iaPhotos.slice(0, 3);
-      if(comparePhotos.length === 0) {
+      // Comparativo com fotos salvas
+      const previousPhotos = iaPhotos.slice(-3); // até 3 fotos anteriores
+      if(previousPhotos.length === 0) {
         hideIALoading();
-        toast('📸 Selecione ao menos uma foto salva para comparar.', '#ffaa47');
+        toast('📸 Sem fotos anteriores para comparar. Salve fotos primeiro.', '#ffaa47');
         return;
       }
-      // Guarda a seleção para o bloco de imagens mais abaixo
-      window._iaComparePhotos = comparePhotos;
       prompt = `Você é um coach de fitness especialista. Compare as fotos NOVAS (enviadas agora) com as fotos ANTERIORES salvas e crie um RELATÓRIO COMPARATIVO detalhado em português brasileiro com as seções:
 
 1. **EVOLUÇÃO DETECTADA** — O que mudou visivelmente entre as fotos
@@ -4761,8 +4835,7 @@ IMPORTANTE: Escreva o relatório COMPLETO. Não pare no meio. Cada seção deve 
 Contexto do atleta:
 ${systemContext}
 
-OBS sobre os dados: "massa magra" / "massa muscular esquelética" significa MASSA DE MÚSCULO ESQUELÉTICO, não massa magra total do corpo.
-Fotos ANTERIORES (compare as novas contra estas) são de: ${comparePhotos.map(p => p.label + ' (' + new Date(p.date).toLocaleDateString('pt-BR') + ')').join(', ')}
+Fotos anteriores são de: ${previousPhotos.map(p => p.label + ' (' + new Date(p.date).toLocaleDateString('pt-BR') + ')').join(', ')}
 
 Seja específico e motivador. Use formatação com emojis.`;
     }
@@ -4787,18 +4860,13 @@ Seja específico e motivador. Use formatação com emojis.`;
       return;
     }
 
-    // Adiciona as fotos anteriores SELECIONADAS para comparação
+    // Add previous photos for comparison
     if(reportType === 'compare') {
-      const prevPhotos = window._iaComparePhotos || iaPhotos.slice(0, 3);
-      let added = 0;
+      const prevPhotos = iaPhotos.slice(-2);
       prevPhotos.forEach(pp => {
-        // inclui todas as imagens de cada registro (até um teto para não estourar)
-        const srcs = pp.photos && pp.photos.length ? pp.photos : [pp.base64 || pp.thumb];
-        srcs.forEach(src => {
-          if(added >= 6) return; // teto de segurança de imagens anteriores
-          const data = toBase64Pure(src);
-          if(data) { imageParts.push({ inlineData: { mimeType: 'image/jpeg', data } }); added++; }
-        });
+        const src = pp.photos?.[0] || pp.base64 || pp.thumb;
+        const data = toBase64Pure(src);
+        if(data) imageParts.push({ inlineData: { mimeType: 'image/jpeg', data } });
       });
     }
 
@@ -4853,7 +4921,7 @@ async function generateIADataReport() {
     } else if(focus === 'forca') {
       focusPrompt = `FOCO: Analise especificamente a evolução de FORÇA E PERFORMANCE — analise progressão de carga, reps, volume por exercício.`;
     } else if(focus === 'composicao') {
-      focusPrompt = `FOCO: Analise COMPOSIÇÃO CORPORAL — evolução de peso, massa muscular esquelética (músculo), gordura, bioimpedância. Lembre-se: "massa magra" aqui significa músculo esquelético, não massa magra total do corpo.`;
+      focusPrompt = `FOCO: Analise COMPOSIÇÃO CORPORAL — evolução de peso, massa magra, gordura, bioimpedância.`;
     } else if(focus === 'volume') {
       focusPrompt = `FOCO: Analise VOLUME DE TREINO — frequência semanal, séries por músculo, consistência.`;
     } else {
@@ -4864,14 +4932,12 @@ async function generateIADataReport() {
 
 IMPORTANTE: NÃO use placeholders como "[Nome do Atleta]" ou "[Seu Nome]". Escreva o relatório diretamente com base nos dados fornecidos, sem campos em branco.
 
-DEFINIÇÃO OBRIGATÓRIA: Nos dados deste app, o termo "massa magra" / "massa muscular esquelética" refere-se EXCLUSIVAMENTE à MASSA MUSCULAR ESQUELÉTICA (o músculo), e NÃO à massa magra/livre de gordura total do corpo (que incluiria água, ossos e órgãos). Trate sempre esse número como massa de músculo esquelético ao avaliar ganho de músculo.
-
 ${focusPrompt}
 
 ESTRUTURA DO RELATÓRIO (use exatamente esses títulos):
 1. RESUMO DO PERÍODO — Panorama geral dos últimos ${period} dias com números reais dos dados
 2. ANÁLISE DE PERFORMANCE — Evolução de força, volume e consistência com dados específicos
-3. COMPOSIÇÃO CORPORAL — Tendências de peso, massa muscular esquelética (músculo) e gordura (se disponível nos dados)
+3. COMPOSIÇÃO CORPORAL — Tendências de peso, massa magra e gordura (se disponível nos dados)
 4. DETECÇÃO DE PLATÔS — Identifique estagnações com exercícios e métricas específicas
 5. RECOMENDAÇÕES — Mudanças concretas e práticas para continuar evoluindo
 6. PRÓXIMAS 4 SEMANAS — Plano de foco para o próximo ciclo
@@ -4899,22 +4965,19 @@ Seja direto, analítico e baseado APENAS nos dados fornecidos. Leve em conta o p
 }
 
 // ---- GEMINI API CALLS ----
-// Modelos em ordem de preferência. Se o primeiro estiver sobrecarregado
-// ("demanda alta"), tentamos automaticamente o próximo.
-const GEMINI_MODELS = ['gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-flash-latest'];
-
 function buildGeminiUrl(model) {
   return `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
 }
 function buildGeminiHeaders(apiKey) {
-  // Apenas a chave da API — header Authorization vazio causava falhas.
   return {
     'Content-Type': 'application/json',
-    'x-goog-api-key': apiKey
+    'x-goog-api-key': apiKey,
+    'Authorization': 'Bearer '
   };
 }
 
 async function callGeminiVision(apiKey, prompt, imageParts) {
+  const url = buildGeminiUrl('gemini-2.5-flash');
   const body = {
     contents: [{
       parts: [ ...imageParts, { text: prompt } ]
@@ -4925,123 +4988,46 @@ async function callGeminiVision(apiKey, prompt, imageParts) {
       { category: 'HARM_CATEGORY_HATE_SPEECH', threshold: 'BLOCK_ONLY_HIGH' }
     ]
   };
-  return await geminiWithRetry(body, apiKey);
+  return await geminiWithRetry(url, body, apiKey);
 }
 
 async function callGeminiText(apiKey, prompt) {
+  const url = buildGeminiUrl('gemini-2.5-flash');
   const body = {
     contents: [{ parts: [{ text: prompt }] }],
     generationConfig: { temperature: 0.7, maxOutputTokens: 8192 }
   };
-  return await geminiWithRetry(body, apiKey);
+  return await geminiWithRetry(url, body, apiKey);
 }
 
-function setIALoadingMsg(text) {
-  const el = document.getElementById('ia-loading-msg');
-  if(el) el.textContent = text;
-  const g = document.getElementById('ia-global-loading-msg');
-  if(g) g.textContent = text;
-}
-
-function showGlobalIALoading(msg) {
-  const o = document.getElementById('ia-global-loading');
-  if(o) o.style.display = 'flex';
-  setIALoadingMsg(msg || 'Analisando com IA…');
-}
-
-function hideGlobalIALoading() {
-  const o = document.getElementById('ia-global-loading');
-  if(o) o.style.display = 'none';
-}
-
-async function geminiWithRetry(body, apiKey, maxRetries = 4) {
-  const quotaWaits     = [30, 60, 90, 120]; // espera longa: cota/limite
-  const overloadWaits  = [4, 8, 14, 22];    // espera curta: servidor sobrecarregado
-  let modelIdx = 0;
-
+async function geminiWithRetry(url, body, apiKey, maxRetries = 4) {
+  const waits = [30, 60, 90, 120]; // segundos de espera entre tentativas
   for(let attempt = 0; attempt <= maxRetries; attempt++) {
-    const model = GEMINI_MODELS[Math.min(modelIdx, GEMINI_MODELS.length - 1)];
-
-    // Corpo específico por modelo: nos modelos 2.5 (que "pensam"), desligamos o
-    // thinking para que TODO o orçamento de tokens vá para o texto da resposta —
-    // senão o relatório sai cortado no meio.
-    const reqBody = JSON.parse(JSON.stringify(body));
-    reqBody.generationConfig = reqBody.generationConfig || {};
-    if(model.startsWith('gemini-2.5')) {
-      reqBody.generationConfig.thinkingConfig = { thinkingBudget: 0 };
-    } else {
-      delete reqBody.generationConfig.thinkingConfig;
-    }
-
-    let res;
-    try {
-      res = await fetch(buildGeminiUrl(model), {
-        method: 'POST',
-        headers: buildGeminiHeaders(apiKey),
-        body: JSON.stringify(reqBody)
-      });
-    } catch(netErr) {
-      // Falha de rede — tenta de novo se ainda houver tentativas
-      if(attempt < maxRetries) {
-        setIALoadingMsg(`📡 Sem resposta da rede — tentando novamente (${attempt+1}/${maxRetries})…`);
-        await new Promise(r => setTimeout(r, 4000));
-        continue;
-      }
-      throw new Error('Falha de conexão. Verifique sua internet e tente de novo.');
-    }
-
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: buildGeminiHeaders(apiKey),
+      body: JSON.stringify(body)
+    });
     if(res.ok) {
       const data = await res.json();
-      const cand = data.candidates?.[0];
-      const parts = cand?.content?.parts || [];
-      // Junta TODOS os blocos de texto (a resposta pode vir em vários parts)
-      const text = parts.map(p => p.text).filter(Boolean).join('').trim() || null;
-      const finish = cand?.finishReason;
-      if(text) {
-        // Se ainda assim truncou por limite de tokens, avisa o usuário (mas devolve o que veio)
-        if(finish === 'MAX_TOKENS') {
-          toast('⚠️ Relatório pode ter sido encurtado pelo limite de tokens.', '#ffaa47');
-        }
-        return text;
-      }
-      // Resposta vazia (ex: bloqueada por segurança ou só thinking) — tenta outro modelo
-      if(attempt < maxRetries) { modelIdx++; continue; }
-      throw new Error('A IA não retornou texto. Tente novamente em instantes.');
+      return data.candidates?.[0]?.content?.parts?.[0]?.text || null;
     }
+    const err = await res.json().catch(()=>({}));
+    const msg = err.error?.message || '';
+    const isQuota = res.status === 429 || msg.toLowerCase().includes('quota');
 
-    const err = await res.json().catch(() => ({}));
-    const msg = (err.error?.message || '').toString();
-    const lower = msg.toLowerCase();
-
-    const isQuota = res.status === 429 || lower.includes('quota') || lower.includes('rate limit');
-    const isOverloaded = res.status === 503 || res.status === 500 ||
-                         lower.includes('overloaded') || lower.includes('unavailable') ||
-                         lower.includes('try again later') || lower.includes('demanda');
-
-    if((isQuota || isOverloaded) && attempt < maxRetries) {
-      if(isOverloaded) {
-        // Sobrecarga: primeiro troca de modelo (rápido), depois espera curta
-        modelIdx++;
-        const waitSec = overloadWaits[Math.min(attempt, overloadWaits.length - 1)];
-        setIALoadingMsg(`⚙️ Servidor com alta demanda — trocando de modelo e tentando de novo (${attempt+1}/${maxRetries})…`);
-        await new Promise(r => setTimeout(r, waitSec * 1000));
-      } else {
-        // Cota: respeita o tempo sugerido pelo Google
-        const retryMatch = msg.match(/retry in ([\d.]+)s/i);
-        const waitSec = retryMatch ? Math.ceil(parseFloat(retryMatch[1])) + 5 : quotaWaits[Math.min(attempt, quotaWaits.length - 1)];
-        setIALoadingMsg(`⏳ Cota atingida — aguardando ${waitSec}s e tentando novamente (${attempt+1}/${maxRetries})…`);
-        await new Promise(r => setTimeout(r, waitSec * 1000));
-      }
+    if(isQuota && attempt < maxRetries) {
+      // Tenta extrair o tempo de espera sugerido pelo Google
+      const retryMatch = msg.match(/retry in ([\d.]+)s/i);
+      const waitSec = retryMatch ? Math.ceil(parseFloat(retryMatch[1])) + 5 : waits[attempt];
+      document.getElementById('ia-loading-msg').textContent =
+        `⏳ Cota atingida — aguardando ${waitSec}s e tentando novamente (${attempt+1}/${maxRetries})…`;
+      await new Promise(r => setTimeout(r, waitSec * 1000));
       continue;
     }
-
-    // Erro não recuperável — mensagem amigável
-    if(res.status === 400 && lower.includes('api key')) throw new Error('Chave da API inválida. Confira sua chave Gemini.');
-    if(res.status === 403) throw new Error('Acesso negado pela API. Verifique se a chave tem permissão para o Gemini.');
-    throw new Error(msg || `Erro HTTP ${res.status}`);
+    throw new Error(msg || `HTTP ${res.status}`);
   }
-
-  throw new Error('A IA está com alta demanda no momento. Aguarde 1–2 minutos e tente novamente.');
+  throw new Error('Cota excedida após várias tentativas. Aguarde alguns minutos.');
 }
 
 // ---- DATA CONTEXT BUILDERS ----
@@ -5055,8 +5041,10 @@ function buildTrainingDataSummary() {
   const lastBio = bios.length ? bios[bios.length-1] : null;
   let summary = `Total de treinos: ${totalSessions} | Treinos últimos 30 dias: ${last30.length}`;
   if(lastWeight) summary += ` | Peso atual: ${lastWeight.val}kg (${lastWeight.date})`;
-  if(lastBio) summary += ` | Bioimpedância: Massa muscular esquelética ${lastBio.massa}kg, Gordura ${lastBio.gordura}kg (${lastBio.date})`;
+  if(lastBio) summary += ` | Bioimpedância: Massa magra ${lastBio.massa}kg, Gordura ${lastBio.gordura}kg (${lastBio.date})`;
   summary += ` | Fichas: ${fichas.map(f=>f.name).join(', ')}`;
+  const last30cardio = cardios.filter(c => (Date.now() - new Date(c.date).getTime()) < 30 * 86400000);
+  if(last30cardio.length) summary += ` | Cardio últimos 30d: ${last30cardio.length} sessões (${last30cardio.reduce((a,c)=>a+(c.duration||0),0)}min)`;
   return summary;
 }
 
@@ -5119,264 +5107,32 @@ function buildDetailedDataContext(periodDays) {
 
   // Bio
   const bioTrend = recentBios.length >= 2
-    ? `Massa muscular esquelética: ${recentBios[0].massa}→${recentBios[recentBios.length-1].massa}kg | Gordura: ${recentBios[0].gordura}→${recentBios[recentBios.length-1].gordura}kg`
-    : recentBios.length === 1 ? `Massa muscular esquelética: ${recentBios[0].massa}kg | Gordura: ${recentBios[0].gordura}kg` : 'Sem registros';
+    ? `Peso: ${recentBios[0].peso}→${recentBios[recentBios.length-1].peso}kg | Massa magra: ${recentBios[0].massa}→${recentBios[recentBios.length-1].massa}kg | Gordura: ${recentBios[0].gordura}→${recentBios[recentBios.length-1].gordura}kg`
+    : recentBios.length === 1 ? `Peso: ${recentBios[0].peso}kg | Massa magra: ${recentBios[0].massa}kg | Gordura: ${recentBios[0].gordura}kg` : 'Sem registros';
 
-  return `=== PERÍODO: últimos ${periodDays} dias ===
-TREINOS: ${recentSessions.length} sessões | Média: ${avgPerWeek}/semana
-FICHAS ATIVAS: ${fichas.map(f=>f.name).join(', ')}
+  // Cardio
+  const recentCardios = cardios.filter(c => new Date(c.date).getTime() > cutoff);
+  const cardioTotalMin = recentCardios.reduce((a,c) => a + (c.duration || 0), 0);
+  const cardioByType = {};
+  recentCardios.forEach(c => { cardioByType[c.type] = (cardioByType[c.type] || 0) + 1; });
+  const cardioSummary = recentCardios.length
+    ? `${recentCardios.length} sessões (${cardioTotalMin}min total) | Tipos: ${Object.entries(cardioByType).map(([t,n])=>n+'× '+t).join(', ')}${recentCardios.some(c=>c.speed) ? ' | Vel. média: ' + (recentCardios.filter(c=>c.speed>0).reduce((a,c)=>a+c.speed,0)/recentCardios.filter(c=>c.speed>0).length).toFixed(1) + 'km/h' : ''}`
+    : 'Sem registros';
+
+  return \`=== PERÍODO: últimos \${periodDays} dias ===
+TREINOS DE FORÇA: \${recentSessions.length} sessões | Média: \${avgPerWeek}/semana
+FICHAS ATIVAS: \${fichas.map(f=>f.name).join(', ')}
 
 VOLUME POR MÚSCULO (séries):
-${Object.entries(muscleVol).sort((a,b)=>b[1]-a[1]).map(([m,v]) => `• ${m}: ${v} séries`).join('\n')}
+\${Object.entries(muscleVol).sort((a,b)=>b[1]-a[1]).map(([m,v]) => \`• \${m}: \${v} séries\`).join('\n')}
 
 EVOLUÇÃO DE FORÇA (top exercícios):
-${topExercises || 'Sem dados suficientes'}
+\${topExercises || 'Sem dados suficientes'}
 
-PESO CORPORAL: ${weightTrend}
-BIOIMPEDÂNCIA: ${bioTrend}`;
+PESO CORPORAL: \${weightTrend}
+BIOIMPEDÂNCIA: \${bioTrend}
+CARDIO: \${cardioSummary}\`;
 }
-
-// ======================================================
-// CONTEXTOS COMPARTILHADOS PARA A IA (treino isolado + relatórios)
-// ======================================================
-
-// Texto detalhado de UMA sessão de treino — TODOS os dados (séries, reps, carga, método)
-function buildSessionDetailText(sess, headerPrefix) {
-  if(!sess) return '';
-  const d = new Date(sess.date);
-  const dataStr = d.toLocaleDateString('pt-BR', { weekday:'long', day:'2-digit', month:'long', year:'numeric' });
-  const horaStr = d.toLocaleTimeString('pt-BR', { hour:'2-digit', minute:'2-digit' });
-  const totalVol = sessionTotalVolume(sess);
-  const totalSets = sess.exercises.reduce((a,ex) => a + ex.sets.filter(isValidSet).length, 0);
-
-  let txt = `${headerPrefix ? headerPrefix + ' ' : ''}${sess.fichaName || 'Treino'} — ${dataStr} ${horaStr}\n`;
-  txt += `(Volume total: ${Math.round(totalVol)}kg | Séries válidas: ${totalSets} | Exercícios: ${sess.exercises.filter(e=>!e.skipped).length})\n`;
-
-  sess.exercises.forEach(ex => {
-    if(ex.skipped) { txt += `  • ${ex.name} — PULADO\n`; return; }
-    const done = ex.sets.filter(isValidSet);
-    const skipped = ex.sets.filter(s => s.done && !isValidSet(s)).length;
-    const maxW = done.length ? Math.max(...done.map(s => parseFloat(s.weight) || 0)) : 0;
-    const exVol = done.reduce((a,s) => a + (parseFloat(s.reps) * (parseFloat(s.weight) || 0)), 0);
-    const muscles = [ex.muscle, ex.muscle2].filter(Boolean).join(' + ');
-    const setsTxt = done.map((s,i) => {
-      const w = s.weight ? `${s.weight}kg` : (ex.bodyweight ? 'peso corporal' : '—');
-      const label = s.isDrop ? `D${i+1}` : `${i+1}`;
-      return `${label}:${s.reps}r×${w}`;
-    }).join(', ');
-    txt += `  • ${ex.name} [${muscles}${ex.method ? ' · ' + ex.method : ''}${ex.bodyweight ? ' · peso corporal' : ''}]: ${setsTxt || 'sem séries válidas'}`;
-    txt += ` | carga máx: ${maxW}kg | vol: ${Math.round(exVol)}kg`;
-    if(skipped) txt += ` | ${skipped} série(s) pulada(s)`;
-    txt += `\n`;
-  });
-  return txt;
-}
-
-// Seleciona sessões anteriores para comparar com a sessão atual:
-// prioriza a MESMA ficha (últimas 3 + a mais antiga); se não houver, usa cronológico geral.
-function pickComparisonSessions(currentSess) {
-  const curTime = new Date(currentSess.date).getTime();
-  const priorAll = sessions
-    .filter(s => s !== currentSess && new Date(s.date).getTime() < curTime)
-    .sort((a,b) => new Date(b.date) - new Date(a.date)); // mais recente → mais antigo
-
-  let sameFicha = priorAll.filter(s => s.fichaId && s.fichaId === currentSess.fichaId);
-  const pool = sameFicha.length ? sameFicha : priorAll;
-
-  const last3 = pool.slice(0, 3);
-  const oldest = pool.length ? pool[pool.length - 1] : null;
-
-  const chosen = [...last3];
-  if(oldest && !chosen.includes(oldest)) chosen.push(oldest);
-  return { chosen, usedSameFicha: sameFicha.length > 0, totalPrior: priorAll.length };
-}
-
-// Resumo dos relatórios de foto salvos — para a IA fazer ligações visuais
-// Seleciona os relatórios de foto MAIS RELEVANTES para a data analisada.
-// Regras:
-//  - Prioriza os mais próximos para trás a partir de refDate (até maxRecent) + o mais antigo.
-//  - Se houver poucos, usa quantos existirem.
-//  - SÓ ignora tudo se NÃO houver nenhuma foto recente: ou seja, se a foto mais
-//    próxima da data analisada estiver a MAIS de 2 semanas de distância (foto velha).
-function pickRelevantPhotoReports(refDate, maxRecent = 3, freshnessDays = 14) {
-  if(!iaPhotos || !iaPhotos.length) return [];
-  const ref = refDate ? new Date(refDate).getTime() : Date.now();
-  const freshnessMs = freshnessDays * 86400000;
-  const sorted = [...iaPhotos].sort((a,b) => new Date(a.date) - new Date(b.date)); // antigo → recente
-
-  // Relatórios na data ou antes dela, do mais próximo para o mais distante
-  const before = sorted.filter(p => new Date(p.date).getTime() <= ref).reverse();
-
-  // Âncora = foto mais relevante (a mais próxima para trás; se não houver, a mais próxima depois)
-  let anchor = before[0];
-  if(!anchor) anchor = sorted.find(p => new Date(p.date).getTime() > ref);
-  if(!anchor) return [];
-
-  // Guarda de frescor: se a foto mais próxima estiver a mais de 2 semanas da data
-  // analisada, não analisamos as fotos (ausência de foto recente → evita conflito de dados).
-  const gap = Math.abs(ref - new Date(anchor.date).getTime());
-  if(gap > freshnessMs) return [];
-
-  // Caso contrário, pega os mais próximos (quantos existirem, até maxRecent) + o mais antigo
-  let chosen = before.slice(0, maxRecent);
-  if(chosen.length < maxRecent) {
-    const after = sorted.filter(p => new Date(p.date).getTime() > ref);
-    chosen = chosen.concat(after.slice(0, maxRecent - chosen.length));
-  }
-  const oldest = sorted[0];
-  if(oldest && !chosen.some(p => p.id === oldest.id)) chosen.push(oldest);
-
-  return chosen;
-}
-
-function buildPhotoReportsContext(refDate, charLimit = 900) {
-  if(!iaPhotos || !iaPhotos.length) return 'Nenhum relatório de foto salvo.';
-  const chosen = pickRelevantPhotoReports(refDate, 3, 14);
-  if(!chosen.length) {
-    return 'Sem foto recente (a foto mais próxima está a mais de 2 semanas da data analisada) — relatórios de foto NÃO foram considerados para evitar conflito de dados.';
-  }
-  // Ordena do mais recente para o mais antigo na saída
-  const ordered = [...chosen].sort((a,b) => new Date(b.date) - new Date(a.date));
-  const oldestId = [...iaPhotos].sort((a,b) => new Date(a.date) - new Date(b.date))[0]?.id;
-  const refTime = refDate ? new Date(refDate).getTime() : Date.now();
-
-  return ordered.map((p, i) => {
-    const date = new Date(p.date).toLocaleDateString('pt-BR');
-    const tipo = p.type === 'compare' ? 'comparativo' : 'isolado';
-    let tag = '';
-    if(p.id === oldestId && ordered.length > 1) tag = ' [MAIS ANTIGO — linha de base]';
-    else if(i === 0 && new Date(p.date).getTime() <= refTime) tag = ' [REFERÊNCIA MAIS PRÓXIMA]';
-    let rt = (p.reportText || '').replace(/\s+/g, ' ').trim();
-    if(rt.length > charLimit) rt = rt.slice(0, charLimit) + '… [resumo truncado]';
-    return `📸 "${p.label}" (${date}, ${tipo})${tag}:\n${rt || 'sem texto de relatório'}`;
-  }).join('\n\n');
-}
-
-// Contexto corporal completo: perfil + peso + bioimpedância + segmentar
-function buildBodyContextForIA() {
-  const parts = [];
-  parts.push('PERFIL: ' + buildProfileContext());
-
-  // Histórico de peso (até 8 registros mais recentes)
-  if(weights.length) {
-    const recent = [...weights].sort((a,b) => new Date(a.date) - new Date(b.date)).slice(-8);
-    parts.push('PESO CORPORAL (kg): ' + recent.map(w => `${w.val}(${w.date})`).join(' → '));
-  }
-
-  // Bioimpedância (massa = músculo esquelético)
-  if(bios.length) {
-    const recent = [...bios].sort((a,b) => a.date.localeCompare(b.date)).slice(-6);
-    parts.push('BIOIMPEDÂNCIA [massa = músculo esquelético, NÃO massa magra total]: ' +
-      recent.map(b => `${b.date}: músculo ${b.massa}kg, gordura ${b.gordura}kg, peso ${b.peso}kg`).join(' | '));
-  }
-
-  // Segmentar mais recente
-  if(segs.length) {
-    const latest = [...segs].sort((a,b) => a.date.localeCompare(b.date))[segs.length - 1];
-    const segLabels = { tronco:'Tronco', bracoDir:'Braço D', bracoEsq:'Braço E', pernaDir:'Perna D', pernaEsq:'Perna E' };
-    const segTxt = Object.keys(segLabels)
-      .filter(k => latest[k])
-      .map(k => `${segLabels[k]}: músculo ${latest[k].massa}kg / gordura ${latest[k].gordura}kg`)
-      .join(' | ');
-    if(segTxt) parts.push(`SEGMENTAR (${latest.date}) [massa = músculo esquelético]: ${segTxt}`);
-  }
-
-  return parts.join('\n');
-}
-
-// ======================================================
-// ANÁLISE DE TREINO ISOLADO (página Histórico)
-// ======================================================
-const sessionIACache = {}; // { [sessionId]: textoDaIA }
-
-async function analyzeSessionWithIA(sessionIdx) {
-  const sess = sessions[sessionIdx];
-  if(!sess) return;
-  if(!checkRateLimit()) return;
-  const key = await getGeminiKey();
-  if(!key) { toast('🔑 Configure sua chave Gemini na aba IA Coach primeiro', '#ff6b47'); return; }
-
-  showGlobalIALoading('🤖 Analisando este treino e comparando com os anteriores…');
-
-  try {
-    // Garante que fotos e perfil estão carregados (o usuário pode não ter aberto a aba IA Coach)
-    await loadIAPhotos();
-    await loadIAProfile();
-
-    const { chosen, usedSameFicha, totalPrior } = pickComparisonSessions(sess);
-
-    const currentTxt = buildSessionDetailText(sess, '➡️ TREINO ANALISADO:');
-    const comparisonTxt = chosen.length
-      ? chosen.map((s, i) => buildSessionDetailText(s, `🔁 ANTERIOR ${i+1}:`)).join('\n')
-      : 'Não há treinos anteriores para comparar (este parece ser um dos primeiros registros).';
-
-    const bodyCtx = buildBodyContextForIA();
-    const photoCtx = buildPhotoReportsContext(sess.date);
-
-    const prompt = `Você é um treinador de força e hipertrofia de elite. Analise UM treino específico do atleta, comparando-o com treinos anteriores para avaliar PROGRESSÃO. Responda em português brasileiro.
-
-IMPORTANTE:
-- Baseie-se APENAS nos dados fornecidos. Não invente números.
-- "massa magra"/"massa muscular esquelética" nos dados significa MÚSCULO ESQUELÉTICO, não massa magra total.
-- Use os relatórios de foto (quando houver) para conectar a evolução visual com a evolução de carga/volume.
-- ${usedSameFicha ? 'Os treinos anteriores são da MESMA ficha, então compare exercício a exercício.' : 'Não há treinos anteriores da mesma ficha; compare de forma geral (volume, intensidade, padrões).'}
-
-${currentTxt}
-
-TREINOS ANTERIORES PARA COMPARAÇÃO (${chosen.length} de ${totalPrior} anteriores no total):
-${comparisonTxt}
-
-CONTEXTO CORPORAL DO ATLETA:
-${bodyCtx}
-
-RELATÓRIOS DE FOTO SALVOS (use para conectar evolução visual):
-${photoCtx}
-
-ESCREVA UM RELATÓRIO com estas seções (use emojis nos títulos):
-🎯 RESUMO DO TREINO — como foi este treino em números (volume, séries, intensidade)
-📈 PROGRESSÃO vs ANTERIORES — exercício por exercício, o que subiu/caiu/estagnou em carga, reps e volume
-💪 LIGAÇÃO COM A COMPOSIÇÃO/FOTOS — relacione com peso, músculo esquelético e relatórios de foto, se houver
-⚠️ PONTOS DE ATENÇÃO — sinais de fadiga, estagnação ou desequilíbrio
-✅ RECOMENDAÇÕES PRÁTICAS — o que ajustar no próximo treino desse tipo (carga, reps, técnica)
-
-Seja objetivo, técnico e motivador.`;
-
-    const response = await callGeminiText(key, prompt);
-    hideGlobalIALoading();
-
-    if(response) {
-      sessionIACache[sess.id || sess.date] = response;
-      renderSessionIAResult(response);
-      toast('✅ Análise do treino concluída!', 'var(--green)');
-    } else {
-      toast('⚠️ A IA não retornou texto. Tente novamente.', '#ffaa47');
-    }
-  } catch(err) {
-    hideGlobalIALoading();
-    toast('❌ Erro ao chamar a IA: ' + (err.message || 'desconhecido'), '#ff4757');
-    console.error('[IA Sessão]', err);
-  }
-}
-
-function renderSessionIAResult(text) {
-  const box = document.getElementById('session-ia-result');
-  if(!box) return;
-  const html = text
-    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-    .replace(/\*(.+?)\*/g, '<em>$1</em>')
-    .replace(/^#{1,3}\s+(.+)$/gm, '<div style="font-weight:800;color:var(--accent);margin:12px 0 4px;font-size:13px">$1</div>')
-    .replace(/^[\-•]\s+(.+)$/gm, '<div style="padding-left:12px;margin-bottom:3px">• $1</div>')
-    .replace(/\n\n/g, '<br><br>')
-    .replace(/\n/g, '<br>');
-  box.innerHTML = `
-    <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
-      <span style="font-size:11px;color:var(--accent);text-transform:uppercase;letter-spacing:1px;font-weight:700">🤖 Interpretação da IA</span>
-    </div>
-    <div style="font-size:12px;line-height:1.6;color:var(--text)">${html}</div>`;
-  box.style.display = 'block';
-  box.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-}
-
 
 // ---- UI HELPERS ----
 function showIALoading(msg) {
@@ -5472,8 +5228,6 @@ function renderIASavedPhotos() {
         <button class="btn btn-sm btn-danger" onclick="deleteIAPhoto('${p.id}')" style="font-size:10px;padding:4px 8px">✕</button>
       </div>
     </div>`}).join('');
-  // mantém o seletor de comparação atualizado
-  if(typeof renderIACompareSelector === 'function') renderIACompareSelector();
 }
 
 function openIASavedPhoto(id) {
