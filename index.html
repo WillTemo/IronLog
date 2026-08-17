@@ -359,7 +359,8 @@ select.input { appearance: none; cursor: pointer; }
   margin-bottom: 8px;
 }
 .workout-card-meta { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; }
-.workout-card-actions { display: flex; gap: 8px; margin-top: 12px; }
+.workout-card-actions { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+.workout-card-actions .btn { flex: 1 1 auto; justify-content: center; }
 
 /* EXERCISE ITEM */
 .exercise-item {
@@ -757,6 +758,183 @@ canvas { max-width: 100%; }
 .pts-hist-val.pos { color:var(--accent) }
 .pts-hist-val.neg { color:#ff6b6b }
 
+
+/* ========== SUB-ABAS (Fichas / Exercícios) ========== */
+.subtabs {
+  display: flex; gap: 5px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 4px;
+  margin-bottom: 16px;
+}
+.subtab {
+  flex: 1; padding: 10px 8px;
+  border-radius: 9px; border: none; background: none;
+  color: var(--text2);
+  font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 600;
+  letter-spacing: 0.3px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+  transition: background 0.18s, color 0.18s;
+}
+.subtab.active { background: var(--surface3); color: var(--accent); }
+.subtab .cnt {
+  font-size: 10px; font-weight: 700; padding: 1px 6px; border-radius: 20px;
+  background: rgba(255,255,255,0.06); color: inherit; opacity: 0.85;
+}
+
+/* ========== BUSCA ========== */
+.search-wrap { position: relative; margin-bottom: 10px; }
+.search-wrap .search-ico {
+  position: absolute; left: 13px; top: 50%; transform: translateY(-50%);
+  color: var(--text3); font-size: 14px; pointer-events: none;
+}
+.search-input {
+  width: 100%; background: var(--surface2);
+  border: 1px solid var(--border); border-radius: 10px;
+  padding: 11px 38px 11px 36px; color: var(--text);
+  font-family: 'DM Sans', sans-serif; font-size: 14px;
+  outline: none; transition: border-color 0.2s;
+}
+.search-input:focus { border-color: var(--accent); }
+.search-clear {
+  position: absolute; right: 8px; top: 50%; transform: translateY(-50%);
+  background: none; border: none; color: var(--text3);
+  font-size: 15px; cursor: pointer; padding: 6px;
+}
+
+/* ========== CHIPS DE FILTRO ========== */
+.chip-row {
+  display: flex; gap: 7px; overflow-x: auto;
+  padding-bottom: 8px; margin-bottom: 4px;
+  scrollbar-width: none; -webkit-overflow-scrolling: touch;
+}
+.chip-row::-webkit-scrollbar { display: none; }
+.chip {
+  flex: 0 0 auto; padding: 6px 13px; border-radius: 20px;
+  border: 1px solid var(--border); background: var(--surface2);
+  color: var(--text2); font-family: 'DM Sans', sans-serif;
+  font-size: 12px; font-weight: 600; white-space: nowrap;
+  cursor: pointer; transition: all 0.15s;
+}
+.chip:hover { border-color: var(--text3); }
+.chip.active { background: var(--chipc, var(--accent)); border-color: var(--chipc, var(--accent)); color: #000; }
+.chip .dot { display:inline-block; width:7px; height:7px; border-radius:50%; margin-right:6px; vertical-align:1px; }
+
+/* ========== BARRA RESUMO ========== */
+.exl-summary {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 10px; margin: 4px 0 12px;
+  font-size: 11px; color: var(--text3);
+}
+.exl-sort {
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 8px; color: var(--text2); padding: 6px 10px;
+  font-family: 'DM Sans', sans-serif; font-size: 11px; font-weight: 600;
+  outline: none; appearance: none; cursor: pointer;
+}
+
+/* ========== CARD DE EXERCÍCIO (BIBLIOTECA) ========== */
+.exl-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--m, #47c8ff);
+  border-radius: 12px;
+  padding: 14px;
+  margin-bottom: 10px;
+  transition: border-color 0.2s, transform 0.12s;
+}
+.exl-card.archived { opacity: 0.55; }
+.exl-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
+.exl-name { font-size: 15px; font-weight: 600; line-height: 1.25; letter-spacing: 0.2px; }
+.exl-sub { font-size: 11px; color: var(--text3); margin-top: 3px; }
+.exl-tags { display: flex; gap: 5px; flex-wrap: wrap; margin-top: 8px; }
+.exl-badge {
+  flex-shrink: 0; text-align: center; min-width: 46px;
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 9px; padding: 5px 8px;
+}
+.exl-badge-val { font-family: 'Bebas Neue', sans-serif; font-size: 20px; line-height: 1; color: var(--m, #47c8ff); }
+.exl-badge-lbl { font-size: 8px; text-transform: uppercase; letter-spacing: 0.6px; color: var(--text3); font-weight: 600; margin-top: 1px; }
+.exl-mini { display: flex; gap: 7px; margin-top: 12px; }
+.exl-stat {
+  flex: 1; background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 9px; padding: 8px 6px; text-align: center; min-width: 0;
+}
+.exl-stat-lbl { font-size: 8.5px; text-transform: uppercase; letter-spacing: 0.6px; color: var(--text3); font-weight: 700; }
+.exl-stat-val {
+  font-family: 'Bebas Neue', sans-serif; font-size: 19px; line-height: 1.15;
+  margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.exl-actions { display: flex; gap: 6px; margin-top: 12px; }
+.exl-actions .btn { flex: 1; justify-content: center; }
+.exl-actions .btn-tiny { flex: 0 0 auto; padding: 6px 11px; }
+
+.tag-soft { background: var(--surface3); color: var(--text2); border: 1px solid var(--border); }
+.tag-warn { background: rgba(255,168,71,0.12); color: #ffa847; border: 1px solid rgba(255,168,71,0.28); }
+
+/* ========== SELETOR DE EXERCÍCIO NO FORM DA FICHA ========== */
+.ex-pick-row { display: flex; gap: 8px; align-items: stretch; }
+.ex-pick-row .input { flex: 1; min-width: 0; }
+.ex-pick-new {
+  flex: 0 0 auto; width: 44px;
+  background: var(--surface3); border: 1px dashed var(--border);
+  color: var(--accent); border-radius: 8px; cursor: pointer;
+  font-size: 18px; font-weight: 700; line-height: 1;
+  transition: all 0.15s;
+}
+.ex-pick-new:hover { border-color: var(--accent); background: rgba(232,255,71,0.08); }
+.ex-form-meta { display: flex; gap: 5px; flex-wrap: wrap; margin-top: 9px; min-height: 20px; }
+.ex-form-hint { font-size: 10px; color: var(--text3); margin-top: 6px; line-height: 1.5; }
+
+/* ========== DETALHE DO EXERCÍCIO ========== */
+.exd-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 14px; }
+.exd-box {
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 10px; padding: 11px 12px;
+}
+.exd-box-lbl { font-size: 9px; text-transform: uppercase; letter-spacing: 0.8px; color: var(--text3); font-weight: 700; }
+.exd-box-val { font-family: 'Bebas Neue', sans-serif; font-size: 26px; line-height: 1.1; margin-top: 2px; }
+.exd-box-sub { font-size: 10px; color: var(--text3); margin-top: 1px; }
+.exd-hist {
+  display: flex; justify-content: space-between; align-items: center; gap: 10px;
+  padding: 9px 0; border-bottom: 1px solid var(--border); font-size: 12px;
+}
+.exd-hist:last-child { border-bottom: none; }
+.exd-hist-sets { font-family: 'JetBrains Mono', monospace; font-size: 10.5px; color: var(--text2); text-align: right; }
+
+
+/* CABEÇALHO DA LINHA DE EXERCÍCIO + REORDENAÇÃO */
+.ex-row-head { display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; gap:8px; }
+.ex-row-num { font-size:12px; font-weight:700; color:var(--text3); text-transform:uppercase; letter-spacing:1px; }
+.ex-row-ctrl { display:flex; gap:5px; }
+.ex-move {
+  width:30px; height:30px; border-radius:8px;
+  background:var(--surface2); border:1px solid var(--border); color:var(--text2);
+  font-size:11px; line-height:1; cursor:pointer; transition:all .15s;
+  display:flex; align-items:center; justify-content:center;
+}
+.ex-move:hover:not(:disabled) { border-color:var(--accent); color:var(--accent); }
+.ex-move:disabled { cursor:default; }
+.ex-move-del { color:var(--red); }
+.ex-move-del:hover { border-color:var(--red); background:rgba(255,71,87,0.08); }
+.exercise-item { transition: border-color .5s; }
+
+.ex-presc-label {
+  font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:1px;
+  color:var(--text3); margin:14px 0 10px; padding-top:12px;
+  border-top:1px dashed var(--border);
+}
+
+/* BOTÃO PDF */
+.btn-pdf {
+  flex:0 0 auto; display:inline-flex; align-items:center; gap:5px;
+  background:var(--surface2); border:1px solid var(--border); color:var(--text2);
+  border-radius:8px; padding:7px 12px; cursor:pointer;
+  font-family:'DM Sans',sans-serif; font-size:11px; font-weight:700; letter-spacing:0.5px;
+  transition:all .15s;
+}
+.btn-pdf:hover { border-color:var(--accent); color:var(--accent); }
 </style>
 </head>
 <body>
@@ -833,15 +1011,72 @@ canvas { max-width: 100%; }
 <!-- PAGE: FICHAS -->
 <div class="page active" id="page-fichas">
   <div style="height:16px"></div>
-  <div class="section-title">Fichas de Treino</div>
 
-  <div id="fichas-list"></div>
+  <div class="subtabs">
+    <button class="subtab active" id="subtab-fichas" onclick="switchFichaTab('fichas')">
+      📋 Fichas <span class="cnt" id="cnt-fichas">0</span>
+    </button>
+    <button class="subtab" id="subtab-exercicios" onclick="switchFichaTab('exercicios')">
+      🏋️ Exercícios <span class="cnt" id="cnt-exercicios">0</span>
+    </button>
+  </div>
 
-  <button class="btn btn-primary" onclick="openModal('modal-new-ficha')" style="width:100%;justify-content:center;margin-top:4px;">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" style="width:18px;height:18px;"><path d="M12 5v14M5 12h14"/></svg>
-    Nova Ficha
-  </button>
+  <!-- SUB-ABA: FICHAS -->
+  <div id="sub-fichas">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px">
+      <div class="section-title" style="flex:1;margin-bottom:0">Fichas de Treino</div>
+      <button class="btn-pdf" onclick="exportFichasPDF()" title="Exportar todas as fichas em PDF">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>
+        PDF
+      </button>
+    </div>
+
+    <div id="fichas-list"></div>
+
+    <button class="btn btn-primary" onclick="openNewFicha()" style="width:100%;justify-content:center;margin-top:4px;">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" style="width:18px;height:18px;"><path d="M12 5v14M5 12h14"/></svg>
+      Nova Ficha
+    </button>
+  </div>
+
+  <!-- SUB-ABA: BIBLIOTECA DE EXERCÍCIOS -->
+  <div id="sub-exercicios" style="display:none">
+    <div class="section-title">Meus Exercícios</div>
+
+    <div class="search-wrap">
+      <span class="search-ico">🔍</span>
+      <input type="text" class="search-input" id="exl-search" placeholder="Buscar exercício…" oninput="onExLibSearch(this.value)">
+      <button class="search-clear" id="exl-search-clear" style="display:none" onclick="clearExLibSearch()">✕</button>
+    </div>
+
+    <div class="chip-row" id="exl-chips"></div>
+
+    <div class="exl-summary">
+      <span id="exl-count">—</span>
+      <select class="exl-sort" id="exl-sort" onchange="onExLibSort(this.value)">
+        <option value="name">A → Z</option>
+        <option value="used">Mais treinados</option>
+        <option value="recent">Treinados recentemente</option>
+        <option value="pr">Maior carga</option>
+        <option value="muscle">Por músculo</option>
+        <option value="unused">Sem histórico</option>
+      </select>
+    </div>
+
+    <div id="exl-list"></div>
+
+    <button class="btn btn-primary" onclick="openExerciseModal()" style="width:100%;justify-content:center;margin-top:4px;">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" style="width:18px;height:18px;"><path d="M12 5v14M5 12h14"/></svg>
+      Novo Exercício
+    </button>
+
+    <div style="font-size:11px;color:var(--text3);text-align:center;margin-top:14px;line-height:1.6">
+      Os exercícios ficam salvos aqui como um banco de dados.<br>
+      Editar um exercício atualiza todas as fichas e o histórico automaticamente.
+    </div>
+  </div>
 </div>
+
 
 <!-- PAGE: TREINAR -->
 <div class="page" id="page-treinar">
@@ -1172,6 +1407,9 @@ canvas { max-width: 100%; }
     </div>
 
     <div class="section-title" style="margin-top:8px;font-size:16px">Exercícios</div>
+    <div style="font-size:11px;color:var(--text3);margin:-8px 0 12px;line-height:1.5">
+      Use ▲ ▼ para definir a ordem em que você vai executar os exercícios.
+    </div>
 
     <div id="ficha-exercises-list"></div>
 
@@ -1186,6 +1424,72 @@ canvas { max-width: 100%; }
     </div>
   </div>
 </div>
+
+<!-- MODAL: EXERCÍCIO (BANCO DE DADOS) -->
+<div class="modal-overlay" id="modal-exercise">
+  <div class="modal">
+    <div class="modal-title">
+      <span id="modal-exercise-title">Novo Exercício</span>
+      <button class="modal-close" onclick="closeExerciseModal()">✕</button>
+    </div>
+
+    <input type="hidden" id="editing-exercise-id">
+
+    <div style="font-size:11.5px;color:var(--text2);line-height:1.65;margin-bottom:18px;background:var(--surface2);border:1px solid var(--border);border-radius:9px;padding:11px 13px">
+      Aqui fica a <strong style="color:var(--text)">identidade</strong> do exercício: nome e músculos trabalhados.<br>
+      <span style="color:var(--text3)">Séries, repetições, carga e metodologia são definidas dentro de cada ficha.</span>
+    </div>
+
+    <div class="input-group">
+      <label class="input-label">Nome do Exercício</label>
+      <input type="text" class="input" id="exf-name" placeholder="ex: Supino Reto com Barra" autocomplete="off">
+    </div>
+
+    <div class="input-group">
+      <label class="input-label">Equipamento <span style="text-transform:none;letter-spacing:0;font-weight:400;color:var(--text3)">— opcional</span></label>
+      <input type="text" class="input" id="exf-equip" placeholder="ex: Barra, Halter, Polia, Máquina">
+    </div>
+
+    <div class="input-group">
+      <label class="input-label">Músculo Alvo</label>
+      <select class="input" id="exf-muscle" onchange="updateExModalPreview()"></select>
+    </div>
+
+    <div style="background:var(--surface3);border:1px solid var(--border);border-radius:8px;padding:10px 14px;margin-bottom:16px">
+      <div style="display:flex;align-items:center;gap:10px">
+        <input type="checkbox" id="exf-has-m2" onchange="toggleExModalM2()" style="width:18px;height:18px;accent-color:var(--accent2);cursor:pointer;flex-shrink:0">
+        <label for="exf-has-m2" style="font-size:13px;font-weight:600;color:var(--text2);cursor:pointer;user-select:none">
+          Multiarticular <span style="font-size:11px;color:var(--text3)">(trabalha um 2º músculo)</span>
+        </label>
+      </div>
+      <div id="exf-m2-wrap" style="display:none;margin-top:10px">
+        <label class="input-label">Músculo Secundário</label>
+        <select class="input" id="exf-muscle2" onchange="updateExModalPreview()"></select>
+        <div style="font-size:10px;color:var(--text3);margin-top:6px">O volume será contado para os dois músculos.</div>
+      </div>
+    </div>
+
+    <div id="exf-preview" style="margin-bottom:14px"></div>
+    <div id="exf-impact" style="margin-bottom:14px"></div>
+
+    <div style="display:flex;gap:10px">
+      <button class="btn btn-secondary" onclick="closeExerciseModal()" style="flex:1;justify-content:center">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveExerciseFromModal()" style="flex:1;justify-content:center">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: DETALHE DO EXERCÍCIO -->
+<div class="modal-overlay" id="modal-ex-detail">
+  <div class="modal">
+    <div class="modal-title">
+      <span id="exd-title">Exercício</span>
+      <button class="modal-close" onclick="closeModal('modal-ex-detail')">✕</button>
+    </div>
+    <div id="exd-body"></div>
+  </div>
+</div>
+
 
 <!-- MODAL: SESSAO DE TREINO -->
 <div class="modal-overlay" id="modal-session">
@@ -1696,54 +2000,45 @@ async function migrateFromLocalStorage() {
 }
 
 // Async data loader — lê local primeiro, depois mescla com nuvem
+const DATA_KEYS = ['fichas','sessions','weights','bios','segs','cardios','exercises'];
+
+function _applyLoaded(o) {
+  fichas      = o.fichas || [];
+  sessions    = o.sessions || [];
+  weights     = o.weights || [];
+  bios        = o.bios || [];
+  segs        = o.segs || [];
+  cardios     = o.cardios || [];
+  exerciseLib = o.exercises || [];
+}
+
 async function loadAllData() {
-  // If logged in, try cloud first
   if(window.CloudDB && window.CloudDB._uid) {
     try {
-      const [cf, cs, cw, cb, csg, ccar, cpts] = await Promise.all([
-        window.CloudDB.get('fichas'),
-        window.CloudDB.get('sessions'),
-        window.CloudDB.get('weights'),
-        window.CloudDB.get('bios'),
-        window.CloudDB.get('segs'),
-        window.CloudDB.get('cardios'),
-        window.CloudDB.get('ironpoints')
-      ]);
-      // Get local as fallback
-      const [lf, ls, lw, lb, lsg, lcar, lpts] = await Promise.all([
-        DB.get('fichas'), DB.get('sessions'), DB.get('weights'), DB.get('bios'), DB.get('segs'), DB.get('cardios'), DB.get('ironpoints')
-      ]);
-      fichas   = mergeArrays(cf, lf) || [];
-      sessions = mergeArrays(cs, ls) || [];
-      weights  = mergeArrays(cw, lw) || [];
-      bios     = mergeArrays(cb, lb) || [];
-      segs     = mergeArrays(csg, lsg) || [];
-      cardios  = mergeArrays(ccar, lcar) || [];
+      const cloud = {}, local = {};
+      await Promise.all(DATA_KEYS.map(async k => { cloud[k] = await window.CloudDB.get(k); }));
+      await Promise.all(DATA_KEYS.map(async k => { local[k] = await DB.get(k); }));
+      const cpts = await window.CloudDB.get('ironpoints');
+      const lpts = await DB.get('ironpoints');
+
+      const merged = {};
+      DATA_KEYS.forEach(k => { merged[k] = mergeArrays(cloud[k], local[k]) || []; });
+      _applyLoaded(merged);
       ironPointsData = cpts ? cpts : (lpts || ironPointsData);
-      // Save merged back to both
-      await Promise.all([
-        DB.set('fichas', fichas), DB.set('sessions', sessions),
-        DB.set('weights', weights), DB.set('bios', bios), DB.set('segs', segs), DB.set('cardios', cardios)
-      ]);
-      await Promise.all([
-        window.CloudDB.set('fichas', fichas), window.CloudDB.set('sessions', sessions),
-        window.CloudDB.set('weights', weights), window.CloudDB.set('bios', bios), window.CloudDB.set('segs', segs), window.CloudDB.set('cardios', cardios)
-      ]);
+
+      // Salva o resultado mesclado de volta nos dois lados
+      await Promise.all(DATA_KEYS.map(k => DB.set(k, merged[k])));
+      await Promise.all(DATA_KEYS.map(k => window.CloudDB.set(k, merged[k])));
       return;
     } catch(e) {
       console.warn('[IronLog] Cloud load failed, using local:', e);
     }
   }
-  // Fallback to local only
-  const [f, s, w, b, sg, car, pts] = await Promise.all([
-    DB.get('fichas'), DB.get('sessions'), DB.get('weights'), DB.get('bios'), DB.get('segs'), DB.get('cardios'), DB.get('ironpoints')
-  ]);
-  fichas   = f || [];
-  sessions = s || [];
-  weights  = w || [];
-  bios     = b || [];
-  segs     = sg || [];
-  cardios  = car || [];
+  // Fallback local
+  const local = {};
+  await Promise.all(DATA_KEYS.map(async k => { local[k] = await DB.get(k); }));
+  const pts = await DB.get('ironpoints');
+  _applyLoaded(local);
   if(pts) ironPointsData = pts;
 }
 
@@ -1763,7 +2058,7 @@ function mergeArrays(cloudArr, localArr) {
 
 // Baixa dados da nuvem e mescla com IndexedDB local
 async function syncFromCloud() {
-  const keys = ['fichas', 'sessions', 'weights', 'bios'];
+  const keys = ['fichas', 'sessions', 'weights', 'bios', 'segs', 'cardios', 'exercises'];
   let anySynced = false;
 
   for (const key of keys) {
@@ -1788,6 +2083,9 @@ async function syncFromCloud() {
       if (key === 'sessions') sessions = merged;
       if (key === 'weights')  weights  = merged;
       if (key === 'bios')     bios     = merged;
+      if (key === 'segs')     segs     = merged;
+      if (key === 'cardios')  cardios  = merged;
+      if (key === 'exercises') exerciseLib = merged;
       anySynced = true;
     }
   }
@@ -1843,7 +2141,11 @@ function goPage(page, btn) {
   document.getElementById('page-'+page).classList.add('active');
   btn.classList.add('active');
 
-  if(page === 'fichas') renderFichas();
+  if(page === 'fichas') {
+    const subEx = document.getElementById('sub-exercicios');
+    if(subEx && subEx.style.display !== 'none') renderExerciseLib(); else renderFichas();
+    updateSubtabCounts();
+  }
   if(page === 'treinar') { renderTreinarPage(); renderCardioRecent(); }
   if(page === 'evolucao') { renderEvoExercises(); renderEvolution(); }
   if(page === 'historico') renderHistorico();
@@ -1911,6 +2213,8 @@ function getMonthlyCount(fichaId) {
 
 function renderFichas() {
   const el = document.getElementById('fichas-list');
+  if(!el) return;
+  updateSubtabCounts();
   if(!fichas.length) {
     el.innerHTML = '<div class="empty-state"><div class="empty-state-icon">📋</div><div class="empty-state-text">Nenhuma ficha criada ainda.<br>Crie sua primeira ficha de treino!</div></div>';
     return;
@@ -1959,6 +2263,7 @@ function renderFichas() {
       '<div class="workout-card-actions">' +
         '<button class="btn btn-primary btn-sm" style="background:' + color + ';color:#000" onclick="startSession(' + i + ')">▶ Iniciar</button>' +
         '<button class="btn btn-secondary btn-sm" onclick="editFicha(' + i + ')">✏ Editar</button>' +
+        '<button class="btn btn-secondary btn-sm" title="Gerar PDF desta ficha" onclick="exportFichasPDF(' + i + ')">📄</button>' +
         '<button class="btn btn-danger btn-sm" onclick="deleteFicha(' + i + ')">🗑</button>' +
       '</div>' +
     '</div>';
@@ -1971,6 +2276,7 @@ function setColor(c) { document.getElementById('ficha-color').value = c; }
 
 function editFicha(i) {
   const f = fichas[i];
+  exerciseFormCount = 0;
   document.getElementById('editing-ficha-id').value = i;
   document.getElementById('ficha-name').value = f.name;
   document.getElementById('ficha-color').value = f.color || '#e8ff47';
@@ -1991,165 +2297,145 @@ function deleteFicha(i) {
 }
 
 // ========================
-// EXERCISE FORM
+// EXERCISE FORM — linha da ficha
+// Referencia um exercício do banco; a prescrição (séries, reps,
+// metodologia, obs) é exclusiva desta ficha e não volta pro banco.
 // ========================
 let exerciseFormCount = 0;
 function addExerciseToForm(existing) {
+  if (!exerciseLib.filter(e => !e.archived).length && !existing) {
+    toast('Cadastre um exercício primeiro', '#ffa847');
+    openNewExerciseFor(null);
+    return;
+  }
   const id = exerciseFormCount++;
+  const rowId = 'ex-form-' + id;
   const list = document.getElementById('ficha-exercises-list');
   const div = document.createElement('div');
   div.className = 'exercise-item';
-  div.id = 'ex-form-'+id;
+  div.id = rowId;
+
+  const selId = existing ? (existing.exId || existing.id) : '';
+  const method = existing?.method || 'Convencional';
+
   div.innerHTML = `
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
-      <span style="font-size:12px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:1px">Exercício ${id+1}</span>
-      <button class="btn-icon" onclick="document.getElementById('ex-form-${id}').remove()" style="padding:4px 8px;font-size:11px">✕</button>
-    </div>
-    <div class="input-group">
-      <label class="input-label">Nome</label>
-      <input type="text" class="input" placeholder="ex: Supino Reto" value="${existing?.name||''}" data-field="name">
-    </div>
-    <div class="grid2">
-      <div class="input-group" style="margin-bottom:0">
-        <label class="input-label">Músculo Principal</label>
-        <select class="input" data-field="muscle">
-          ${MUSCLES.map(m => `<option value="${m}" ${existing?.muscle===m?'selected':''}>${m}</option>`).join('')}
-        </select>
+    <div class="ex-row-head">
+      <span class="ex-row-num" data-role="ex-num">Exercício ${id + 1}</span>
+      <div class="ex-row-ctrl">
+        <button type="button" class="ex-move" data-role="mv-up" title="Subir" onclick="moveExRow('${rowId}',-1)">▲</button>
+        <button type="button" class="ex-move" data-role="mv-down" title="Descer" onclick="moveExRow('${rowId}',1)">▼</button>
+        <button type="button" class="ex-move ex-move-del" title="Remover" onclick="removeExRow('${rowId}')">✕</button>
       </div>
+    </div>
+
+    <div class="input-group">
+      <label class="input-label">Exercício</label>
+      <div class="ex-pick-row">
+        <select class="input" data-field="exId" onchange="onExFormPick('${rowId}')">${libSelectOptions(selId)}</select>
+        <button type="button" class="ex-pick-new" title="Cadastrar novo exercício" onclick="openNewExerciseFor('${rowId}')">＋</button>
+      </div>
+      <div class="ex-form-meta" data-role="meta"></div>
+      <div class="ex-form-hint">Escolha um exercício já salvo ou toque em <strong>＋</strong> para cadastrar um novo. O músculo alvo vem do banco.</div>
+    </div>
+
+    <div class="ex-presc-label">Prescrição desta ficha</div>
+
+    <div class="grid2">
       <div class="input-group" style="margin-bottom:0">
         <label class="input-label">Metodologia</label>
         <select class="input" data-field="method">
-          ${METHODS.map(m => `<option value="${m}" ${existing?.method===m?'selected':''}>${m}</option>`).join('')}
+          ${METHODS.map(m => `<option value="${m}" ${method === m ? 'selected' : ''}>${m}</option>`).join('')}
         </select>
+      </div>
+      <div class="input-group" style="margin-bottom:0">
+        <label class="input-label">Séries</label>
+        <input type="number" class="input" min="1" max="20" value="${existing?.sets || 4}" data-field="sets">
       </div>
     </div>
 
-    <!-- Músculo Secundário -->
-    <div style="margin-top:10px;background:var(--surface3);border:1px solid var(--border);border-radius:8px;padding:10px 14px">
-      <div style="display:flex;align-items:center;gap:10px;margin-bottom:0" id="muscle2-toggle-${id}">
-        <input type="checkbox" id="muscle2-check-${id}" data-field="hasSecondaryMuscle" ${existing?.muscle2?'checked':''} style="width:18px;height:18px;accent-color:var(--accent2);cursor:pointer;flex-shrink:0">
-        <label for="muscle2-check-${id}" style="font-size:13px;font-weight:600;color:var(--text2);cursor:pointer;user-select:none">
-          Exercício multiarticular <span style="font-size:11px;color:var(--text3)">(adicionar músculo secundário)</span>
-        </label>
-      </div>
-      <div id="muscle2-field-${id}" style="display:${existing?.muscle2?'block':'none'};margin-top:10px">
-        <label class="input-label">Músculo Secundário</label>
-        <select class="input" data-field="muscle2">
-          <option value="">— nenhum —</option>
-          ${MUSCLES.map(m => `<option value="${m}" ${existing?.muscle2===m?'selected':''}>${m}</option>`).join('')}
-        </select>
-        <div style="font-size:10px;color:var(--text3);margin-top:6px">O volume deste exercício será contado para ambos os músculos</div>
-      </div>
-    </div>
     <div class="grid2" style="margin-top:10px">
-      <div class="input-group" style="margin-bottom:0">
-        <label class="input-label">Séries</label>
-        <input type="number" class="input" placeholder="4" min="1" max="20" value="${existing?.sets||4}" data-field="sets">
-      </div>
       <div class="input-group" style="margin-bottom:0">
         <label class="input-label">Reps Mín</label>
-        <input type="number" class="input" placeholder="8" min="1" max="100" value="${existing?.repsMin||8}" data-field="repsMin">
+        <input type="number" class="input" min="1" max="300" value="${existing?.repsMin || 8}" data-field="repsMin">
       </div>
-    </div>
-    <div class="grid2" style="margin-top:10px">
       <div class="input-group" style="margin-bottom:0">
         <label class="input-label">Reps Máx</label>
-        <input type="number" class="input" placeholder="12" min="1" max="100" value="${existing?.repsMax||12}" data-field="repsMax">
-      </div>
-      <div class="input-group" style="margin-bottom:0">
-        <label class="input-label">Séries de Drop</label>
-        <input type="number" class="input" placeholder="2" min="1" max="10" value="${existing?.dropSets||2}" data-field="dropSets"
-          style="display:${existing?.method==='Drop Set'?'block':'none'}">
-        <span style="display:${existing?.method==='Drop Set'?'none':'block'};color:var(--text3);font-size:12px;padding-top:10px">—</span>
+        <input type="number" class="input" min="1" max="300" value="${existing?.repsMax || 12}" data-field="repsMax">
       </div>
     </div>
-    <div id="biset-field-${id}" class="input-group" style="margin-top:10px;margin-bottom:0;display:${(existing?.method==='Bi-Set'||existing?.method==='Tri-Set')?'block':'none'}">
-      <label class="input-label">${existing?.method==='Tri-Set'?'Exercícios Conjugados (2)':'Exercício Conjugado'}</label>
-      <input type="text" class="input" placeholder="ex: Rosca Direta" value="${existing?.conjugado||''}" data-field="conjugado">
-      ${existing?.method==='Tri-Set'?`<input type="text" class="input" style="margin-top:6px" placeholder="ex: Rosca Martelo" value="${existing?.conjugado2||''}" data-field="conjugado2">`:''}
+
+    <div class="input-group" data-role="drop-wrap" style="margin-top:10px;margin-bottom:0;display:none">
+      <label class="input-label">Séries de Drop</label>
+      <input type="number" class="input" min="1" max="10" value="${existing?.dropSets || 2}" data-field="dropSets">
     </div>
-    <div style="margin-top:12px;margin-bottom:8px;display:flex;align-items:center;gap:10px;background:var(--surface3);border:1px solid var(--border);border-radius:8px;padding:10px 14px">
-      <input type="checkbox" id="bw-check-${id}" data-field="bodyweight" ${existing?.bodyweight?'checked':''} style="width:18px;height:18px;accent-color:var(--accent);cursor:pointer;flex-shrink:0">
-      <label for="bw-check-${id}" style="font-size:13px;font-weight:600;color:var(--text2);cursor:pointer;user-select:none">
-        Exercício sem peso <span style="font-size:11px;color:var(--text3)">(ex: abdominais, flexão)</span>
+
+    <div class="input-group" data-role="conj-wrap" style="margin-top:10px;margin-bottom:0;display:none">
+      <label class="input-label">Exercício Conjugado</label>
+      <input type="text" class="input" placeholder="ex: Rosca Direta" value="${existing?.conjugado || ''}" data-field="conjugado">
+      <input type="text" class="input" style="margin-top:6px;display:none" placeholder="ex: Rosca Martelo" value="${existing?.conjugado2 || ''}" data-field="conjugado2">
+    </div>
+
+    <div style="margin-top:12px;display:flex;align-items:center;gap:10px;background:var(--surface3);border:1px solid var(--border);border-radius:8px;padding:10px 14px">
+      <input type="checkbox" id="bw-${rowId}" data-field="bodyweight" ${existing?.bodyweight ? 'checked' : ''} style="width:18px;height:18px;accent-color:var(--accent);cursor:pointer;flex-shrink:0">
+      <label for="bw-${rowId}" style="font-size:13px;font-weight:600;color:var(--text2);cursor:pointer;user-select:none">
+        Sem peso <span style="font-size:11px;color:var(--text3)">(peso corporal)</span>
       </label>
     </div>
-    <div style="margin-bottom:10px;display:flex;align-items:center;gap:10px;background:var(--surface3);border:1px solid rgba(184,71,255,0.3);border-radius:8px;padding:10px 14px">
-      <input type="checkbox" id="iso-check-${id}" data-field="isometric" ${existing?.isometric?'checked':''} style="width:18px;height:18px;accent-color:var(--accent4);cursor:pointer;flex-shrink:0">
-      <label for="iso-check-${id}" style="font-size:13px;font-weight:600;color:var(--text2);cursor:pointer;user-select:none">
-        Modo Isometria <span style="font-size:11px;color:var(--accent4)">(séries em segundos — prancha, wall sit...)</span>
+
+    <div style="margin-top:8px;display:flex;align-items:center;gap:10px;background:var(--surface3);border:1px solid rgba(184,71,255,0.3);border-radius:8px;padding:10px 14px">
+      <input type="checkbox" id="iso-${rowId}" data-field="isometric" ${existing?.isometric ? 'checked' : ''} style="width:18px;height:18px;accent-color:var(--accent4);cursor:pointer;flex-shrink:0">
+      <label for="iso-${rowId}" style="font-size:13px;font-weight:600;color:var(--text2);cursor:pointer;user-select:none">
+        Isometria <span style="font-size:11px;color:var(--accent4)">(séries em segundos)</span>
       </label>
     </div>
-    <div class="input-group" style="margin-top:0;margin-bottom:0">
+
+    <div class="input-group" style="margin-top:10px;margin-bottom:0">
       <label class="input-label">Observações</label>
-      <input type="text" class="input" placeholder="ex: Pegada fechada, 2s na descida" value="${existing?.obs||''}" data-field="obs">
+      <input type="text" class="input" placeholder="ex: Pegada fechada, 2s na descida" value="${existing?.obs || ''}" data-field="obs">
     </div>
   `;
 
-  // Toggle secondary muscle field
-  const muscle2Check = div.querySelector('[data-field="hasSecondaryMuscle"]');
-  const muscle2Field = div.querySelector('#muscle2-field-' + id);
-  muscle2Check.addEventListener('change', function() {
-    muscle2Field.style.display = this.checked ? 'block' : 'none';
-    if(!this.checked) div.querySelector('[data-field="muscle2"]').value = '';
-  });
-
-  // Show/hide drop set and bi/tri-set fields based on method selection
-  const methodSelect = div.querySelector('[data-field="method"]');
-  methodSelect.addEventListener('change', function() {
-    const m = this.value;
-    const dropInput = div.querySelector('[data-field="dropSets"]');
-    const dropSpan = dropInput.nextElementSibling;
-    const bisetField = div.querySelector('#biset-field-' + id);
-    const bisetLabel = bisetField.querySelector('label');
-    const bisetInputs = bisetField.querySelectorAll('input');
-
-    dropInput.style.display = m === 'Drop Set' ? 'block' : 'none';
-    dropSpan.style.display = m === 'Drop Set' ? 'none' : 'block';
-
-    bisetField.style.display = (m === 'Bi-Set' || m === 'Tri-Set') ? 'block' : 'none';
-    if(m === 'Tri-Set') {
-      bisetLabel.textContent = 'Exercícios Conjugados (2)';
-      if(bisetInputs.length === 1) {
-        const extra = document.createElement('input');
-        extra.type = 'text';
-        extra.className = 'input';
-        extra.style.marginTop = '6px';
-        extra.placeholder = 'ex: Rosca Martelo';
-        extra.setAttribute('data-field', 'conjugado2');
-        bisetField.appendChild(extra);
-      }
-    } else {
-      bisetLabel.textContent = 'Exercício Conjugado';
-      const extra = bisetField.querySelector('[data-field="conjugado2"]');
-      if(extra) extra.remove();
-    }
-  });
   list.appendChild(div);
+  div.querySelector('[data-field="method"]').addEventListener('change', () => updateExRowMethodFields(rowId));
+  if (existing) div.querySelector('[data-field="exId"]').value = selId;
+  updateExRowMethodFields(rowId);
+  onExFormPick(rowId);
+  renumberExRows();
 }
 
-function getExercisesFromForm(existingExercises) {
-  const items = document.querySelectorAll('[id^="ex-form-"]');
-  return Array.from(items).map((item, idx) => {
-    const name = item.querySelector('[data-field="name"]').value.trim();
-    // Try to find matching existing exercise by name to preserve its ID
-    const existingMatch = existingExercises && existingExercises.find(e => e.name.trim().toLowerCase() === name.toLowerCase());
-    return {
-      id: existingMatch ? existingMatch.id : crypto.randomUUID(),
-      name,
-      muscle: item.querySelector('[data-field="muscle"]').value,
-      muscle2: item.querySelector('[data-field="muscle2"]')?.value || '',
+function getExercisesFromForm() {
+  const items = document.querySelectorAll('#ficha-exercises-list [id^="ex-form-"]');
+  const seen = new Set();
+  const out = [];
+  Array.from(items).forEach(item => {
+    const exId = item.querySelector('[data-field="exId"]').value;
+    const lib = getLibEx(exId);
+    if (!lib || seen.has(lib.id)) return;
+    seen.add(lib.id);
+    const repsMax = parseInt(item.querySelector('[data-field="repsMax"]').value) || 12;
+    out.push({
+      id: lib.id,
+      exId: lib.id,
+      // identidade — vem do banco de exercícios
+      name: lib.name,
+      muscle: lib.muscle,
+      muscle2: lib.muscle2,
+      equip: lib.equip || '',
+      // prescrição — exclusiva desta ficha
       method: item.querySelector('[data-field="method"]').value,
-      sets: parseInt(item.querySelector('[data-field="sets"]').value) || 3,
+      sets: parseInt(item.querySelector('[data-field="sets"]').value) || 4,
       repsMin: parseInt(item.querySelector('[data-field="repsMin"]').value) || 8,
-      repsMax: parseInt(item.querySelector('[data-field="repsMax"]').value) || 12,
-      reps: parseInt(item.querySelector('[data-field="repsMax"]').value) || 12, // backward compat
-      dropSets: parseInt(item.querySelector('[data-field="dropSets"]')?.value) || 2,
-      conjugado: item.querySelector('[data-field="conjugado"]')?.value.trim() || '',
-      bodyweight: item.querySelector('[data-field="bodyweight"]')?.checked || false,
-      isometric: item.querySelector('[data-field="isometric"]')?.checked || false,
-    };
-  }).filter(e => e.name);
+      repsMax: repsMax,
+      reps: repsMax,
+      dropSets: parseInt(item.querySelector('[data-field="dropSets"]').value) || 2,
+      conjugado: item.querySelector('[data-field="conjugado"]').value.trim(),
+      conjugado2: (item.querySelector('[data-field="conjugado2"]')?.value || '').trim(),
+      bodyweight: item.querySelector('[data-field="bodyweight"]').checked,
+      isometric: item.querySelector('[data-field="isometric"]').checked,
+      obs: item.querySelector('[data-field="obs"]').value.trim()
+    });
+  });
+  return out;
 }
 
 async function saveFicha() {
@@ -2160,7 +2446,7 @@ async function saveFicha() {
   const exercises = getExercisesFromForm(existingExercises);
 
   if(!name) { toast('Digite o nome da ficha', 'var(--red)'); return; }
-  if(!exercises.length) { toast('Adicione pelo menos um exercício', 'var(--red)'); return; }
+  if(!exercises.length) { toast('Selecione pelo menos um exercício', 'var(--red)'); return; }
 
   if(editingId !== '') {
     const existingId = fichas[parseInt(editingId)].id;
@@ -2168,6 +2454,14 @@ async function saveFicha() {
   } else {
     fichas.push({ id: crypto.randomUUID(), name, color, exercises });
   }
+
+  // Reativa exercícios arquivados que voltaram para uma ficha
+  let libTouched = false;
+  exercises.forEach(e => {
+    const lib = getLibEx(e.id);
+    if(lib && lib.archived) { lib.archived = false; libTouched = true; }
+  });
+  if(libTouched) await saveExerciseLib();
 
   await DB.set('fichas', fichas);
   closeModal('modal-new-ficha');
@@ -2183,6 +2477,671 @@ function resetFichaForm() {
   document.getElementById('ficha-exercises-list').innerHTML = '';
   document.getElementById('modal-ficha-title-text').textContent = 'Nova Ficha';
   exerciseFormCount = 0;
+}
+
+// ============================================================
+// BIBLIOTECA DE EXERCÍCIOS — BANCO DE DADOS PERSISTENTE
+// ============================================================
+let exerciseLib = [];
+let exLibFilter = { q: '', muscle: 'ALL', sort: 'name', showArchived: false };
+let exPickerTargetRow = null; // id da linha do form da ficha aguardando novo exercício
+
+function normName(s) {
+  return (s || '').trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, ' ');
+}
+function getLibEx(id) { return exerciseLib.find(e => e.id === id) || null; }
+function findLibByName(name) {
+  const n = normName(name);
+  if (!n) return null;
+  return exerciseLib.find(e => normName(e.name) === n) || null;
+}
+function muscleColor(m) { return MUSCLE_COLORS[m] || '#47c8ff'; }
+
+function newLibEx(o) {
+  o = o || {};
+  return {
+    id: o.id || crypto.randomUUID(),
+    name: (o.name || '').trim(),
+    muscle: o.muscle && MUSCLES.includes(o.muscle) ? o.muscle : MUSCLES[0],
+    muscle2: o.muscle2 && MUSCLES.includes(o.muscle2) ? o.muscle2 : '',
+    equip: o.equip || '',
+    archived: !!o.archived,
+    createdAt: o.createdAt || Date.now()
+  };
+}
+
+async function saveExerciseLib() { await DB.set('exercises', exerciseLib); }
+
+// ------------------------------------------------------------
+// MIGRAÇÃO — corrige IDs fragmentados (histórico que "sumia")
+// ------------------------------------------------------------
+async function migrateExerciseLibrary() {
+  if (!Array.isArray(exerciseLib)) exerciseLib = [];
+  let changed = false;
+
+  // O banco guarda só identidade: nome + músculos. Remove prescrição legada.
+  exerciseLib.forEach((e, i) => {
+    const clean = newLibEx(e);
+    if (JSON.stringify(clean) !== JSON.stringify(e)) { exerciseLib[i] = clean; changed = true; }
+  });
+
+  // 1) Cria entradas a partir das fichas existentes
+  fichas.forEach(f => (f.exercises || []).forEach(e => {
+    if (!e || !e.name) return;
+    if (!findLibByName(e.name)) {
+      exerciseLib.push(newLibEx({ id: e.id, name: e.name, muscle: e.muscle, muscle2: e.muscle2, equip: e.equip }));
+      changed = true;
+    }
+  }));
+
+  // 2) Cria entradas a partir do histórico (exercícios que saíram das fichas)
+  sessions.forEach(s => (s.exercises || []).forEach(e => {
+    if (!e || !e.name) return;
+    if (!findLibByName(e.name)) {
+      exerciseLib.push(newLibEx({ id: e.id, name: e.name, muscle: e.muscle, muscle2: e.muscle2, archived: true }));
+      changed = true;
+    }
+  }));
+
+  // 3) Unifica os IDs: tudo passa a apontar para o ID canônico da biblioteca
+  fichas.forEach(f => (f.exercises || []).forEach(e => {
+    const lib = findLibByName(e.name);
+    if (!lib) return;
+    if (lib.archived) { lib.archived = false; changed = true; } // está numa ficha ⇒ ativo
+    if (e.id !== lib.id) { e.id = lib.id; changed = true; }
+    if (e.exId !== lib.id) { e.exId = lib.id; changed = true; }
+  }));
+  sessions.forEach(s => (s.exercises || []).forEach(e => {
+    const lib = findLibByName(e.name);
+    if (lib && e.id !== lib.id) { e.id = lib.id; changed = true; }
+  }));
+
+  if (changed) {
+    await DB.set('exercises', exerciseLib);
+    await DB.set('fichas', fichas);
+    await DB.set('sessions', sessions);
+    console.log('[IronLog] Biblioteca sincronizada:', exerciseLib.length, 'exercícios');
+  }
+}
+
+// Propaga edição do exercício para fichas e histórico
+function propagateExerciseUpdate(lib) {
+  fichas.forEach(f => (f.exercises || []).forEach(e => {
+    if (e.id !== lib.id) return;
+    e.exId = lib.id; e.name = lib.name;
+    e.muscle = lib.muscle; e.muscle2 = lib.muscle2; e.equip = lib.equip || '';
+  }));
+  sessions.forEach(s => (s.exercises || []).forEach(e => {
+    if (e.id !== lib.id) return;
+    e.name = lib.name;
+    e.muscle = lib.muscle; e.muscle2 = lib.muscle2;
+  }));
+}
+
+// ------------------------------------------------------------
+// ESTATÍSTICAS
+// ------------------------------------------------------------
+function exStats(exId) {
+  const st = {
+    count: 0, lastDate: null, lastWeight: 0, lastReps: 0, lastSets: 0,
+    prWeight: 0, prReps: 0, prDate: null, totalVol: 0, totalSets: 0, best1rm: 0,
+    series: [] // [{date, weight, reps}] melhor série por dia
+  };
+  const byDate = {};
+  sessions.forEach(s => {
+    let hit = false;
+    (s.exercises || []).forEach(e => {
+      if (e.id !== exId) return;
+      const done = (e.sets || []).filter(isValidSet);
+      if (!done.length) return;
+      hit = true;
+      st.totalSets += done.length;
+      done.forEach(x => {
+        const w = parseFloat(x.weight) || 0, r = parseFloat(x.reps) || 0;
+        st.totalVol += w * r;
+        if (w > st.prWeight || (w === st.prWeight && r > st.prReps)) {
+          st.prWeight = w; st.prReps = r; st.prDate = s.date;
+        }
+        const rm = (w > 0 && r > 0) ? w * (1 + r / 30) : 0;
+        if (rm > st.best1rm) st.best1rm = rm;
+      });
+      const best = done.reduce((a, b) => (parseFloat(b.weight) || 0) > (parseFloat(a.weight) || 0) ? b : a);
+      const dk = (s.date || '').split('T')[0];
+      const w = parseFloat(best.weight) || 0, r = parseFloat(best.reps) || 0;
+      if (!byDate[dk] || w > byDate[dk].weight) byDate[dk] = { date: dk, weight: w, reps: r, sets: done.length };
+      if (!st.lastDate || s.date > st.lastDate) {
+        st.lastDate = s.date; st.lastWeight = w; st.lastReps = r; st.lastSets = done.length;
+      }
+    });
+    if (hit) st.count++;
+  });
+  st.series = Object.keys(byDate).sort().map(k => byDate[k]);
+  return st;
+}
+
+function fichasUsing(exId) { return fichas.filter(f => (f.exercises || []).some(e => e.id === exId)); }
+
+function fmtDateBR(d) {
+  if (!d) return '—';
+  const dt = new Date(d);
+  return isNaN(dt) ? '—' : dt.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: '2-digit' });
+}
+function daysAgo(d) {
+  if (!d) return null;
+  return Math.floor((Date.now() - new Date(d).getTime()) / 86400000);
+}
+
+// ------------------------------------------------------------
+// SUB-ABAS DA PÁGINA FICHAS
+// ------------------------------------------------------------
+function switchFichaTab(tab) {
+  document.getElementById('subtab-fichas').classList.toggle('active', tab === 'fichas');
+  document.getElementById('subtab-exercicios').classList.toggle('active', tab === 'exercicios');
+  document.getElementById('sub-fichas').style.display = tab === 'fichas' ? 'block' : 'none';
+  document.getElementById('sub-exercicios').style.display = tab === 'exercicios' ? 'block' : 'none';
+  if (tab === 'exercicios') renderExerciseLib(); else renderFichas();
+}
+
+function updateSubtabCounts() {
+  const cf = document.getElementById('cnt-fichas');
+  const ce = document.getElementById('cnt-exercicios');
+  if (cf) cf.textContent = fichas.length;
+  if (ce) ce.textContent = exerciseLib.filter(e => !e.archived).length;
+}
+
+// ------------------------------------------------------------
+// FILTROS
+// ------------------------------------------------------------
+function onExLibSearch(v) {
+  exLibFilter.q = v;
+  document.getElementById('exl-search-clear').style.display = v ? 'block' : 'none';
+  renderExerciseLib();
+}
+function clearExLibSearch() {
+  document.getElementById('exl-search').value = '';
+  onExLibSearch('');
+}
+function setExLibMuscle(m) { exLibFilter.muscle = m; renderExerciseLib(); }
+function onExLibSort(v) { exLibFilter.sort = v; renderExerciseLib(); }
+function toggleExLibArchived() { exLibFilter.showArchived = !exLibFilter.showArchived; renderExerciseLib(); }
+
+function renderExLibChips() {
+  const el = document.getElementById('exl-chips');
+  if (!el) return;
+  const counts = {};
+  exerciseLib.filter(e => exLibFilter.showArchived || !e.archived).forEach(e => {
+    counts[e.muscle] = (counts[e.muscle] || 0) + 1;
+  });
+  const used = MUSCLES.filter(m => counts[m]);
+  const archCount = exerciseLib.filter(e => e.archived).length;
+
+  let html = '<button class="chip ' + (exLibFilter.muscle === 'ALL' ? 'active' : '') + '" onclick="setExLibMuscle(\'ALL\')">Todos</button>';
+  html += used.map(m =>
+    '<button class="chip ' + (exLibFilter.muscle === m ? 'active' : '') + '" style="--chipc:' + muscleColor(m) + '" onclick="setExLibMuscle(\'' + m.replace(/'/g, "\\'") + '\')">' +
+    '<span class="dot" style="background:' + muscleColor(m) + '"></span>' + m + ' ' + counts[m] + '</button>'
+  ).join('');
+  if (archCount) {
+    html += '<button class="chip ' + (exLibFilter.showArchived ? 'active' : '') + '" style="--chipc:#ffa847" onclick="toggleExLibArchived()">📦 Arquivados ' + archCount + '</button>';
+  }
+  el.innerHTML = html;
+}
+
+// ------------------------------------------------------------
+// LISTA DA BIBLIOTECA
+// ------------------------------------------------------------
+function renderExerciseLib() {
+  updateSubtabCounts();
+  renderExLibChips();
+  const el = document.getElementById('exl-list');
+  const countEl = document.getElementById('exl-count');
+  if (!el) return;
+
+  if (!exerciseLib.length) {
+    countEl.textContent = '';
+    el.innerHTML = '<div class="empty-state"><div class="empty-state-icon">🏋️</div>' +
+      '<div class="empty-state-text">Seu banco de exercícios está vazio.<br>Cadastre um exercício para começar a registrar cargas e repetições.</div></div>';
+    return;
+  }
+
+  const q = normName(exLibFilter.q);
+  let list = exerciseLib.filter(e => {
+    if (!exLibFilter.showArchived && e.archived) return false;
+    if (exLibFilter.muscle !== 'ALL' && e.muscle !== exLibFilter.muscle && e.muscle2 !== exLibFilter.muscle) return false;
+    if (q && !(normName(e.name).includes(q) || normName(e.muscle).includes(q) || normName(e.equip).includes(q))) return false;
+    return true;
+  });
+
+  const statCache = {};
+  const S = id => (statCache[id] = statCache[id] || exStats(id));
+
+  const sorters = {
+    name: (a, b) => a.name.localeCompare(b.name, 'pt-BR'),
+    used: (a, b) => S(b.id).count - S(a.id).count || a.name.localeCompare(b.name, 'pt-BR'),
+    recent: (a, b) => (S(b.id).lastDate || '').localeCompare(S(a.id).lastDate || ''),
+    pr: (a, b) => S(b.id).prWeight - S(a.id).prWeight,
+    muscle: (a, b) => MUSCLES.indexOf(a.muscle) - MUSCLES.indexOf(b.muscle) || a.name.localeCompare(b.name, 'pt-BR'),
+    unused: (a, b) => S(a.id).count - S(b.id).count || a.name.localeCompare(b.name, 'pt-BR')
+  };
+  list.sort(sorters[exLibFilter.sort] || sorters.name);
+
+  countEl.textContent = list.length + (list.length === 1 ? ' exercício' : ' exercícios');
+
+  if (!list.length) {
+    el.innerHTML = '<div class="empty-state"><div class="empty-state-icon">🔍</div>' +
+      '<div class="empty-state-text">Nenhum exercício encontrado com esses filtros.</div></div>';
+    return;
+  }
+
+  el.innerHTML = list.map(e => {
+    const st = S(e.id);
+    const col = muscleColor(e.muscle);
+    const usedIn = fichasUsing(e.id);
+    const dAgo = daysAgo(st.lastDate);
+    const lastTxt = !st.lastDate ? '—' : (st.lastWeight > 0 ? st.lastWeight + '×' + st.lastReps : st.lastReps + ' reps');
+    const prTxt = !st.count ? '—' : (st.prWeight > 0 ? st.prWeight + ' kg' : st.prReps + ' reps');
+    const volTxt = st.totalVol >= 1000 ? (st.totalVol / 1000).toFixed(1) + 't' : Math.round(st.totalVol) + 'kg';
+
+    return '<div class="exl-card' + (e.archived ? ' archived' : '') + '" style="--m:' + col + '">' +
+      '<div class="exl-top">' +
+        '<div style="min-width:0;flex:1">' +
+          '<div class="exl-name">' + e.name + (e.archived ? ' <span class="tag tag-warn" style="font-size:9px">arquivado</span>' : '') + '</div>' +
+          '<div class="exl-sub">' + (e.equip ? e.equip + ' · ' : '') + (st.lastDate ? (dAgo === 0 ? 'treinado hoje' : dAgo === 1 ? 'ontem' : 'há ' + dAgo + ' dias') : 'sem histórico') + '</div>' +
+          '<div class="exl-tags">' +
+            '<span class="tag" style="background:' + col + '22;color:' + col + ';border:1px solid ' + col + '55">' + e.muscle + '</span>' +
+            (e.muscle2 ? '<span class="tag tag-soft">+ ' + e.muscle2 + '</span>' : '') +
+            (usedIn.length ? '<span class="tag tag-soft">' + usedIn.length + ' ficha' + (usedIn.length > 1 ? 's' : '') + '</span>' : '<span class="tag tag-warn">fora das fichas</span>') +
+          '</div>' +
+        '</div>' +
+        '<div class="exl-badge">' +
+          '<div class="exl-badge-val">' + st.count + '</div>' +
+          '<div class="exl-badge-lbl">treinos</div>' +
+        '</div>' +
+      '</div>' +
+      '<div class="exl-mini">' +
+        '<div class="exl-stat"><div class="exl-stat-lbl">Último</div><div class="exl-stat-val">' + lastTxt + '</div></div>' +
+        '<div class="exl-stat"><div class="exl-stat-lbl">Recorde</div><div class="exl-stat-val" style="color:' + col + '">' + prTxt + '</div></div>' +
+        '<div class="exl-stat"><div class="exl-stat-lbl">Volume</div><div class="exl-stat-val">' + volTxt + '</div></div>' +
+      '</div>' +
+      '<div class="exl-actions">' +
+        '<button class="btn btn-secondary btn-sm" onclick="openExDetail(\'' + e.id + '\')">📊 Detalhes</button>' +
+        '<button class="btn btn-secondary btn-sm" onclick="openExerciseModal(\'' + e.id + '\')">✏ Editar</button>' +
+        '<button class="btn btn-danger btn-sm btn-tiny" onclick="removeLibEx(\'' + e.id + '\')">🗑</button>' +
+      '</div>' +
+    '</div>';
+  }).join('');
+}
+
+// ------------------------------------------------------------
+// MODAL: CRIAR / EDITAR EXERCÍCIO (só nome + músculos)
+// ------------------------------------------------------------
+function fillMuscleSelects() {
+  const opts = MUSCLES.map(m => '<option value="' + m + '">' + m + '</option>').join('');
+  document.getElementById('exf-muscle').innerHTML = opts;
+  document.getElementById('exf-muscle2').innerHTML = '<option value="">— nenhum —</option>' + opts;
+}
+
+function openExerciseModal(id) {
+  fillMuscleSelects();
+  const lib = id ? getLibEx(id) : null;
+  document.getElementById('editing-exercise-id').value = lib ? lib.id : '';
+  document.getElementById('modal-exercise-title').textContent = lib ? 'Editar Exercício' : 'Novo Exercício';
+  document.getElementById('exf-name').value = lib ? lib.name : '';
+  document.getElementById('exf-equip').value = lib ? (lib.equip || '') : '';
+  document.getElementById('exf-muscle').value = lib ? lib.muscle : MUSCLES[0];
+  document.getElementById('exf-has-m2').checked = !!(lib && lib.muscle2);
+  document.getElementById('exf-muscle2').value = lib ? (lib.muscle2 || '') : '';
+  document.getElementById('exf-m2-wrap').style.display = (lib && lib.muscle2) ? 'block' : 'none';
+  updateExModalPreview();
+
+  const imp = document.getElementById('exf-impact');
+  if (lib) {
+    const st = exStats(lib.id);
+    const uf = fichasUsing(lib.id);
+    imp.innerHTML = (st.count || uf.length)
+      ? '<div style="background:rgba(71,200,255,0.07);border:1px solid rgba(71,200,255,0.25);border-radius:9px;padding:10px 12px;font-size:11.5px;color:var(--text2);line-height:1.6">' +
+        '🔗 Alterações aqui valem para <strong>' + uf.length + ' ficha' + (uf.length === 1 ? '' : 's') + '</strong> e <strong>' + st.count + ' treino' + (st.count === 1 ? '' : 's') + '</strong> já registrados. Suas cargas e repetições são mantidas.' +
+        '</div>'
+      : '';
+  } else { imp.innerHTML = ''; }
+
+  openModal('modal-exercise');
+}
+
+function closeExerciseModal() {
+  closeModal('modal-exercise');
+  exPickerTargetRow = null;
+}
+
+function toggleExModalM2() {
+  const on = document.getElementById('exf-has-m2').checked;
+  document.getElementById('exf-m2-wrap').style.display = on ? 'block' : 'none';
+  if (!on) document.getElementById('exf-muscle2').value = '';
+  updateExModalPreview();
+}
+
+function updateExModalPreview() {
+  const el = document.getElementById('exf-preview');
+  if (!el) return;
+  const m1 = document.getElementById('exf-muscle').value;
+  const m2 = document.getElementById('exf-has-m2').checked ? document.getElementById('exf-muscle2').value : '';
+  const c1 = muscleColor(m1);
+  el.innerHTML = '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:11px;color:var(--text3)">' +
+    '<span>Áreas trabalhadas:</span>' +
+    '<span class="tag" style="background:' + c1 + '22;color:' + c1 + ';border:1px solid ' + c1 + '55">' + m1 + '</span>' +
+    (m2 ? '<span class="tag tag-soft">+ ' + m2 + '</span>' : '') +
+    '</div>';
+}
+
+async function saveExerciseFromModal() {
+  const name = document.getElementById('exf-name').value.trim();
+  if (!name) { toast('Digite o nome do exercício', 'var(--red)'); return; }
+
+  const editingId = document.getElementById('editing-exercise-id').value;
+  const dup = findLibByName(name);
+  if (dup && dup.id !== editingId) { toast('Já existe um exercício com esse nome', 'var(--red)'); return; }
+
+  const data = {
+    name,
+    muscle: document.getElementById('exf-muscle').value,
+    muscle2: document.getElementById('exf-has-m2').checked ? document.getElementById('exf-muscle2').value : '',
+    equip: document.getElementById('exf-equip').value.trim()
+  };
+
+  let lib;
+  if (editingId) {
+    lib = getLibEx(editingId);
+    Object.assign(lib, newLibEx(Object.assign({}, lib, data, { id: lib.id, createdAt: lib.createdAt, archived: lib.archived })));
+    propagateExerciseUpdate(lib);
+    await Promise.all([saveExerciseLib(), DB.set('fichas', fichas), DB.set('sessions', sessions)]);
+    toast('Exercício atualizado — fichas e histórico sincronizados');
+  } else {
+    lib = newLibEx(data);
+    exerciseLib.push(lib);
+    await saveExerciseLib();
+    toast('Exercício cadastrado!');
+  }
+
+  const target = exPickerTargetRow;
+  closeExerciseModal();
+  refreshAllExSelects();
+  if (target) {
+    const sel = document.querySelector('#' + target + ' [data-field="exId"]');
+    if (sel) { sel.value = lib.id; onExFormPick(target); }
+  }
+  renderExerciseLib();
+  renderFichas();
+}
+
+async function removeLibEx(id) {
+  const lib = getLibEx(id);
+  if (!lib) return;
+  const st = exStats(id);
+  const uf = fichasUsing(id);
+
+  if (st.count > 0) {
+    const ok = confirm('"' + lib.name + '" tem ' + st.count + ' treino(s) registrados.\n\n' +
+      'OK → ARQUIVAR: sai das fichas mas o histórico, gráficos e recordes continuam salvos.\n' +
+      'Cancelar → manter como está.');
+    if (!ok) return;
+    lib.archived = true;
+    uf.forEach(f => { f.exercises = f.exercises.filter(e => e.id !== id); });
+    await Promise.all([saveExerciseLib(), DB.set('fichas', fichas)]);
+    toast('📦 Exercício arquivado — histórico preservado', '#ffa847');
+  } else {
+    if (!confirm('Excluir "' + lib.name + '" definitivamente?')) return;
+    exerciseLib = exerciseLib.filter(e => e.id !== id);
+    uf.forEach(f => { f.exercises = f.exercises.filter(e => e.id !== id); });
+    await Promise.all([saveExerciseLib(), DB.set('fichas', fichas)]);
+    toast('Exercício excluído', 'var(--red)');
+  }
+  renderExerciseLib();
+  renderFichas();
+}
+
+async function unarchiveLibEx(id) {
+  const lib = getLibEx(id);
+  if (!lib) return;
+  lib.archived = false;
+  await saveExerciseLib();
+  closeModal('modal-ex-detail');
+  renderExerciseLib();
+  toast('Exercício reativado');
+}
+
+async function purgeLibEx(id) {
+  const lib = getLibEx(id);
+  if (!lib) return;
+  const st = exStats(id);
+  if (!confirm('APAGAR TUDO de "' + lib.name + '"?\n\nIsso remove o exercício e apaga ' + st.count + ' registro(s) de treino dele. Não dá para desfazer.')) return;
+  if (!confirm('Tem certeza mesmo? Todo o histórico de cargas deste exercício será perdido.')) return;
+  exerciseLib = exerciseLib.filter(e => e.id !== id);
+  fichas.forEach(f => { f.exercises = (f.exercises || []).filter(e => e.id !== id); });
+  sessions.forEach(s => { s.exercises = (s.exercises || []).filter(e => e.id !== id); });
+  await Promise.all([saveExerciseLib(), DB.set('fichas', fichas), DB.set('sessions', sessions)]);
+  closeModal('modal-ex-detail');
+  renderExerciseLib();
+  renderFichas();
+  toast('Exercício e histórico apagados', 'var(--red)');
+}
+
+// ------------------------------------------------------------
+// MODAL: DETALHES DO EXERCÍCIO
+// ------------------------------------------------------------
+let chartExDetail = null;
+function openExDetail(id) {
+  const lib = getLibEx(id);
+  if (!lib) return;
+  const st = exStats(id);
+  const col = muscleColor(lib.muscle);
+  const uf = fichasUsing(id);
+  document.getElementById('exd-title').textContent = lib.name;
+
+  const prBox = st.prWeight > 0
+    ? '<div class="exd-box-val" style="color:' + col + '">' + st.prWeight + '<span style="font-size:14px"> kg</span></div><div class="exd-box-sub">' + (st.prReps ? st.prReps + ' reps · ' : '') + fmtDateBR(st.prDate) + '</div>'
+    : '<div class="exd-box-val" style="color:' + col + '">' + (st.prReps || '—') + '</div><div class="exd-box-sub">reps · ' + fmtDateBR(st.prDate) + '</div>';
+
+  // Prescrição atual em cada ficha
+  const prescr = uf.map(f => {
+    const e = f.exercises.find(x => x.id === id) || {};
+    return '<div class="exd-hist">' +
+      '<div style="min-width:0"><div style="font-weight:600;color:' + (f.color || '#e8ff47') + '">' + f.name + '</div>' +
+      '<div style="font-size:10px;color:var(--text3)">' + (e.method || 'Convencional') + '</div></div>' +
+      '<div class="exd-hist-sets">' + (e.sets || '?') + ' × ' + (e.repsMin || '?') + '-' + (e.repsMax || '?') + '</div>' +
+    '</div>';
+  }).join('');
+
+  // Histórico recente
+  const hist = [];
+  sessions.slice().sort((a, b) => (b.date || '').localeCompare(a.date || '')).forEach(s => {
+    (s.exercises || []).forEach(e => {
+      if (e.id !== id) return;
+      const done = (e.sets || []).filter(isValidSet);
+      if (!done.length) return;
+      hist.push({
+        date: s.date, ficha: s.fichaName || '',
+        sets: done.map(x => (parseFloat(x.weight) > 0 ? (x.weight + '×' + x.reps) : x.reps)).join('  ')
+      });
+    });
+  });
+
+  const histHtml = hist.length
+    ? hist.slice(0, 12).map(h =>
+        '<div class="exd-hist">' +
+          '<div style="min-width:0"><div style="font-weight:600">' + fmtDateBR(h.date) + '</div>' +
+          '<div style="font-size:10px;color:var(--text3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + h.ficha + '</div></div>' +
+          '<div class="exd-hist-sets">' + h.sets + '</div>' +
+        '</div>').join('')
+    : '<div style="font-size:12px;color:var(--text3);padding:10px 0">Nenhum treino registrado ainda com este exercício.</div>';
+
+  document.getElementById('exd-body').innerHTML =
+    '<div class="exl-tags" style="margin-bottom:14px">' +
+      '<span class="tag" style="background:' + col + '22;color:' + col + ';border:1px solid ' + col + '55">' + lib.muscle + '</span>' +
+      (lib.muscle2 ? '<span class="tag tag-soft">+ ' + lib.muscle2 + '</span>' : '') +
+      (lib.equip ? '<span class="tag tag-soft">' + lib.equip + '</span>' : '') +
+    '</div>' +
+    '<div class="exd-grid">' +
+      '<div class="exd-box"><div class="exd-box-lbl">Treinos</div><div class="exd-box-val">' + st.count + '</div><div class="exd-box-sub">' + st.totalSets + ' séries válidas</div></div>' +
+      '<div class="exd-box"><div class="exd-box-lbl">Recorde</div>' + prBox + '</div>' +
+      '<div class="exd-box"><div class="exd-box-lbl">Último treino</div><div class="exd-box-val">' + (st.lastDate ? (st.lastWeight > 0 ? st.lastWeight + '×' + st.lastReps : st.lastReps) : '—') + '</div><div class="exd-box-sub">' + fmtDateBR(st.lastDate) + '</div></div>' +
+      '<div class="exd-box"><div class="exd-box-lbl">Volume total</div><div class="exd-box-val">' + (st.totalVol >= 1000 ? (st.totalVol / 1000).toFixed(1) + 't' : Math.round(st.totalVol) + 'kg') + '</div><div class="exd-box-sub">1RM est.: ' + (st.best1rm ? st.best1rm.toFixed(1) + ' kg' : '—') + '</div></div>' +
+    '</div>' +
+    (st.series.length > 1 ? '<div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:14px"><canvas id="exd-chart" height="150"></canvas></div>' : '') +
+    '<div style="font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--text3);font-weight:700;margin-bottom:2px">Prescrição por ficha</div>' +
+    '<div style="margin-bottom:16px">' + (prescr || '<div style="font-size:12px;color:var(--text3);padding:10px 0">Este exercício não está em nenhuma ficha.</div>') + '</div>' +
+    '<div style="font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--text3);font-weight:700;margin-bottom:2px">Histórico recente</div>' +
+    '<div style="margin-bottom:16px">' + histHtml + '</div>' +
+    '<div style="display:flex;gap:8px;flex-wrap:wrap">' +
+      '<button class="btn btn-secondary btn-sm" style="flex:1;justify-content:center" onclick="closeModal(\'modal-ex-detail\');openExerciseModal(\'' + id + '\')">✏ Editar</button>' +
+      (st.count ? '<button class="btn btn-primary btn-sm" style="flex:1;justify-content:center" onclick="goToEvolution(\'' + id + '\')">📈 Ver evolução</button>' : '') +
+    '</div>' +
+    (lib.archived ? '<button class="btn btn-secondary btn-sm" style="width:100%;justify-content:center;margin-top:8px" onclick="unarchiveLibEx(\'' + id + '\')">♻ Reativar exercício</button>' : '') +
+    '<button class="btn btn-danger btn-sm" style="width:100%;justify-content:center;margin-top:8px" onclick="purgeLibEx(\'' + id + '\')">🗑 Apagar exercício e histórico</button>';
+
+  openModal('modal-ex-detail');
+
+  if (st.series.length > 1) {
+    setTimeout(() => {
+      const cv = document.getElementById('exd-chart');
+      if (!cv) return;
+      if (chartExDetail) chartExDetail.destroy();
+      chartExDetail = new Chart(cv.getContext('2d'), {
+        type: 'line',
+        data: {
+          labels: st.series.map(p => fmtDateBR(p.date)),
+          datasets: [{
+            data: st.series.map(p => p.weight > 0 ? p.weight : p.reps),
+            borderColor: col, backgroundColor: col + '22',
+            borderWidth: 2, tension: 0.3, fill: true,
+            pointRadius: 3, pointBackgroundColor: col
+          }]
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            x: { ticks: { color: '#555566', font: { size: 9 }, maxTicksLimit: 6 }, grid: { color: '#2a2a3a' } },
+            y: { ticks: { color: '#555566', font: { size: 9 } }, grid: { color: '#2a2a3a' } }
+          }
+        }
+      });
+    }, 60);
+  }
+}
+
+function goToEvolution(exId) {
+  closeModal('modal-ex-detail');
+  const btn = Array.from(document.querySelectorAll('.nav-btn')).find(b => (b.getAttribute('onclick') || '').includes("'evolucao'"));
+  goPage('evolucao', btn || document.querySelectorAll('.nav-btn')[2]);
+  const sel = document.getElementById('evo-exercise-select');
+  if (sel) { sel.value = exId; renderEvolution(); }
+}
+
+// ------------------------------------------------------------
+// SELETOR DE EXERCÍCIO NO FORMULÁRIO DA FICHA
+// ------------------------------------------------------------
+function libSelectOptions(selectedId) {
+  const active = exerciseLib.filter(e => !e.archived || e.id === selectedId);
+  if (!active.length) return '<option value="">— nenhum exercício cadastrado —</option>';
+  const byMuscle = {};
+  active.forEach(e => { (byMuscle[e.muscle] = byMuscle[e.muscle] || []).push(e); });
+  let html = '<option value="">— selecione —</option>';
+  MUSCLES.forEach(m => {
+    if (!byMuscle[m]) return;
+    html += '<optgroup label="' + m + '">';
+    byMuscle[m].sort((a, b) => a.name.localeCompare(b.name, 'pt-BR')).forEach(e => {
+      html += '<option value="' + e.id + '"' + (e.id === selectedId ? ' selected' : '') + '>' + e.name + (e.equip ? ' · ' + e.equip : '') + '</option>';
+    });
+    html += '</optgroup>';
+  });
+  return html;
+}
+
+function refreshAllExSelects() {
+  document.querySelectorAll('#ficha-exercises-list [data-field="exId"]').forEach(sel => {
+    const cur = sel.value;
+    sel.innerHTML = libSelectOptions(cur);
+    sel.value = cur;
+  });
+}
+
+// Mostra o alvo muscular e o histórico do exercício escolhido (só leitura)
+function onExFormPick(rowId) {
+  const row = document.getElementById(rowId);
+  if (!row) return;
+  const sel = row.querySelector('[data-field="exId"]');
+  const lib = getLibEx(sel.value);
+  const meta = row.querySelector('[data-role="meta"]');
+  if (!lib) { meta.innerHTML = ''; return; }
+
+  const col = muscleColor(lib.muscle);
+  const st = exStats(lib.id);
+  meta.innerHTML =
+    '<span class="tag" style="background:' + col + '22;color:' + col + ';border:1px solid ' + col + '55">' + lib.muscle + '</span>' +
+    (lib.muscle2 ? '<span class="tag tag-soft">+ ' + lib.muscle2 + '</span>' : '') +
+    (lib.equip ? '<span class="tag tag-soft">' + lib.equip + '</span>' : '') +
+    (st.count
+      ? '<span class="tag tag-soft">' + st.count + ' treinos · recorde ' + (st.prWeight > 0 ? st.prWeight + 'kg' : st.prReps + ' reps') + '</span>'
+      : '<span class="tag tag-soft">sem histórico</span>');
+}
+
+function updateExRowMethodFields(rowId) {
+  const row = document.getElementById(rowId);
+  if (!row) return;
+  const m = row.querySelector('[data-field="method"]').value;
+  row.querySelector('[data-role="drop-wrap"]').style.display = m === 'Drop Set' ? 'block' : 'none';
+  row.querySelector('[data-role="conj-wrap"]').style.display = (m === 'Bi-Set' || m === 'Tri-Set') ? 'block' : 'none';
+  const c2 = row.querySelector('[data-field="conjugado2"]');
+  if (c2) c2.style.display = m === 'Tri-Set' ? 'block' : 'none';
+}
+
+// ------------------------------------------------------------
+// ORDEM DOS EXERCÍCIOS NA FICHA
+// ------------------------------------------------------------
+function renumberExRows() {
+  const list = document.getElementById('ficha-exercises-list');
+  if (!list) return;
+  const rows = list.querySelectorAll('[id^="ex-form-"]');
+  rows.forEach((r, i) => {
+    const num = r.querySelector('[data-role="ex-num"]');
+    if (num) num.textContent = 'Exercício ' + (i + 1);
+    const up = r.querySelector('[data-role="mv-up"]');
+    const dn = r.querySelector('[data-role="mv-down"]');
+    if (up) { up.disabled = i === 0; up.style.opacity = i === 0 ? '0.25' : '1'; }
+    if (dn) { dn.disabled = i === rows.length - 1; dn.style.opacity = i === rows.length - 1 ? '0.25' : '1'; }
+  });
+}
+
+function moveExRow(rowId, dir) {
+  const row = document.getElementById(rowId);
+  if (!row) return;
+  const list = row.parentNode;
+  if (dir < 0 && row.previousElementSibling) list.insertBefore(row, row.previousElementSibling);
+  if (dir > 0 && row.nextElementSibling) list.insertBefore(row.nextElementSibling, row);
+  renumberExRows();
+  row.style.transition = 'none';
+  row.style.borderColor = 'var(--accent)';
+  setTimeout(() => { row.style.transition = 'border-color .5s'; row.style.borderColor = ''; }, 30);
+}
+
+function removeExRow(rowId) {
+  const row = document.getElementById(rowId);
+  if (row) row.remove();
+  renumberExRows();
+}
+
+function openNewExerciseFor(rowId) {
+  exPickerTargetRow = rowId;
+  openExerciseModal();
+}
+
+function openNewFicha() {
+  if (!exerciseLib.filter(e => !e.archived).length) {
+    toast('Cadastre exercícios primeiro na aba Exercícios', '#ffa847');
+    switchFichaTab('exercicios');
+    return;
+  }
+  resetFichaForm();
+  openModal('modal-new-ficha');
 }
 
 // ========================
@@ -2209,11 +3168,16 @@ function renderTreinarPage() {
   el.innerHTML = thtml;
 }
 
-function getLastSessionForExercise(exId) {
-  // Find most recent session that has this exercise with at least one done set
-  for(let i = sessions.length - 1; i >= 0; i--) {
-    const sess = sessions[i];
-    const found = sess.exercises.find(e => e.id === exId && e.sets.some(s => s.done));
+function getLastSessionForExercise(exId, exName) {
+  // Busca a sessão mais recente com este exercício (por ID e, como rede de
+  // segurança, por nome — evita perder o histórico após renomear)
+  const nn = exName ? normName(exName) : null;
+  const ordered = sessions.slice().sort((a,b) => (a.date||'').localeCompare(b.date||''));
+  for(let i = ordered.length - 1; i >= 0; i--) {
+    const sess = ordered[i];
+    const found = (sess.exercises||[]).find(e =>
+      (e.id === exId || (nn && normName(e.name) === nn)) && (e.sets||[]).some(s => s.done)
+    );
     if(found) return found;
   }
   return null;
@@ -2227,7 +3191,11 @@ function startSession(fichaIdx) {
     fichaIdx,
     date: new Date().toISOString(),
     exercises: ficha.exercises.map(ex => {
-      const last = getLastSessionForExercise(ex.id);
+      const _lib = getLibEx(ex.exId || ex.id);
+      if(_lib) ex = Object.assign({}, ex, {
+        id: _lib.id, name: _lib.name, muscle: _lib.muscle, muscle2: _lib.muscle2
+      });
+      const last = getLastSessionForExercise(ex.id, ex.name);
       const isDropSet = ex.method === 'Drop Set';
       const dropCount = ex.dropSets || 1;
       // Normal sets + drop series at the end
@@ -2486,9 +3454,33 @@ function switchEvoTab(tab) {
 
 function renderEvoExercises() {
   const sel = document.getElementById('evo-exercise-select');
-  const allExercises = [];
-  fichas.forEach(f => f.exercises.forEach(e => { if(!allExercises.find(x=>x.id===e.id)) allExercises.push(e); }));
-  sel.innerHTML = '<option value="">— escolha —</option>' + allExercises.map(e => `<option value="${e.id}">${e.name} (${e.muscle})</option>`).join('');
+  if(!sel) return;
+  const cur = sel.value;
+
+  // Exercícios com histórico registrado
+  const withData = new Set();
+  sessions.forEach(s => (s.exercises||[]).forEach(e => {
+    if((e.sets||[]).some(isValidSet)) withData.add(e.id);
+  }));
+
+  const list = exerciseLib.filter(e =>
+    withData.has(e.id) || fichas.some(f => (f.exercises||[]).some(x => x.id === e.id))
+  );
+
+  const byMuscle = {};
+  list.forEach(e => { (byMuscle[e.muscle] = byMuscle[e.muscle] || []).push(e); });
+
+  let html = '<option value="">— escolha —</option>';
+  MUSCLES.forEach(m => {
+    if(!byMuscle[m]) return;
+    html += '<optgroup label="' + m + '">';
+    byMuscle[m].sort((a,b) => a.name.localeCompare(b.name,'pt-BR')).forEach(e => {
+      html += '<option value="' + e.id + '">' + e.name + (withData.has(e.id) ? '' : ' (sem dados)') + '</option>';
+    });
+    html += '</optgroup>';
+  });
+  sel.innerHTML = html;
+  if(cur) sel.value = cur;
 }
 
 let chartReps = null, chartPeso = null, chartForca = null;
@@ -2499,8 +3491,8 @@ function renderEvolution() {
   if(!exId) { el.innerHTML = ''; return; }
 
   // Find the exercise name for fallback matching by name
-  let exName = null;
-  fichas.forEach(f => f.exercises.forEach(e => { if(e.id === exId) exName = e.name; }));
+  let exName = (getLibEx(exId) || {}).name || null;
+  if(!exName) fichas.forEach(f => f.exercises.forEach(e => { if(e.id === exId) exName = e.name; }));
 
   // Collect best set (max weight) per session day
   const byDate = {};
@@ -3689,6 +4681,139 @@ async function deleteSession(idx) {
   toast('Treino excluído');
 }
 
+// ========================
+// PDF — FICHAS DE TREINO
+// ========================
+function exportFichasPDF(onlyIdx) {
+  const list = (typeof onlyIdx === 'number') ? [fichas[onlyIdx]] : fichas;
+  if (!list.length || !list[0]) { toast('Nenhuma ficha para exportar', 'var(--red)'); return; }
+
+  const today = new Date();
+  const dateStr = today.toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' });
+
+  const totalEx = list.reduce((a, f) => a + (f.exercises || []).length, 0);
+  const totalSets = list.reduce((a, f) => a + (f.exercises || []).reduce((b, e) => b + (parseInt(e.sets) || 0), 0), 0);
+  const allMuscles = [...new Set(list.flatMap(f => (f.exercises || []).flatMap(e => [e.muscle, e.muscle2].filter(Boolean))))];
+
+  let fichasHtml = '';
+  list.forEach(f => {
+    const color = f.color || '#e8ff47';
+    const exs = f.exercises || [];
+    const muscles = [...new Set(exs.map(e => e.muscle).filter(Boolean))];
+    const fSets = exs.reduce((a, e) => a + (parseInt(e.sets) || 0), 0);
+
+    const rows = exs.map((e, i) => {
+      const reps = e.isometric
+        ? ((e.repsMin || e.reps) + '-' + (e.repsMax || e.reps) + 's')
+        : ((e.repsMin || e.reps) + '-' + (e.repsMax || e.reps));
+      const extras = [];
+      if (e.method === 'Drop Set' && e.dropSets) extras.push('+' + e.dropSets + ' drop');
+      if (e.conjugado) extras.push('c/ ' + e.conjugado);
+      if (e.conjugado2) extras.push('+ ' + e.conjugado2);
+      if (e.bodyweight) extras.push('peso corporal');
+      if (e.obs) extras.push(e.obs);
+      const alvo = e.muscle + (e.muscle2 ? ' + ' + e.muscle2 : '');
+      return `<tr style="border-bottom:1px solid #f0f0f0">
+        <td style="padding:7px 8px;color:#aaa;font-weight:700;width:22px">${i + 1}</td>
+        <td style="padding:7px 8px">
+          <div style="font-weight:700;font-size:12.5px;color:#1a1a2e">${e.name}</div>
+          ${extras.length ? `<div style="font-size:10px;color:#888;margin-top:2px">${extras.join(' · ')}</div>` : ''}
+        </td>
+        <td style="padding:7px 8px;font-size:11px;color:#555">${alvo}</td>
+        <td style="padding:7px 8px;font-size:11px;color:#555;text-align:center">${e.method || 'Convencional'}</td>
+        <td style="padding:7px 8px;text-align:center;font-weight:700;font-size:13px">${e.sets || '—'}</td>
+        <td style="padding:7px 8px;text-align:center;font-weight:700;font-size:13px;color:#1a6fb5">${reps}</td>
+        <td style="padding:7px 8px;border-left:1px dashed #ddd"></td>
+      </tr>`;
+    }).join('');
+
+    fichasHtml += `
+      <div style="margin-bottom:22px;break-inside:avoid">
+        <div style="background:#f8f8f8;border-left:4px solid ${color};padding:10px 12px;border-radius:4px 4px 0 0;display:flex;justify-content:space-between;align-items:flex-start">
+          <div>
+            <div style="font-weight:700;font-size:15px;color:#1a1a2e">${f.name}</div>
+            <div style="font-size:11px;color:#666;margin-top:2px">${muscles.join(' · ') || '—'}</div>
+          </div>
+          <div style="text-align:right">
+            <div style="font-weight:700;font-size:13px;color:#1a1a2e">${exs.length} exercícios</div>
+            <div style="font-size:11px;color:#888">${fSets} séries previstas</div>
+          </div>
+        </div>
+        <table style="width:100%;border-collapse:collapse;border:1px solid #e0e0e0;border-top:none">
+          <thead>
+            <tr style="background:#efefef">
+              <th style="padding:6px 8px;text-align:left;font-size:10px;color:#888;text-transform:uppercase">#</th>
+              <th style="padding:6px 8px;text-align:left;font-size:10px;color:#888;text-transform:uppercase">Exercício</th>
+              <th style="padding:6px 8px;text-align:left;font-size:10px;color:#888;text-transform:uppercase">Alvo</th>
+              <th style="padding:6px 8px;text-align:center;font-size:10px;color:#888;text-transform:uppercase">Método</th>
+              <th style="padding:6px 8px;text-align:center;font-size:10px;color:#888;text-transform:uppercase">Séries</th>
+              <th style="padding:6px 8px;text-align:center;font-size:10px;color:#888;text-transform:uppercase">Reps</th>
+              <th style="padding:6px 8px;text-align:center;font-size:10px;color:#888;text-transform:uppercase;border-left:1px dashed #ddd;width:80px">Carga</th>
+            </tr>
+          </thead>
+          <tbody>${rows || '<tr><td colspan="7" style="padding:12px;color:#aaa;font-style:italic">Sem exercícios</td></tr>'}</tbody>
+        </table>
+      </div>`;
+  });
+
+  const pdfHtml = `<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>IronLog — ${list.length === 1 ? list[0].name : 'Fichas de Treino'}</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family: Arial, sans-serif; color: #1a1a2e; padding: 32px; font-size: 13px; }
+  @media print { body { padding: 16px; } @page { margin: 1.5cm; } }
+</style>
+</head>
+<body>
+  <!-- Header -->
+  <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:24px;border-bottom:3px solid #e8ff47;padding-bottom:16px">
+    <div>
+      <div style="font-size:28px;font-weight:900;letter-spacing:2px;color:#1a1a2e">IRON<span style="color:#b8a000">LOG</span></div>
+      <div style="font-size:18px;font-weight:700;margin-top:4px">${list.length === 1 ? list[0].name : 'Fichas de Treino'}</div>
+      <div style="font-size:12px;color:#666;margin-top:2px">${dateStr}</div>
+    </div>
+    <div style="text-align:right">
+      <div style="font-size:11px;color:#888;text-transform:uppercase;letter-spacing:1px">${list.length === 1 ? 'Exercícios' : 'Fichas'}</div>
+      <div style="font-size:26px;font-weight:900;color:#b8a000">${list.length === 1 ? totalEx : list.length}</div>
+    </div>
+  </div>
+
+  <!-- Stats summary -->
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:24px">
+    <div style="background:#f8f8f8;border-radius:6px;padding:12px;text-align:center">
+      <div style="font-size:24px;font-weight:900;color:#1a1a2e">${totalEx}</div>
+      <div style="font-size:10px;color:#888;text-transform:uppercase;letter-spacing:0.5px">Exercícios</div>
+    </div>
+    <div style="background:#f8f8f8;border-radius:6px;padding:12px;text-align:center">
+      <div style="font-size:24px;font-weight:900;color:#1a1a2e">${totalSets}</div>
+      <div style="font-size:10px;color:#888;text-transform:uppercase;letter-spacing:0.5px">Séries Previstas</div>
+    </div>
+    <div style="background:#f8f8f8;border-radius:6px;padding:12px;text-align:center">
+      <div style="font-size:24px;font-weight:900;color:#1a1a2e">${allMuscles.length}</div>
+      <div style="font-size:10px;color:#888;text-transform:uppercase;letter-spacing:0.5px">Músculos</div>
+    </div>
+  </div>
+
+  ${fichasHtml}
+
+  <!-- Footer -->
+  <div style="margin-top:24px;padding-top:12px;border-top:1px solid #eee;font-size:10px;color:#aaa;text-align:center">
+    Gerado pelo IronLog · ${new Date().toLocaleDateString('pt-BR')}
+  </div>
+</body>
+</html>`;
+
+  const win = window.open('', '_blank');
+  if (!win) { toast('Libere os pop-ups para gerar o PDF', 'var(--red)'); return; }
+  win.document.write(pdfHtml);
+  win.document.close();
+  win.focus();
+  setTimeout(() => { win.print(); }, 800);
+}
+
 function exportSessionPDF(sessionIdx) {
   const sess = sessions[sessionIdx];
   if(!sess) return;
@@ -3876,7 +5001,7 @@ window.addEventListener('firebase-ready', () => updateCloudStatus());
 function renderBackupStats() {
   const el = document.getElementById('backup-stats');
   const totalSessions = sessions.length;
-  const totalExercises = fichas.reduce((a, f) => a + f.exercises.length, 0);
+  const totalExercises = fichas.reduce((a, f) => a + (f.exercises||[]).length, 0);
   const firstSession = sessions.length ? new Date(sessions[0].date).toLocaleDateString('pt-BR') : '—';
   const lastSession = sessions.length ? new Date(sessions[sessions.length-1].date).toLocaleDateString('pt-BR') : '—';
   const totalWeights = weights.length;
@@ -3884,6 +5009,7 @@ function renderBackupStats() {
 
   el.innerHTML =
     '📋 <strong>' + fichas.length + '</strong> fichas com <strong>' + totalExercises + '</strong> exercícios<br>' +
+    '🏋️ <strong>' + exerciseLib.length + '</strong> exercícios no banco de dados<br>' +
     '💪 <strong>' + totalSessions + '</strong> treinos registrados<br>' +
     '⚖️ <strong>' + totalWeights + '</strong> registros de peso<br>' +
     '🧬 <strong>' + totalBios + '</strong> registros de bioimpedância<br>' +
@@ -4281,7 +5407,7 @@ async function exportData() {
     version: '1.0',
     exportDate: new Date().toISOString(),
     appName: 'IronLog',
-    data: { fichas, sessions, weights, bios, cardios }
+    data: { fichas, sessions, weights, bios, cardios, segs, exercises: exerciseLib }
   };
   const json = JSON.stringify(backup, null, 2);
   const blob = new Blob([json], { type: 'application/json' });
@@ -4312,13 +5438,14 @@ async function importData(input) {
         return;
       }
 
-      const { fichas: f, sessions: s, weights: w, bios: b, cardios: car } = parsed.data;
+      const { fichas: f, sessions: s, weights: w, bios: b, cardios: car, segs: sg, exercises: exl } = parsed.data;
 
       if(!confirm(
         'Importar backup de ' + new Date(parsed.exportDate).toLocaleDateString('pt-BR') + '?\n\n' +
         '• ' + (f?.length||0) + ' fichas\n' +
         '• ' + (s?.length||0) + ' treinos\n' +
-        '• ' + (w?.length||0) + ' registros de peso\n\n' +
+        '• ' + (w?.length||0) + ' registros de peso\n' +
+        '• ' + (exl?.length||0) + ' exercícios cadastrados\n\n' +
         '⚠️ Isso substituirá todos os dados atuais.'
       )) {
         input.value = '';
@@ -4331,15 +5458,22 @@ async function importData(input) {
       weights  = w || [];
       bios     = b || [];
       cardios  = car || [];
+      segs     = sg || segs || [];
+      exerciseLib = exl || [];
 
       await Promise.all([
         DB.set('fichas', fichas),
         DB.set('sessions', sessions),
         DB.set('weights', weights),
         DB.set('bios', bios),
-        DB.set('cardios', cardios)
+        DB.set('cardios', cardios),
+        DB.set('segs', segs),
+        DB.set('exercises', exerciseLib)
       ]);
 
+      await migrateExerciseLibrary();
+      renderFichas();
+      renderExerciseLib();
       renderBackupStats();
       toast('✅ Backup importado com sucesso! ' + (s?.length||0) + ' treinos restaurados.');
       input.value = '';
@@ -4382,6 +5516,7 @@ window.addEventListener('auth-state-changed', async (e) => {
     showSyncStatus('syncing');
     await migrateFromLocalStorage();
     await loadAllData();
+    await migrateExerciseLibrary();
     // Migrate any bios/weights that were saved without an 'id' field
     let needsSave = false;
     bios.forEach(b => { if(!b.id) { b.id = crypto.randomUUID(); needsSave = true; } });
@@ -4391,6 +5526,7 @@ window.addEventListener('auth-state-changed', async (e) => {
       await DB.set('weights', weights);
     }
     renderFichas();
+    updateSubtabCounts();
     renderCardioRecent();
     await checkForDraft();
     showSyncStatus('synced');
@@ -4409,7 +5545,7 @@ window.addEventListener('auth-state-changed', async (e) => {
     document.getElementById('user-avatar-btn').style.display = 'none';
     document.getElementById('header-subtitle').style.display = 'block';
     document.getElementById('sync-indicator').style.display = 'none';
-    fichas = []; sessions = []; weights = []; bios = [];
+    fichas = []; sessions = []; weights = []; bios = []; segs = []; cardios = []; exerciseLib = [];
   }
 });
 
